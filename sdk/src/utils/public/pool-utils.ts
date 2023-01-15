@@ -1,6 +1,6 @@
 import { AddressUtil, MathUtil, Percentage } from "@orca-so/common-sdk";
 import { Address, BN } from "@project-serum/anchor";
-import { u64 } from "@solana/spl-token";
+import { u64, NATIVE_MINT } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
 import Decimal from "decimal.js";
 import { WhirlpoolData, WhirlpoolRewardInfoData } from "../../types/public";
