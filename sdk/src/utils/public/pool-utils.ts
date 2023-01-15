@@ -1,6 +1,6 @@
 import { AddressUtil, MathUtil, Percentage } from "@orca-so/common-sdk";
 import { Address, BN } from "@project-serum/anchor";
-import { u64 } from "@solana/spl-token";
+import { u64, NATIVE_MINT } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
 import Decimal from "decimal.js";
 import { WhirlpoolData, WhirlpoolRewardInfoData } from "../../types/public";
@@ -56,7 +56,25 @@ export class PoolUtil {
   }
 
   public static orderMints(mintX: Address, mintY: Address): [Address, Address] {
-    return this.compareMints(mintX, mintY) < 0 ? [mintX, mintY] : [mintY, mintX];
+    let mintA, mintB;
+    if (
+      this.compareMints(mintX, mintY) < 0
+    ) {
+      mintA = mintX;
+      mintB = mintY;
+    } else {
+      mintA = mintY;
+      mintB = mintX;
+    }
+    if (AddressUtil.toPubKey(mintX).equals(NATIVE_MINT) && !AddressUtil.toPubKey(mintY).equals(NATIVE_MINT)) {
+      mintA = mintX;
+      mintB = mintY;
+    }
+    if (!AddressUtil.toPubKey(mintX).equals(NATIVE_MINT) && AddressUtil.toPubKey(mintY).equals(NATIVE_MINT)) {
+      mintA = mintY;
+      mintB = mintX;
+    }
+    return [mintA, mintB];
   }
 
   public static compareMints(mintX: Address, mintY: Address): number {
