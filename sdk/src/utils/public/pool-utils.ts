@@ -1,6 +1,6 @@
 import { AddressUtil, MathUtil, Percentage } from "@orca-so/common-sdk";
 import { Address, BN } from "@project-serum/anchor";
-import { u64 } from "@solana/spl-token";
+import { u64, NATIVE_MINT } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
 import Decimal from "decimal.js";
 import { WhirlpoolData, WhirlpoolRewardInfoData } from "../../types/public";
@@ -68,7 +68,14 @@ export class PoolUtil {
       mintA = mintY;
       mintB = mintX;
     }
-
+    if (AddressUtil.toPubKey(mintX).equals(NATIVE_MINT) && !AddressUtil.toPubKey(mintY).equals(NATIVE_MINT)) {
+      mintA = mintX;
+      mintB = mintY;
+    }
+    if (!AddressUtil.toPubKey(mintX).equals(NATIVE_MINT) && AddressUtil.toPubKey(mintY).equals(NATIVE_MINT)) {
+      mintA = mintY;
+      mintB = mintX;
+    }
     return [mintA, mintB];
   }
 
