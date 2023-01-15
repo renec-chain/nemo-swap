@@ -1,0 +1,29 @@
+{
+    "RPC_ENDPOINT_URL": "https://api-testnet.renec.foundation:8899",
+    "WHIRLPOOL_PROGRAM_ID": "HnsHqvaUZTKfinmSHjj68UCSBNPMpmFgd9WEpcKa66YF",
+    "PROTOCOL_FEE_RATE": 300,
+    "FEE_TIERS": [
+        {
+            "TICK_SPACING": 8,
+            "DEFAULT_FEE_RATE": 800
+        },
+        {
+            "TICK_SPACING": 64,
+            "DEFAULT_FEE_RATE": 800
+        }
+    ],
+    "POOLS": [
+        {
+            "TOKEN_MINT_A": "So11111111111111111111111111111111111111112",
+            "TOKEN_MINT_B": "4XQyAMgtXWVNnCcLsjaxN1SXaob2P6GGW4NwKtwDDFME",
+            "TICK_SPACING": 8,
+            "INIT_AMOUNT_B_PER_A": "22.8",
+            "OPEN_POSITION": true,
+            "LOWER_B_PER_A_PRICE": "20",
+            "UPPER_B_PER_A_PRICE": "25",
+            "SLIPPAGE": "1",
+            "INPUT_MINT": "So11111111111111111111111111111111111111112",
+            "INPUT_AMOUNT": "0.2"
+        }
+    ]
+}
