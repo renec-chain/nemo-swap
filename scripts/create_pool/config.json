@@ -1,6 +1,6 @@
 {
     "RPC_ENDPOINT_URL": "https://api-testnet.renec.foundation:8899",
-    "WHIRLPOOL_PROGRAM_ID": "HnsHqvaUZTKfinmSHjj68UCSBNPMpmFgd9WEpcKa66YF",
+    "REDEX_PROGRAM_ID": "HnsHqvaUZTKfinmSHjj68UCSBNPMpmFgd9WEpcKa66YF",
     "PROTOCOL_FEE_RATE": 300,
     "FEE_TIERS": [
         {
