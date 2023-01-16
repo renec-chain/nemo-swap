@@ -16,7 +16,7 @@ export const loadProvider = async function () {
   const connection = new Connection(config.RPC_ENDPOINT_URL)
   const wallet = new Wallet(wallets.payerKeypair)
   const provider = new AnchorProvider(connection, wallet, {})
-  const ctx = WhirlpoolContext.withProvider(provider, new PublicKey(config.WHIRLPOOL_PROGRAM_ID))
+  const ctx = WhirlpoolContext.withProvider(provider, new PublicKey(config.REDEX_PROGRAM_ID))
   console.log('endpoint:', ctx.connection.rpcEndpoint)
   console.log('wallet pubkey:', ctx.wallet.publicKey.toBase58())
 
