@@ -15,6 +15,7 @@ export * from "./set-collect-protocol-fees-authority-ix";
 export * from "./set-default-fee-rate-ix";
 export * from "./set-default-protocol-fee-rate-ix";
 export * from "./set-fee-authority-ix";
+export * from "./set-pool-creator-authority-ix";
 export * from "./set-fee-rate-ix";
 export * from "./set-protocol-fee-rate-ix";
 export * from "./set-reward-authority-by-super-authority-ix";

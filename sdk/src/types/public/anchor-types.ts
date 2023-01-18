@@ -43,6 +43,7 @@ export type WhirlpoolsConfigData = {
   feeAuthority: PublicKey;
   collectProtocolFeesAuthority: PublicKey;
   rewardEmissionsSuperAuthority: PublicKey;
+  poolCreatorAuthority: PublicKey;
   defaultFeeRate: number;
   defaultProtocolFeeRate: number;
 };

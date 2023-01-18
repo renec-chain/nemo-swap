@@ -35,6 +35,10 @@ export type Whirlpool = {
           "type": "publicKey"
         },
         {
+          "name": "poolCreatorAuthority",
+          "type": "publicKey"
+        },
+        {
           "name": "defaultProtocolFeeRate",
           "type": "u16"
         }
@@ -59,8 +63,8 @@ export type Whirlpool = {
           "isSigner": false
         },
         {
-          "name": "funder",
-          "isMut": true,
+          "name": "poolCreator",
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -1028,6 +1032,27 @@ export type Whirlpool = {
       ]
     },
     {
+      "name": "setPoolCreatorAuthority",
+      "accounts": [
+        {
+          "name": "whirlpoolsConfig",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolCreatorAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "newPoolCreatorAuthority",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "setRewardAuthorityBySuperAuthority",
       "accounts": [
         {
@@ -1231,6 +1256,10 @@ export type Whirlpool = {
           },
           {
             "name": "rewardEmissionsSuperAuthority",
+            "type": "publicKey"
+          },
+          {
+            "name": "poolCreatorAuthority",
             "type": "publicKey"
           },
           {
@@ -1868,6 +1897,10 @@ export const IDL: Whirlpool = {
           "type": "publicKey"
         },
         {
+          "name": "poolCreatorAuthority",
+          "type": "publicKey"
+        },
+        {
           "name": "defaultProtocolFeeRate",
           "type": "u16"
         }
@@ -1892,8 +1925,8 @@ export const IDL: Whirlpool = {
           "isSigner": false
         },
         {
-          "name": "funder",
-          "isMut": true,
+          "name": "poolCreator",
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -2861,6 +2894,27 @@ export const IDL: Whirlpool = {
       ]
     },
     {
+      "name": "setPoolCreatorAuthority",
+      "accounts": [
+        {
+          "name": "whirlpoolsConfig",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolCreatorAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "newPoolCreatorAuthority",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "setRewardAuthorityBySuperAuthority",
       "accounts": [
         {
@@ -3064,6 +3118,10 @@ export const IDL: Whirlpool = {
           },
           {
             "name": "rewardEmissionsSuperAuthority",
+            "type": "publicKey"
+          },
+          {
+            "name": "poolCreatorAuthority",
             "type": "publicKey"
           },
           {
