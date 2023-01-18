@@ -81,10 +81,6 @@ impl Whirlpool {
         token_mint_b: Pubkey,
         token_vault_b: Pubkey,
     ) -> Result<(), ErrorCode> {
-        if token_mint_a.ge(&token_mint_b) {
-            return Err(ErrorCode::InvalidTokenMintOrder.into());
-        }
-
         if sqrt_price < MIN_SQRT_PRICE_X64 || sqrt_price > MAX_SQRT_PRICE_X64 {
             return Err(ErrorCode::SqrtPriceOutOfBounds.into());
         }
