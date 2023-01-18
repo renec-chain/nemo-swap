@@ -7,12 +7,13 @@ pub struct WhirlpoolsConfig {
     pub fee_authority: Pubkey,
     pub collect_protocol_fees_authority: Pubkey,
     pub reward_emissions_super_authority: Pubkey,
+    pub pool_creator_authority: Pubkey,
 
     pub default_protocol_fee_rate: u16,
 }
 
 impl WhirlpoolsConfig {
-    pub const LEN: usize = 8 + 96 + 4;
+    pub const LEN: usize = 8 + 128 + 4;
 
     pub fn update_fee_authority(&mut self, fee_authority: Pubkey) {
         self.fee_authority = fee_authority;
@@ -25,16 +26,22 @@ impl WhirlpoolsConfig {
         self.collect_protocol_fees_authority = collect_protocol_fees_authority;
     }
 
+    pub fn update_pool_creator_authority(&mut self, pool_creator_authority: Pubkey) {
+        self.pool_creator_authority = pool_creator_authority;
+    }
+
     pub fn initialize(
         &mut self,
         fee_authority: Pubkey,
         collect_protocol_fees_authority: Pubkey,
         reward_emissions_super_authority: Pubkey,
+        pool_creator_authority: Pubkey,
         default_protocol_fee_rate: u16,
     ) -> Result<(), ErrorCode> {
         self.fee_authority = fee_authority;
         self.collect_protocol_fees_authority = collect_protocol_fees_authority;
         self.reward_emissions_super_authority = reward_emissions_super_authority;
+        self.pool_creator_authority = pool_creator_authority;
         self.update_default_protocol_fee_rate(default_protocol_fee_rate)?;
 
         Ok(())

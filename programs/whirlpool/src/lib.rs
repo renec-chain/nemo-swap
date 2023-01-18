@@ -1,7 +1,7 @@
 //! A concentrated liquidity AMM contract powered by Orca.
 use anchor_lang::prelude::*;
 
-declare_id!("whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc");
+declare_id!("7Vd9eYAH2MZxD6LYHEnDs8Eko9Bx3UydvtNvnJ8vKW21");
 
 #[doc(hidden)]
 pub mod constants;
@@ -38,6 +38,7 @@ pub mod whirlpool {
         fee_authority: Pubkey,
         collect_protocol_fees_authority: Pubkey,
         reward_emissions_super_authority: Pubkey,
+        pool_creator_authority: Pubkey,
         default_protocol_fee_rate: u16,
     ) -> ProgramResult {
         return instructions::initialize_config::handler(
@@ -45,6 +46,7 @@ pub mod whirlpool {
             fee_authority,
             collect_protocol_fees_authority,
             reward_emissions_super_authority,
+            pool_creator_authority,
             default_protocol_fee_rate,
         );
     }
@@ -458,6 +460,15 @@ pub mod whirlpool {
         reward_index: u8,
     ) -> ProgramResult {
         return instructions::set_reward_authority::handler(ctx, reward_index);
+    }
+
+    /// Sets the pool creator authority for a WhirlpoolConfig.
+    /// Only the current pool creator authority has permission to invoke this instruction.
+    ///
+    /// ### Authority
+    /// - "pool_creator_authority" - Set authority that can create a new pool in the WhirlpoolConfig
+    pub fn set_pool_creator_authority(ctx: Context<SetPoolCreatorAuthority>) -> ProgramResult {
+        return instructions::set_pool_creator_authority::handler(ctx);
     }
 
     /// Set the whirlpool reward authority at the provided `reward_index`.

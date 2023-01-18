@@ -18,6 +18,7 @@ pub fn handler(
     fee_authority: Pubkey,
     collect_protocol_fees_authority: Pubkey,
     reward_emissions_super_authority: Pubkey,
+    pool_creator_authority: Pubkey,
     default_protocol_fee_rate: u16,
 ) -> ProgramResult {
     let config = &mut ctx.accounts.config;
@@ -26,6 +27,7 @@ pub fn handler(
         fee_authority,
         collect_protocol_fees_authority,
         reward_emissions_super_authority,
+        pool_creator_authority,
         default_protocol_fee_rate,
     )?)
 }
