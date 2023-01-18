@@ -311,6 +311,18 @@ export class WhirlpoolIx {
   }
 
   /**
+   * Sets the pool creator authority for a WhirlpoolsConfig.
+   * Only the current pool creator authority has permission to invoke this instruction.
+   *
+   * @param program - program object containing services required to generate the instruction
+   * @param params - SetPoolCreatorAuthorityParams object
+   * @returns - Instruction to perform the action.
+   */
+  public static setPoolCreatorAuthorityIx(program: Program<Whirlpool>, params: ix.SetPoolCreatorAuthorityParams) {
+    return ix.setPoolCreatorAuthorityIx(program, params);
+  }
+
+  /**
    * Sets the fee rate for a Whirlpool.
    * Only the current fee authority has permission to invoke this instruction.
    *

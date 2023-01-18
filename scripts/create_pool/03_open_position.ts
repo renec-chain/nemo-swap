@@ -76,7 +76,6 @@ async function main() {
         }
         const txid = await tx.buildAndExecute()
         console.log('open a new position at txid:', txid)
-        return
       }
     }
   }
