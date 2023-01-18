@@ -7,6 +7,7 @@ import payerWallet from '../wallets/payer.json'
 import collectProtocolFeesAuthWallet from '../wallets/collect_protocol_fees_authority_wallet.json'
 import feeAuthWallet from '../wallets/fee_authority_wallet.json'
 import rewardEmissionSupperAuthWallet from '../wallets/reward_emissions_supper_authority_wallet.json'
+import poolCreatorAuthWallet from '../wallets/pool_creator_wallet.json'
 
 export const ZERO_BN = new BN(0)
 export const ONE_SOL = 1000000000
@@ -32,7 +33,8 @@ export const loadWallets = async function () {
     payerKeypair: Keypair.fromSecretKey(Uint8Array.from(payerWallet)),
     collectProtocolFeesAuthKeypair: Keypair.fromSecretKey(Uint8Array.from(collectProtocolFeesAuthWallet)),
     feeAuthKeypair: Keypair.fromSecretKey(Uint8Array.from(feeAuthWallet)),
-    rewardEmissionSupperAuthKeypair: Keypair.fromSecretKey(Uint8Array.from(rewardEmissionSupperAuthWallet))
+    rewardEmissionSupperAuthKeypair: Keypair.fromSecretKey(Uint8Array.from(rewardEmissionSupperAuthWallet)),
+    poolCreatorAuthKeypair: Keypair.fromSecretKey(Uint8Array.from(poolCreatorAuthWallet))
   }
 }
 

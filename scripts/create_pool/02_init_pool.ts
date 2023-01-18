@@ -37,18 +37,21 @@ async function main() {
         mintBPub,
         pool.TICK_SPACING
       )
-      const whirlpool = await client.getPool(whirlpoolPda.publicKey)
 
-      if (whirlpool) {
-        const price = PriceMath.sqrtPriceX64ToPrice(whirlpool.getData().sqrtPrice, tokenMintA.decimals, tokenMintB.decimals)
-        console.log('price_b_per_a:', price.toFixed(6))
-        console.log('pool_pub:', whirlpoolPda.publicKey.toBase58())
-        return
+      try {
+        const whirlpool = await client.getPool(whirlpoolPda.publicKey)
+        if (whirlpool) {
+          const price = PriceMath.sqrtPriceX64ToPrice(whirlpool.getData().sqrtPrice, tokenMintA.decimals, tokenMintB.decimals)
+          console.log('price_b_per_a:', price.toFixed(6))
+          console.log('pool_pub:', whirlpoolPda.publicKey.toBase58())
+          return
+        }
+      } catch(e) {
+        // This pool not existed
       }
       console.log('deploying new pool...')
 
       const currentA2BPrice = new Decimal(pool.INIT_AMOUNT_B_PER_A)
-      ctx.fetcher.getMintInfo
       const tickIndex = PriceMath.priceToInitializableTickIndex(
         currentA2BPrice,
         tokenMintA.decimals,
