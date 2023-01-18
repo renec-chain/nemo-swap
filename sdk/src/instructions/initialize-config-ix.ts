@@ -20,6 +20,7 @@ export type InitConfigParams = {
   feeAuthority: PublicKey;
   collectProtocolFeesAuthority: PublicKey;
   rewardEmissionsSuperAuthority: PublicKey;
+  poolCreatorAuthority: PublicKey;
   defaultProtocolFeeRate: number;
   funder: PublicKey;
 };
@@ -41,6 +42,7 @@ export function initializeConfigIx(
     feeAuthority,
     collectProtocolFeesAuthority,
     rewardEmissionsSuperAuthority,
+    poolCreatorAuthority,
     defaultProtocolFeeRate,
     funder,
   } = params;
@@ -49,6 +51,7 @@ export function initializeConfigIx(
     feeAuthority,
     collectProtocolFeesAuthority,
     rewardEmissionsSuperAuthority,
+    poolCreatorAuthority,
     defaultProtocolFeeRate,
     {
       accounts: {
