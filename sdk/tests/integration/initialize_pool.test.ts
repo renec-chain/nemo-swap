@@ -145,10 +145,13 @@ describe("initialize_pool", () => {
     });
   });
 
-  it("succeeds when funder is different than account paying for transaction fee", async () => {
-    const funderKeypair = anchor.web3.Keypair.generate();
-    await systemTransferTx(provider, funderKeypair.publicKey, ONE_SOL).buildAndExecute();
-    await initTestPool(ctx, TickSpacing.Standard, MathUtil.toX64(new Decimal(5)), funderKeypair);
+  it("fails when caller is different from pool creator", async () => {
+    const otherKeypair = anchor.web3.Keypair.generate();
+    await systemTransferTx(provider, otherKeypair.publicKey, ONE_SOL).buildAndExecute();
+    await assert.rejects(
+      initTestPool(ctx, TickSpacing.Standard, MathUtil.toX64(new Decimal(5)), otherKeypair),
+      /failed to send|unauthorized/
+    );
   });
 
   it("fails when tokenVaultA mint does not match tokenA mint", async () => {
