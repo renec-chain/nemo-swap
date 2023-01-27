@@ -40,6 +40,7 @@ export const generateDefaultConfigParams = (
     feeAuthority: configKeypairs.feeAuthorityKeypair.publicKey,
     collectProtocolFeesAuthority: configKeypairs.collectProtocolFeesAuthorityKeypair.publicKey,
     rewardEmissionsSuperAuthority: configKeypairs.rewardEmissionsSuperAuthorityKeypair.publicKey,
+    poolCreatorAuthority: context.wallet.publicKey,
     defaultProtocolFeeRate: 300,
     funder: funder || context.wallet.publicKey,
   };
