@@ -108,6 +108,8 @@ pub enum ErrorCode {
     InvalidIntermediaryMint, //0x1799
     #[msg("Duplicate two hop pool")]
     DuplicateTwoHopPool, //0x179a
+    #[msg("Pool was disabled")]
+    PoolWasDisabled, //0x1799
 }
 
 impl From<TryFromIntError> for ErrorCode {
