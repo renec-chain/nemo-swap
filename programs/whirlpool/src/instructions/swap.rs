@@ -54,6 +54,7 @@ pub fn handler(
     a_to_b: bool, // Zero for one
 ) -> ProgramResult {
     let whirlpool = &mut ctx.accounts.whirlpool;
+    whirlpool.require_enabled()?;
     let clock = Clock::get()?;
     // Update the global reward growth which increases as a function of time.
     let timestamp = to_timestamp_u64(clock.unix_timestamp)?;

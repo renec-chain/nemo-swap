@@ -857,6 +857,11 @@ export type Whirlpool = {
           "isSigner": false
         },
         {
+          "name": "whirlpool",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
@@ -1103,6 +1108,32 @@ export type Whirlpool = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "setEnableFlag",
+      "accounts": [
+        {
+          "name": "whirlpoolsConfig",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolCreatorAuthority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "isEnabled",
+          "type": "bool"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -1241,6 +1272,10 @@ export type Whirlpool = {
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "isEnabled",
+            "type": "bool"
+          },
           {
             "name": "whirlpoolsConfig",
             "type": "publicKey"
@@ -1711,6 +1746,11 @@ export type Whirlpool = {
       "code": 6040,
       "name": "AmountRemainingOverflow",
       "msg": "Amount remaining overflows"
+    },
+    {
+      "code": 6041,
+      "name": "PoolWasDisabled",
+      "msg": "Pool was disabled"
     }
   ]
 };
@@ -2574,6 +2614,11 @@ export const IDL: Whirlpool = {
           "isSigner": false
         },
         {
+          "name": "whirlpool",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
@@ -2820,6 +2865,32 @@ export const IDL: Whirlpool = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "setEnableFlag",
+      "accounts": [
+        {
+          "name": "whirlpoolsConfig",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolCreatorAuthority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "isEnabled",
+          "type": "bool"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -2958,6 +3029,10 @@ export const IDL: Whirlpool = {
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "isEnabled",
+            "type": "bool"
+          },
           {
             "name": "whirlpoolsConfig",
             "type": "publicKey"
@@ -3428,6 +3503,11 @@ export const IDL: Whirlpool = {
       "code": 6040,
       "name": "AmountRemainingOverflow",
       "msg": "Amount remaining overflows"
+    },
+    {
+      "code": 6041,
+      "name": "PoolWasDisabled",
+      "msg": "Pool was disabled"
     }
   ]
 };

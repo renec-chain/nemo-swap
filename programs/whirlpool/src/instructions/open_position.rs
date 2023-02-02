@@ -54,6 +54,7 @@ pub fn handler(
     tick_upper_index: i32,
 ) -> ProgramResult {
     let whirlpool = &ctx.accounts.whirlpool;
+    whirlpool.require_enabled()?;
     let position_mint = &ctx.accounts.position_mint;
     let position = &mut ctx.accounts.position;
 

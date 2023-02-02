@@ -444,4 +444,11 @@ export class WhirlpoolIx {
   ) {
     return ix.collectAllForPositionAddressesTxns(ctx, params, refresh);
   }
+
+  public static setEnableFlagIx(
+    program: Program<Whirlpool>,
+    params: ix.SetEnableFlagParams
+  ) {
+    return ix.setEnableFlagIx(program, params);
+  }
 }

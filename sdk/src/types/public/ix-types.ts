@@ -22,6 +22,7 @@ export {
   SwapInput,
   SwapParams,
   UpdateFeesAndRewardsParams,
+  SetEnableFlagParams,
   InitConfigParams,
   InitFeeTierParams,
   InitPoolParams,

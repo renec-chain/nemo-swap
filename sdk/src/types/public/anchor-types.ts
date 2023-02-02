@@ -64,6 +64,7 @@ export type WhirlpoolBumpsData = {
  * @category Solana Accounts
  */
 export type WhirlpoolData = {
+  isEnabled: boolean;
   whirlpoolsConfig: PublicKey;
   whirlpoolBump: number[];
   feeRate: number;

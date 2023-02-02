@@ -24,3 +24,4 @@ export * from "./set-reward-emissions-ix";
 export * from "./set-reward-emissions-super-authority-ix";
 export * from "./swap-ix";
 export * from "./update-fees-and-rewards-ix";
+export * from "./set-enable-flag-ix";
