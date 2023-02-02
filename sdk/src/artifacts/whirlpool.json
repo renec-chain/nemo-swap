@@ -1056,6 +1056,11 @@
           "isSigner": false
         },
         {
+          "name": "whirlpool",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
@@ -1570,6 +1575,32 @@
       ]
     },
     {
+      "name": "setEnableFlag",
+      "accounts": [
+        {
+          "name": "whirlpoolsConfig",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolCreatorAuthority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "isEnabled",
+          "type": "bool"
+        }
+      ]
+    },
+    {
       "name": "initializePositionBundle",
       "docs": [
         "Initializes a PositionBundle account that bundles several positions.",
@@ -2027,6 +2058,10 @@
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "isEnabled",
+            "type": "bool"
+          },
           {
             "name": "whirlpoolsConfig",
             "type": "publicKey"
@@ -2549,6 +2584,11 @@
       "code": 6046,
       "name": "PositionBundleNotDeletable",
       "msg": "Unable to delete PositionBundle with open positions"
+    },
+    {
+      "code": 6047,
+      "name": "PoolWasDisabled",
+      "msg": "Pool was disabled"
     }
   ]
 }

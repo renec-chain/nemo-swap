@@ -22,6 +22,8 @@ pub fn handler(
         &ctx.accounts.position_token_account,
         &ctx.accounts.position_authority,
     )?;
+    let whirlpool = &ctx.accounts.whirlpool;
+    whirlpool.require_enabled()?;
 
     let clock = Clock::get()?;
 

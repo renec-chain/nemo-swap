@@ -30,6 +30,7 @@ describe("close_position", () => {
     await toTx(
       ctx,
       WhirlpoolIx.closePositionIx(ctx.program, {
+        whirlpool: poolInitInfo.whirlpoolPda.publicKey,
         positionAuthority: provider.wallet.publicKey,
         receiver: receiverKeypair.publicKey,
         position: params.positionPda.publicKey,
@@ -75,6 +76,7 @@ describe("close_position", () => {
     await toTx(
       ctx,
       WhirlpoolIx.closePositionIx(ctx.program, {
+        whirlpool: poolInitInfo.whirlpoolPda.publicKey,
         positionAuthority: delegate.publicKey,
         receiver: owner.publicKey,
         position: params.positionPda.publicKey,
@@ -105,6 +107,7 @@ describe("close_position", () => {
     await toTx(
       ctx,
       WhirlpoolIx.closePositionIx(ctx.program, {
+        whirlpool: poolInitInfo.whirlpoolPda.publicKey,
         positionAuthority: owner.publicKey,
         receiver: owner.publicKey,
         position: params.positionPda.publicKey,
@@ -135,6 +138,7 @@ describe("close_position", () => {
     await toTx(
       ctx,
       WhirlpoolIx.closePositionIx(ctx.program, {
+        whirlpool: fixture.getInfos().poolInitInfo.whirlpoolPda.publicKey,
         positionAuthority: newOwner.publicKey,
         receiver: newOwner.publicKey,
         position: position.publicKey,
@@ -147,7 +151,7 @@ describe("close_position", () => {
   });
 
   it("fails to close a position with liquidity", async () => {
-    const { positionInfo } = await initTestPoolWithLiquidity(ctx);
+    const { positionInfo, poolInitInfo } = await initTestPoolWithLiquidity(ctx);
 
     const receiverKeypair = anchor.web3.Keypair.generate();
 
@@ -155,6 +159,7 @@ describe("close_position", () => {
       toTx(
         ctx,
         WhirlpoolIx.closePositionIx(ctx.program, {
+          whirlpool: poolInitInfo.whirlpoolPda.publicKey,
           positionAuthority: provider.wallet.publicKey,
           receiver: receiverKeypair.publicKey,
           position: positionInfo.positionPda.publicKey,
@@ -183,6 +188,7 @@ describe("close_position", () => {
       toTx(
         ctx,
         WhirlpoolIx.closePositionIx(ctx.program, {
+          whirlpool: poolInitInfo.whirlpoolPda.publicKey,
           positionAuthority: owner.publicKey,
           receiver: owner.publicKey,
           position: params.positionPda.publicKey,
@@ -221,6 +227,7 @@ describe("close_position", () => {
       toTx(
         ctx,
         WhirlpoolIx.closePositionIx(ctx.program, {
+          whirlpool: poolInitInfo.whirlpoolPda.publicKey,
           positionAuthority: delegate.publicKey,
           receiver: owner.publicKey,
           position: params.positionPda.publicKey,
@@ -250,6 +257,7 @@ describe("close_position", () => {
       toTx(
         ctx,
         WhirlpoolIx.closePositionIx(ctx.program, {
+          whirlpool: poolInitInfo.whirlpoolPda.publicKey,
           positionAuthority: fakeOwner.publicKey,
           receiver: owner.publicKey,
           position: params.positionPda.publicKey,
@@ -280,6 +288,7 @@ describe("close_position", () => {
       toTx(
         ctx,
         WhirlpoolIx.closePositionIx(ctx.program, {
+          whirlpool: fixture.getInfos().poolInitInfo.whirlpoolPda.publicKey,
           positionAuthority: provider.wallet.publicKey,
           receiver: provider.wallet.publicKey,
           position: position.publicKey,
@@ -318,6 +327,7 @@ describe("close_position", () => {
       toTx(
         ctx,
         WhirlpoolIx.closePositionIx(ctx.program, {
+          whirlpool: poolInitInfo.whirlpoolPda.publicKey,
           positionAuthority: delegate.publicKey,
           receiver: owner.publicKey,
           position: params.positionPda.publicKey,
@@ -359,6 +369,7 @@ describe("close_position", () => {
       toTx(
         ctx,
         WhirlpoolIx.closePositionIx(ctx.program, {
+          whirlpool: poolInitInfo.whirlpoolPda.publicKey,
           positionAuthority: fakeDelegate.publicKey,
           receiver: owner.publicKey,
           position: params.positionPda.publicKey,
@@ -389,6 +400,7 @@ describe("close_position", () => {
       toTx(
         ctx,
         WhirlpoolIx.closePositionIx(ctx.program, {
+          whirlpool: fixture.getInfos().poolInitInfo.whirlpoolPda.publicKey,
           positionAuthority: provider.wallet.publicKey,
           receiver: provider.wallet.publicKey,
           position: position.publicKey,
@@ -415,6 +427,7 @@ describe("close_position", () => {
       toTx(
         ctx,
         WhirlpoolIx.closePositionIx(ctx.program, {
+          whirlpool: fixture.getInfos().poolInitInfo.whirlpoolPda.publicKey,
           positionAuthority: provider.wallet.publicKey,
           receiver: provider.wallet.publicKey,
           position: position.publicKey,

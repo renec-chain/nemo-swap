@@ -54,6 +54,9 @@ pub fn handler(
         &ctx.accounts.position_authority,
     )?;
 
+    let whirlpool = &ctx.accounts.whirlpool;
+    whirlpool.require_enabled()?;
+
     let clock = Clock::get()?;
 
     if liquidity_amount == 0 {

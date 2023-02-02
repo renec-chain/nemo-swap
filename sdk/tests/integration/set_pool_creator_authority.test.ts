@@ -33,7 +33,7 @@ describe("set_pool_creator_authority", () => {
     assert.ok(config.poolCreatorAuthority.equals(newAuthorityKeypair.publicKey));
   });
 
-  it("fails if invalid set_pool_creator_authority provided", async () => {
+  it("fails if invalid pool_creator_authority provided", async () => {
     const { configInitInfo } = generateDefaultConfigParams(ctx);
     await toTx(ctx, WhirlpoolIx.initializeConfigIx(ctx.program, configInitInfo)).buildAndExecute();
     const otherAuthorityKeypair = anchor.web3.Keypair.generate();

@@ -28,6 +28,9 @@ pub struct ClosePosition<'info> {
         constraint = position_token_account.mint == position.position_mint)]
     pub position_token_account: Box<Account<'info, TokenAccount>>,
 
+    #[account(address = position.whirlpool)]
+    pub whirlpool: Account<'info, Whirlpool>,
+
     #[account(address = token::ID)]
     pub token_program: Program<'info, Token>,
 }
@@ -41,6 +44,9 @@ pub fn handler(ctx: Context<ClosePosition>) -> Result<()> {
     if !Position::is_position_empty(&ctx.accounts.position) {
         return Err(ErrorCode::ClosePositionNotEmpty.into());
     }
+
+    let whirlpool = &ctx.accounts.whirlpool;
+    whirlpool.require_enabled()?;
 
     burn_and_close_user_position_token(
         &ctx.accounts.position_authority,

@@ -115,6 +115,8 @@ pub enum ErrorCode {
     BundledPositionAlreadyClosed, //0x179d
     #[msg("Unable to delete PositionBundle with open positions")]
     PositionBundleNotDeletable, //0x179e
+    #[msg("Pool was disabled")]
+    PoolWasDisabled, //0x1799
 }
 
 impl From<TryFromIntError> for ErrorCode {
