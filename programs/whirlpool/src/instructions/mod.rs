@@ -25,6 +25,7 @@ pub mod set_reward_emissions_super_authority;
 pub mod swap;
 pub mod two_hop_swap;
 pub mod update_fees_and_rewards;
+pub mod set_enable_flag;
 
 pub use close_position::*;
 pub use collect_fees::*;
@@ -53,3 +54,4 @@ pub use set_reward_emissions_super_authority::*;
 pub use swap::*;
 pub use two_hop_swap::*;
 pub use update_fees_and_rewards::*;
+pub use set_enable_flag::*;

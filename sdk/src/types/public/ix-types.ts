@@ -28,6 +28,7 @@ export {
   SwapInput,
   SwapParams,
   UpdateFeesAndRewardsParams,
+  SetEnableFlagParams
 } from "../../instructions/";
 export {
   CollectAllParams,
