@@ -32,6 +32,7 @@ export {
   DeletePositionBundleParams,
   OpenBundledPositionParams,
   CloseBundledPositionParams,
+  SetEnableFlagParams,
 } from "../../instructions/";
 export {
   CollectAllParams,

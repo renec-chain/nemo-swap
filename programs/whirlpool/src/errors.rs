@@ -101,7 +101,6 @@ pub enum ErrorCode {
     AmountCalcOverflow, //0x1797
     #[msg("Amount remaining overflows")]
     AmountRemainingOverflow, //0x1798
-
     #[msg("Invalid intermediary mint")]
     InvalidIntermediaryMint, //0x1799
     #[msg("Duplicate two hop pool")]
@@ -115,6 +114,9 @@ pub enum ErrorCode {
     BundledPositionAlreadyClosed, //0x179d
     #[msg("Unable to delete PositionBundle with open positions")]
     PositionBundleNotDeletable, //0x179e
+
+    #[msg("Pool was disabled")]
+    PoolWasDisabled, //0x1799
 }
 
 impl From<TryFromIntError> for ErrorCode {

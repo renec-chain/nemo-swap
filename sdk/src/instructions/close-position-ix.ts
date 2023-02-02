@@ -8,6 +8,7 @@ import { Whirlpool } from "../artifacts/whirlpool";
  * Parameters to close a position in a Whirlpool.
  *
  * @category Instruction Types
+ * @param whirlpool - PublicKey for the whirlpool that the position will be closed for.
  * @param receiver - PublicKey for the wallet that will receive the rented lamports.
  * @param position - PublicKey for the position.
  * @param positionMint - PublicKey for the mint token for the Position token.
@@ -15,6 +16,7 @@ import { Whirlpool } from "../artifacts/whirlpool";
  * @param positionAuthority - Authority that owns the position token.
  */
 export type ClosePositionParams = {
+  whirlpool: PublicKey;
   receiver: PublicKey;
   position: PublicKey;
   positionMint: PublicKey;
@@ -35,6 +37,7 @@ export function closePositionIx(
   params: ClosePositionParams
 ): Instruction {
   const {
+    whirlpool,
     positionAuthority,
     receiver: receiver,
     position: position,
@@ -44,6 +47,7 @@ export function closePositionIx(
 
   const ix = program.instruction.closePosition({
     accounts: {
+      whirlpool,
       positionAuthority,
       receiver,
       position,

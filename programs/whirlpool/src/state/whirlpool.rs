@@ -12,6 +12,10 @@ use super::WhirlpoolsConfig;
 #[account]
 #[derive(Default)]
 pub struct Whirlpool {
+    // if the `is_enabled` is false,
+    // the swap, open/close position and deposit/withdraw liquidity would be disabled.
+    pub is_enabled: bool, // 1
+
     pub whirlpools_config: Pubkey, // 32
     pub whirlpool_bump: [u8; 1],   // 1
 
@@ -57,7 +61,7 @@ pub struct Whirlpool {
 pub const NUM_REWARDS: usize = 3;
 
 impl Whirlpool {
-    pub const LEN: usize = 8 + 261 + 384;
+    pub const LEN: usize = 1 + 8 + 261 + 384;
     pub fn seeds(&self) -> [&[u8]; 6] {
         [
             &b"whirlpool"[..],
@@ -84,6 +88,7 @@ impl Whirlpool {
         if sqrt_price < MIN_SQRT_PRICE_X64 || sqrt_price > MAX_SQRT_PRICE_X64 {
             return Err(ErrorCode::SqrtPriceOutOfBounds.into());
         }
+        self.is_enabled = true;
 
         self.whirlpools_config = whirlpools_config.key();
         self.whirlpool_bump = [bump];
@@ -114,6 +119,17 @@ impl Whirlpool {
                 NUM_REWARDS];
 
         Ok(())
+    }
+
+    pub fn require_enabled(&self) -> Result<(), ErrorCode> {
+        if !self.is_enabled {
+            return Err(ErrorCode::PoolWasDisabled.into());
+        }
+        Ok(())
+    }
+
+    pub fn set_enable_flag(&mut self, is_enabled: bool) {
+        self.is_enabled = is_enabled;
     }
 
     /// Update all reward values for the Whirlpool.

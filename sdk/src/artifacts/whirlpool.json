@@ -1056,6 +1056,11 @@
           "isSigner": false
         },
         {
+          "name": "whirlpool",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
@@ -1868,6 +1873,32 @@
           "type": "u16"
         }
       ]
+    },
+    {
+      "name": "setEnableFlag",
+      "accounts": [
+        {
+          "name": "whirlpoolsConfig",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolCreatorAuthority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "isEnabled",
+          "type": "bool"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -2027,6 +2058,10 @@
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "isEnabled",
+            "type": "bool"
+          },
           {
             "name": "whirlpoolsConfig",
             "type": "publicKey"
@@ -2519,6 +2554,7 @@
       "code": 6040,
       "name": "AmountRemainingOverflow",
       "msg": "Amount remaining overflows"
+<<<<<<< HEAD
     },
     {
       "code": 6041,
@@ -2549,6 +2585,14 @@
       "code": 6046,
       "name": "PositionBundleNotDeletable",
       "msg": "Unable to delete PositionBundle with open positions"
+||||||| parent of 922c7c3 (add_disable_dex_function (#5))
+=======
+    },
+    {
+      "code": 6041,
+      "name": "PoolWasDisabled",
+      "msg": "Pool was disabled"
+>>>>>>> 922c7c3 (add_disable_dex_function (#5))
     }
   ]
 }
