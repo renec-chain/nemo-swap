@@ -549,6 +549,7 @@ export class WhirlpoolImpl implements Whirlpool {
 
     /* Close position */
     const positionIx = closePositionIx(this.ctx.program, {
+      whirlpool: positionData.whirlpool,
       positionAuthority: positionWallet,
       receiver: destinationWallet,
       positionTokenAccount,
