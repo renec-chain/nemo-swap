@@ -66,11 +66,17 @@ export class PoolUtil {
       mintA = mintY;
       mintB = mintX;
     }
-    if (AddressUtil.toPubKey(mintX).equals(NATIVE_MINT) && !AddressUtil.toPubKey(mintY).equals(NATIVE_MINT)) {
+    if (
+      AddressUtil.toPubKey(mintX).equals(NATIVE_MINT) &&
+      !AddressUtil.toPubKey(mintY).equals(NATIVE_MINT)
+    ) {
       mintA = mintX;
       mintB = mintY;
     }
-    if (!AddressUtil.toPubKey(mintX).equals(NATIVE_MINT) && AddressUtil.toPubKey(mintY).equals(NATIVE_MINT)) {
+    if (
+      !AddressUtil.toPubKey(mintX).equals(NATIVE_MINT) &&
+      AddressUtil.toPubKey(mintY).equals(NATIVE_MINT)
+    ) {
       mintA = mintY;
       mintB = mintX;
     }

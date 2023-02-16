@@ -1,6 +1,7 @@
-import { AddressUtil, TransactionBuilder } from "@orca-so/common-sdk";
-import { Address } from "@project-serum/anchor";
+import { AddressUtil, TransactionBuilder, TokenUtil } from "@orca-so/common-sdk";
+import { Address, BN } from "@project-serum/anchor";
 import { Keypair, PublicKey } from "@solana/web3.js";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import invariant from "tiny-invariant";
 import { WhirlpoolContext } from "../context";
 import { initTickArrayIx } from "../instructions";
@@ -93,6 +94,37 @@ export class WhirlpoolClientImpl implements WhirlpoolClient {
       );
     }
     return whirlpools;
+  }
+
+  public async getAllPositionsOf(owner: PublicKey, refresh = false): Promise<Position[]> {
+    const { ctx } = this;
+    // Get all token accounts
+    const tokenAccounts = (
+      await ctx.connection.getTokenAccountsByOwner(owner, {
+        programId: TOKEN_PROGRAM_ID,
+      })
+    ).value;
+
+    // Get candidate addresses for the position
+    let positionCandidatePubkeys = [] as Address[];
+    tokenAccounts.forEach((ta) => {
+      const parsed = TokenUtil.deserializeTokenAccount(ta.account.data);
+      if (parsed) {
+        const pda = PDAUtil.getPosition(ctx.program.programId, parsed.mint);
+        // Returns the address of the Whirlpool position only if the number of tokens is 1 (ignores empty token accounts and non-NFTs)
+        if (new BN(parsed.amount.toString()).eq(new BN(1))) {
+          positionCandidatePubkeys.push(pda.publicKey);
+        }
+      }
+    });
+    const positions = [] as Position[];
+
+    Object.values(await this.getPositions(positionCandidatePubkeys, refresh)).forEach((p) => {
+      if (p) {
+        positions.push(p);
+      }
+    });
+    return positions;
   }
 
   public async getPosition(positionAddress: Address, refresh = false): Promise<Position> {
