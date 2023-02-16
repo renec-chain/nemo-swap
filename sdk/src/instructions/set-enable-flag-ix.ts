@@ -28,7 +28,10 @@ export type SetEnableFlagParams = {
  * @param params - SetEnableFlagParams object
  * @returns - Instruction to perform the action.
  */
-export function setEnableFlagIx(program: Program<Whirlpool>, params: SetEnableFlagParams): Instruction {
+export function setEnableFlagIx(
+  program: Program<Whirlpool>,
+  params: SetEnableFlagParams
+): Instruction {
   const { whirlpoolsConfig, whirlpool, poolCreatorAuthority, isEnabled } = params;
 
   const ix = program.instruction.setEnableFlag(isEnabled, {
