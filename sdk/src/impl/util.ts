@@ -1,5 +1,5 @@
 import BN from "bn.js";
-import { NATIVE_MINT } from '@solana/spl-token';
+import { NATIVE_MINT } from "@solana/spl-token";
 import { AccountFetcher, PoolUtil, TokenInfo } from "..";
 import {
   WhirlpoolData,
@@ -14,12 +14,16 @@ export async function getTokenMintInfos(
   refresh: boolean
 ): Promise<TokenInfo[]> {
   const mintA = data.tokenMintA;
-  const infoA = (mintA.equals(NATIVE_MINT)) ? await getNativeMintInfo() : await fetcher.getMintInfo(mintA, refresh);
+  const infoA = mintA.equals(NATIVE_MINT)
+    ? await getNativeMintInfo()
+    : await fetcher.getMintInfo(mintA, refresh);
   if (!infoA) {
     throw new Error(`Unable to fetch MintInfo for mint - ${mintA}`);
   }
   const mintB = data.tokenMintB;
-  const infoB = (mintB.equals(NATIVE_MINT)) ? await getNativeMintInfo() : await fetcher.getMintInfo(mintB, refresh);
+  const infoB = mintB.equals(NATIVE_MINT)
+    ? await getNativeMintInfo()
+    : await fetcher.getMintInfo(mintB, refresh);
   if (!infoB) {
     throw new Error(`Unable to fetch MintInfo for mint - ${mintB}`);
   }
@@ -36,9 +40,9 @@ export async function getNativeMintInfo() {
     decimals: 9,
     isInitialized: true,
     freezeAuthority: null,
-    mint: NATIVE_MINT
-  }
-  return nativeMint
+    mint: NATIVE_MINT,
+  };
+  return nativeMint;
 }
 
 export async function getRewardInfos(

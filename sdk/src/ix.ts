@@ -318,7 +318,10 @@ export class WhirlpoolIx {
    * @param params - SetPoolCreatorAuthorityParams object
    * @returns - Instruction to perform the action.
    */
-  public static setPoolCreatorAuthorityIx(program: Program<Whirlpool>, params: ix.SetPoolCreatorAuthorityParams) {
+  public static setPoolCreatorAuthorityIx(
+    program: Program<Whirlpool>,
+    params: ix.SetPoolCreatorAuthorityParams
+  ) {
     return ix.setPoolCreatorAuthorityIx(program, params);
   }
 
@@ -445,10 +448,7 @@ export class WhirlpoolIx {
     return ix.collectAllForPositionAddressesTxns(ctx, params, refresh);
   }
 
-  public static setEnableFlagIx(
-    program: Program<Whirlpool>,
-    params: ix.SetEnableFlagParams
-  ) {
+  public static setEnableFlagIx(program: Program<Whirlpool>, params: ix.SetEnableFlagParams) {
     return ix.setEnableFlagIx(program, params);
   }
 }
