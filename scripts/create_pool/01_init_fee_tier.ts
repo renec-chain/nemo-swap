@@ -62,4 +62,4 @@ function printFeeTier(publicKey: PublicKey, feeTierAccount: FeeTierData) {
 
 main().catch((reason) => {
   console.log('ERROR:', reason)
-})
+}) 
