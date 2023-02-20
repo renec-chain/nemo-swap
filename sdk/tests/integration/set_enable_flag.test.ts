@@ -1,9 +1,9 @@
 import * as anchor from "@project-serum/anchor";
 import * as assert from "assert";
-import { toTx, WhirlpoolContext, WhirlpoolData, WhirlpoolIx,
+import { toTx, WhirlpoolContext, WhirlpoolData, WhirlpoolIx, 
   PriceMath, PDAUtil, swapQuoteByInputToken, buildWhirlpoolClient } from "../../src";
 import { TickSpacing, ZERO_BN } from "../utils";
-import { initTestPool, openPosition,
+import { initTestPool, openPosition, 
   fundPositions, initTestPoolWithTokens, initTickArrayRange, FundedPositionParams } from "../utils/init-utils";
 import { WhirlpoolTestFixture } from "../utils/fixture";
 import { PoolUtil, toTokenAmount } from "../../src/utils/public/pool-utils";
@@ -122,7 +122,7 @@ describe("set_enable_flag", () => {
     await sleep(1000);
     const whirlpool = (await fetcher.getPool(poolInitInfo.whirlpoolPda.publicKey, true)) as WhirlpoolData;
     assert.equal(whirlpool.isEnabled, isEnabled);
-
+    
     const receiverKeypair = anchor.web3.Keypair.generate();
 
     await assert.rejects(
@@ -196,7 +196,7 @@ describe("set_enable_flag", () => {
       /0x1799/ // Pool was disabled
     );
   })
-
+  
   it("fails decrease_liquidity if pool enable is false", async () => {
     const liquidityAmount = new anchor.BN(1_250_000);
     const tickLower = 7168;

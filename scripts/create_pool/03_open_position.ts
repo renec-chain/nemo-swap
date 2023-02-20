@@ -12,7 +12,7 @@ async function main() {
   const { ctx, wallets } = await loadProvider()
   if (deployed.REDEX_CONFIG_PUB === '') {
     console.log('ReDEX Pool Config is not found. Please run `npm run 00-create-pool-config` .')
-    return
+    return 
   }
   const REDEX_CONFIG_PUB = new PublicKey(deployed.REDEX_CONFIG_PUB)
   const client = buildWhirlpoolClient(ctx)
@@ -83,4 +83,4 @@ async function main() {
 
 main().catch((reason) => {
   console.log('ERROR:', reason)
-})
+}) 

@@ -435,6 +435,20 @@ describe("whirlpool-impl", () => {
       tickUpper: position.getUpperTickData(),
     });
 
+    const feesQuote = collectFeesQuote({
+      whirlpool: poolData,
+      position: positionData,
+      tickLower: position.getLowerTickData(),
+      tickUpper: position.getUpperTickData(),
+    });
+
+    const rewardsQuote = collectRewardsQuote({
+      whirlpool: poolData,
+      position: positionData,
+      tickLower: position.getLowerTickData(),
+      tickUpper: position.getUpperTickData(),
+    });
+
     let ataTx: TransactionBuilder | undefined;
     let closeTx: TransactionBuilder;
     if (txs.length === 1) {

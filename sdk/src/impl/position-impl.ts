@@ -6,6 +6,7 @@ import {
   TransactionBuilder,
   ZERO,
   resolveOrCreateATAs,
+  Percentage,
 } from "@orca-so/common-sdk";
 import { NATIVE_MINT, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
@@ -28,7 +29,9 @@ import {
   getTokenMintsFromWhirlpools,
   resolveAtaForMints,
 } from "../utils/whirlpool-ata-utils";
-import { Position } from "../whirlpool-client";
+import { Position, Whirlpool } from "../whirlpool-client";
+import { getRewardInfos, getTokenMintInfos, getTokenVaultAccountInfos } from "./util";
+import { WhirlpoolImpl } from "./whirlpool-impl";
 
 export class PositionImpl implements Position {
   private data: PositionData;
@@ -439,6 +442,49 @@ export class PositionImpl implements Position {
     return txBuilder;
   }
 
+  async closePosition(
+    slippageTolerance: Percentage,
+    destinationWallet?: Address,
+    positionWallet?: Address,
+    payer?: Address
+  ): Promise<TransactionBuilder> {
+    const pool = await this.getPool();
+    const txs = await pool.closePosition(
+      this.address,
+      slippageTolerance,
+      destinationWallet,
+      positionWallet,
+      payer
+    );
+
+    if (txs.length <= 1) {
+      return txs[0];
+    }
+    const tokenAccountsIx = txs[0].compressIx(true);
+    return txs[1].addInstruction(tokenAccountsIx);
+  }
+
+  private async getPool(refresh = false): Promise<Whirlpool> {
+    const poolAddress = this.data.whirlpool;
+    const account = await this.ctx.fetcher.getPool(poolAddress, refresh);
+    if (!account) {
+      throw new Error(`Unable to fetch Whirlpool at address at ${poolAddress}`);
+    }
+    const tokenInfos = await getTokenMintInfos(this.ctx.fetcher, account, refresh);
+    const vaultInfos = await getTokenVaultAccountInfos(this.ctx.fetcher, account, refresh);
+    const rewardInfos = await getRewardInfos(this.ctx.fetcher, account, refresh);
+    return new WhirlpoolImpl(
+      this.ctx,
+      AddressUtil.toPubKey(poolAddress),
+      tokenInfos[0],
+      tokenInfos[1],
+      vaultInfos[0],
+      vaultInfos[1],
+      rewardInfos,
+      account
+    );
+  }
+
   private async refresh() {
     const positionAccount = await this.ctx.fetcher.getPosition(this.address, true);
     if (!!positionAccount) {
@@ -493,3 +539,4 @@ export class PositionImpl implements Position {
     return updateIx;
   }
 }
+

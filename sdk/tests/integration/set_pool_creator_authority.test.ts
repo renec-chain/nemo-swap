@@ -26,7 +26,7 @@ describe("set_pool_creator_authority", () => {
       })
     )
       .buildAndExecute();
-
+      
     const config = (await fetcher.getConfig(
       configInitInfo.whirlpoolsConfigKeypair.publicKey
     )) as WhirlpoolsConfigData;
