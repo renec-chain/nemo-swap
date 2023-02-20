@@ -1,5 +1,8 @@
 export {
   ClosePositionParams,
+  CollectAllParams,
+  CollectAllPositionAddressParams,
+  CollectAllPositionParams,
   CollectFeesParams,
   CollectProtocolFeesParams,
   CollectRewardParams,
@@ -30,8 +33,3 @@ export {
   UpdateFeesAndRewardsParams,
   SetEnableFlagParams,
 } from "../../instructions/";
-export {
-  CollectAllParams,
-  CollectAllPositionAddressParams,
-  CollectAllPositionParams,
-} from "../../instructions/composites";

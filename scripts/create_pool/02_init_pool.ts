@@ -66,7 +66,7 @@ async function main() {
 
       const currentA2BPrice = new Decimal(poolInfo.initialAmountBPerA);
       const tickIndex = PriceMath.priceToInitializableTickIndex(
-        currentA2BPrice,
+        currentA2BPrice, 
         tokenMintA.decimals,
         tokenMintB.decimals,
         poolInfo.tickSpacing
