@@ -8,7 +8,7 @@ use spl_token::native_mint;
 pub struct InitializePool<'info> {
     pub whirlpools_config: Box<Account<'info, WhirlpoolsConfig>>,
 
-    /// CHECK: token_mint_a will be verified in handler,
+    /// CHECK: token_mint_a will be verified in handler, 
     pub token_mint_a: UncheckedAccount<'info>,
     pub token_mint_b: Account<'info, Mint>,
 
@@ -62,7 +62,7 @@ pub fn handler(
     if token_mint_a.eq(&token_mint_b) {
         return Err(ErrorCode::InvalidTokenMintOrder.into());
     }
-
+    
     // Only check Mint Info when token a is not a native mint.
     if !native_mint::check_id(&token_mint_a) {
         let mut data: &[u8] = &ctx.accounts.token_mint_a.try_borrow_data()?;

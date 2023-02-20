@@ -1,5 +1,4 @@
 export {
-  ClosePositionParams,
   CollectFeesParams,
   CollectProtocolFeesParams,
   CollectRewardParams,

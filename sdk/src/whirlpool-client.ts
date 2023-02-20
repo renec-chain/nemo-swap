@@ -49,10 +49,10 @@ export interface WhirlpoolClient {
   getPools: (poolAddresses: Address[], refresh?: boolean) => Promise<Whirlpool[]>;
 
   /**
-   * Get all positions of a given owner.
-   * @param {PublicKey} owner - The owner of the positions.
-   * @param {boolean} [refresh=false] - Whether to refresh the positions from the blockchain.
-   * @returns A promise that resolves to a Record of positions.
+   * Gets all positions of the given owner.
+   * @param {PublicKey} owner - the owner to get positions for.
+   * @param {boolean} [refresh=false] - whether to refresh the positions from the blockchain.
+   * @returns A promise that resolves to an array of positions.
    */
   getAllPositionsOf: (owner: PublicKey, refresh?: boolean) => Promise<Position[]>;
   /**

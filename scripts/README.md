@@ -7,7 +7,7 @@ This script will initialize a new ReDEX protocol and create pools to swap.
     ```bash
     yarn install
     ```
-2.  Paste your key into `create_pool/wallets/payer.json` file. This account will pay transaction fee.
+2.  Paste your key into `create_pool/wallets/payer.json` file. This account will pay transaction fee. 
 
     ```json
     [199,203,42,..]
@@ -26,7 +26,7 @@ This script will initialize a new ReDEX protocol and create pools to swap.
     + REDEX_PROGRAM_ID: is program ID of redex which deployed on this network.
 ## Usage
 
-1. If you deployed a REDEX Config account on this network before, you would paste it's the public key to the `create_pool/deployed.json` file.
+1. If you deployed a REDEX Config account on this network before, you would paste it's the public key to the `create_pool/deployed.json` file. 
     ```json
     {
         "REDEX_CONFIG_PUB": "3zGD2b6ovpYxPBor28R8zRBq7Wm2z2zhh79uzac1PRHG"
@@ -93,7 +93,7 @@ This script will initialize a new ReDEX protocol and create pools to swap.
         + `UPPER_B_PER_A_PRICE` (optional): the upper price of this pair.
         + `SLIPPAGE` (optional): the slippage which you accept when depositing liquidity to pool. E.g: = 1 ~ 1%.
         + `INPUT_MINT` (optional): `TOKEN_MINT_A` or  `TOKEN_MINT_B` which you want to deposit.
-        + `INPUT_AMOUNT` (optional): amount of `INPUT_MINT` which you want to deposit.
+        + `INPUT_AMOUNT` (optional): amount of `INPUT_MINT` which you want to deposit. 
     ```json
     ...,
     "POOLS": [

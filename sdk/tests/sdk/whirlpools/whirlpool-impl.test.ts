@@ -436,6 +436,13 @@ describe("whirlpool-impl", () => {
       tickUpper: position.getUpperTickData(),
     });
 
+    const rewardsQuote = collectRewardsQuote({
+      whirlpool: poolData,
+      position: positionData,
+      tickLower: position.getLowerTickData(),
+      tickUpper: position.getUpperTickData(),
+    });
+
     let ataTx: TransactionBuilder | undefined;
     let closeTx: TransactionBuilder;
     if (txs.length === 1) {
@@ -448,19 +455,7 @@ describe("whirlpool-impl", () => {
     }
 
     await ataTx?.buildAndExecute();
-    const signature = await closeTx.addSigner(otherWallet).buildAndExecute();
-
-    // To calculate the rewards that have accumulated up to the timing of the close,
-    // the block time at transaction execution is used.
-    const tx = await ctx.provider.connection.getTransaction(signature);
-    const closeTimestampInSeconds = new anchor.BN(tx!.blockTime!.toString());
-    const rewardsQuote = collectRewardsQuote({
-      whirlpool: poolData,
-      position: positionData,
-      tickLower: position.getLowerTickData(),
-      tickUpper: position.getUpperTickData(),
-      timeStampInSeconds: closeTimestampInSeconds,
-    });
+    await closeTx.addSigner(otherWallet).buildAndExecute();
 
     assert.equal(
       await getTokenBalance(ctx.provider, dWalletTokenAAccount),
@@ -596,6 +591,13 @@ describe("whirlpool-impl", () => {
       tickUpper: position.getUpperTickData(),
     });
 
+    const rewardsQuote = collectRewardsQuote({
+      whirlpool: poolData,
+      position: positionData,
+      tickLower: position.getLowerTickData(),
+      tickUpper: position.getUpperTickData(),
+    });
+
     const dWalletTokenBAccount = await deriveATA(otherWallet.publicKey, poolData.tokenMintB);
     const rewardAccount0 = await deriveATA(otherWallet.publicKey, poolData.rewardInfos[0].mint);
     const rewardAccount1 = await deriveATA(otherWallet.publicKey, poolData.rewardInfos[1].mint);
@@ -630,13 +632,6 @@ describe("whirlpool-impl", () => {
     // the block time at transaction execution is used.
     const tx = await ctx.provider.connection.getTransaction(signature);
     const closeTimestampInSeconds = new anchor.BN(tx!.blockTime!.toString());
-    const rewardsQuote = collectRewardsQuote({
-      whirlpool: poolData,
-      position: positionData,
-      tickLower: position.getLowerTickData(),
-      tickUpper: position.getUpperTickData(),
-      timeStampInSeconds: closeTimestampInSeconds,
-    });
 
     const otherWalletBalanceAfter = await ctx.connection.getBalance(otherWallet.publicKey);
 
