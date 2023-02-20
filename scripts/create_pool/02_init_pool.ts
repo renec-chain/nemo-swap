@@ -12,7 +12,7 @@ async function main() {
   const { ctx } = await loadProvider()
   if (deployed.REDEX_CONFIG_PUB === '') {
     console.log('ReDEX Pool Config is not found. Please run `npm run 00-create-pool-config` .')
-    return
+    return 
   }
   const REDEX_CONFIG_PUB = new PublicKey(deployed.REDEX_CONFIG_PUB)
   const client = buildWhirlpoolClient(ctx)
@@ -29,7 +29,7 @@ async function main() {
       console.log('token_a:', mintAPub.toBase58())
       console.log('token_b:', mintBPub.toBase58())
       console.log('tick_spacing:', pool.TICK_SPACING)
-
+      
       const whirlpoolPda = PDAUtil.getWhirlpool(
         ctx.program.programId,
         REDEX_CONFIG_PUB,
@@ -53,7 +53,7 @@ async function main() {
 
       const currentA2BPrice = new Decimal(pool.INIT_AMOUNT_B_PER_A)
       const tickIndex = PriceMath.priceToInitializableTickIndex(
-        currentA2BPrice,
+        currentA2BPrice, 
         tokenMintA.decimals,
         tokenMintB.decimals,
         pool.TICK_SPACING
@@ -74,4 +74,4 @@ async function main() {
 
 main().catch((reason) => {
   console.log('ERROR:', reason)
-})
+}) 

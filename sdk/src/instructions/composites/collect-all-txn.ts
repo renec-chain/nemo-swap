@@ -9,7 +9,11 @@ import { WhirlpoolData } from "../../types/public";
 import { PDAUtil, PoolUtil, TickUtil } from "../../utils/public";
 import { getAssociatedTokenAddressSync } from "../../utils/spl-token-utils";
 import { convertListToMap } from "../../utils/txn-utils";
-import { getTokenMintsFromWhirlpools, resolveAtaForMints } from "../../utils/whirlpool-ata-utils";
+import {
+  addNativeMintHandlingIx,
+  getTokenMintsFromWhirlpools,
+  resolveAtaForMints,
+} from "../../utils/whirlpool-ata-utils";
 import { updateFeesAndRewardsIx } from "../update-fees-and-rewards-ix";
 
 /**
@@ -40,7 +44,16 @@ export type CollectAllPositionParams = {
   positions: Record<string, PositionData>;
 } & CollectAllParams;
 
-type CollectAllParams = {
+/**
+ * Common parameters between {@link CollectAllPositionParams} & {@link CollectAllPositionAddressParams}
+ *
+ * @category Instruction Types
+ * @param receiver - The destination wallet that collected fees & reward will be sent to. Defaults to ctx.wallet key.
+ * @param positionOwner - The wallet key that contains the position token. Defaults to ctx.wallet key.
+ * @param positionAuthority - The authority key that can authorize operation on the position. Defaults to ctx.wallet key.
+ * @param payer - The key that will pay for the initialization of ATA token accounts. Defaults to ctx.wallet key.
+ */
+export type CollectAllParams = {
   receiver?: PublicKey;
   positionOwner?: PublicKey;
   positionAuthority?: PublicKey;
@@ -186,24 +199,6 @@ export async function collectAllForPositionsTxns(
 
   txBuilders.push(pendingTxBuilder);
   return txBuilders;
-}
-
-/**
- * Helper methods.
- */
-function addNativeMintHandlingIx(
-  txBuilder: TransactionBuilder,
-  affliatedTokenAtaMap: Record<string, PublicKey>,
-  destinationWallet: PublicKey,
-  accountExemption: number
-) {
-  let { address: wSOLAta, ...resolveWSolIx } = createWSOLAccountInstructions(
-    destinationWallet,
-    ZERO,
-    accountExemption
-  );
-  affliatedTokenAtaMap[NATIVE_MINT.toBase58()] = wSOLAta;
-  txBuilder.prependInstruction(resolveWSolIx);
 }
 
 // TODO: Once individual collect ix for positions is implemented, maybe migrate over if it can take custom ATA?

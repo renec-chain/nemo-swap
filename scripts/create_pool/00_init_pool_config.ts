@@ -46,7 +46,7 @@ async function main() {
   const configAccount = (await ctx.fetcher.getConfig(
     new PublicKey(deployed.REDEX_CONFIG_PUB)
   )) as WhirlpoolsConfigData
-
+  
   console.log('===================================================')
   console.log('ReDEX Pool Config Info:')
   console.log('public_key:', deployed.REDEX_CONFIG_PUB)
@@ -60,4 +60,4 @@ async function main() {
 
 main().catch((reason) => {
   console.log('ERROR:', reason)
-})
+}) 

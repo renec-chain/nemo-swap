@@ -5,7 +5,10 @@ import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import invariant from "tiny-invariant";
 import { WhirlpoolContext } from "../context";
 import { initTickArrayIx } from "../instructions";
-import { collectAllForPositionAddressesTxns } from "../instructions/composites";
+import {
+  collectAllForPositionAddressesTxns,
+  collectProtocolFees,
+} from "../instructions/composites";
 import { WhirlpoolIx } from "../ix";
 import { AccountFetcher } from "../network/public";
 import { WhirlpoolData } from "../types/public";
@@ -163,7 +166,7 @@ export class WhirlpoolClientImpl implements WhirlpoolClient {
       .map((position) => position?.whirlpool.toBase58())
       .flatMap((x) => (!!x ? x : []));
     await this.ctx.fetcher.listPools(whirlpoolAddrs, refresh);
-    const tickArrayAddresses: Set<PublicKey> = new Set();
+    const tickArrayAddresses: Set<string> = new Set();
     await Promise.all(
       positions.map(async (pos) => {
         if (pos) {
@@ -181,8 +184,8 @@ export class WhirlpoolClientImpl implements WhirlpoolClient {
               pos.whirlpool,
               this.ctx.program.programId
             ).publicKey;
-            tickArrayAddresses.add(lowerTickArrayPda);
-            tickArrayAddresses.add(upperTickArrayPda);
+            tickArrayAddresses.add(lowerTickArrayPda.toBase58());
+            tickArrayAddresses.add(upperTickArrayPda.toBase58());
           }
         }
       })
@@ -307,5 +310,9 @@ export class WhirlpoolClientImpl implements WhirlpoolClient {
       },
       refresh
     );
+  }
+
+  public async collectProtocolFeesForPools(poolAddresses: Address[]): Promise<TransactionBuilder> {
+    return collectProtocolFees(this.ctx, poolAddresses);
   }
 }
