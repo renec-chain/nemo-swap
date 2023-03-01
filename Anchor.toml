@@ -5,7 +5,7 @@ whirlpool = "whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc"
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "localnet"
+cluster = "https://api-testnet.renec.foundation"
 wallet = "~/.config/solana/id.json"
 
 # wait for update to anchor to support cloning
