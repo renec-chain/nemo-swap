@@ -86,8 +86,8 @@
           "isSigner": false
         },
         {
-          "name": "poolCreator",
-          "isMut": false,
+          "name": "funder",
+          "isMut": true,
           "isSigner": true
         },
         {
