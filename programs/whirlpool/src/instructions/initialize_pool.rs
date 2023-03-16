@@ -12,7 +12,9 @@ pub struct InitializePool<'info> {
     pub token_mint_a: UncheckedAccount<'info>,
     pub token_mint_b: Account<'info, Mint>,
 
-    // #[account(mut)]
+    #[account(mut)]
+    pub funder: Signer<'info>,
+
     #[account(address = whirlpools_config.pool_creator_authority)]
     pub pool_creator: Signer<'info>,
 
@@ -25,18 +27,18 @@ pub struct InitializePool<'info> {
         tick_spacing.to_le_bytes().as_ref()
       ],
       bump = bumps.whirlpool_bump,
-      payer = pool_creator,
+      payer = funder,
       space = Whirlpool::LEN)]
     pub whirlpool: Box<Account<'info, Whirlpool>>,
 
     #[account(init,
-      payer = pool_creator,
+      payer = funder,
       token::mint = token_mint_a,
       token::authority = whirlpool)]
     pub token_vault_a: Box<Account<'info, TokenAccount>>,
 
     #[account(init,
-      payer = pool_creator,
+      payer = funder,
       token::mint = token_mint_b,
       token::authority = whirlpool)]
     pub token_vault_b: Box<Account<'info, TokenAccount>>,
