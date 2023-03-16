@@ -600,7 +600,7 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@orca-so/common-sdk@^0.1.9":
+"@orca-so/common-sdk@^0.1.10":
   version "0.1.12"
   resolved "https://registry.yarnpkg.com/@orca-so/common-sdk/-/common-sdk-0.1.12.tgz#40dd1577e27e7e24bd388233b758d4035fb3ac58"
   integrity sha512-YtrwwnrkgnOLWPiXzKPdz+L6XRBfwXMd5zI0MZm2olCmyaM41RpKyHd+NW/adem+Eb2Ey0FVd+Bie6pRlY1Z0g==
@@ -643,7 +643,7 @@
   version "0.7.2"
   dependencies:
     "@metaplex-foundation/mpl-token-metadata" "1.2.5"
-    "@orca-so/common-sdk" "^0.1.9"
+    "@orca-so/common-sdk" "^0.1.10"
     "@project-serum/anchor" "~0.25.0"
     "@solana/spl-token" "^0.1.8"
     "@solana/web3.js" "1.66.0"
