@@ -54,9 +54,24 @@ yarn add "decimal.js"
 Read instructions on how to use the SDK on the [Orca Developer Portal](https://orca-so.gitbook.io/orca-developer-portal/orca/welcome).
 
 ## Run Typescript tests via local validator
+Run test validator:
+```
+solana-test-validator --faucet-sol --reset
+```
 
-In the whirlpools/sdk folder, run:
+In the nemo-swap folder, run:
 
+```
+solana config set --url http://127.0.0.1:8899 
+
+export ANCHOR_PROVIDER_URL=http://127.0.0.1:8899
+
+export ANCHOR_WALLET=/<<userpath>>/.config/solana/id.json // Keypair Path when run solana config get
+```
+```
+solana program deploy /<<path>>/nemo-swap/target/deploy/whirlpool.so
+```
+Copy Program Id and paste to Anchor.toml file. Line whirlpool = "<< Program Id >>"
 ```
 anchor test
 ```

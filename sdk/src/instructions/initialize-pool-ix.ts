@@ -70,7 +70,7 @@ export function initializePoolIx(program: Program<Whirlpool>, params: InitPoolPa
       whirlpoolsConfig,
       tokenMintA,
       tokenMintB,
-      poolCreator: funder,
+      funder,
       whirlpool: whirlpoolPda.publicKey,
       tokenVaultA: tokenVaultAKeypair.publicKey,
       tokenVaultB: tokenVaultBKeypair.publicKey,
