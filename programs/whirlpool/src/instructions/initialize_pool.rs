@@ -15,9 +15,6 @@ pub struct InitializePool<'info> {
     #[account(mut)]
     pub funder: Signer<'info>,
 
-    #[account(address = whirlpools_config.pool_creator_authority)]
-    pub pool_creator: Signer<'info>,
-
     #[account(init,
       seeds = [
         b"whirlpool".as_ref(),
