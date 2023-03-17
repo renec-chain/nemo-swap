@@ -32,6 +32,7 @@ describe("position management tests", () => {
     await toTx(
       ctx,
       WhirlpoolIx.closePositionIx(ctx.program, {
+        whirlpool: poolInitInfo.whirlpoolPda.publicKey,
         positionAuthority: provider.wallet.publicKey,
         receiver: receiverKeypair.publicKey,
         position: params.positionPda.publicKey,
