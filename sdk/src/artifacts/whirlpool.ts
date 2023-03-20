@@ -63,8 +63,8 @@ export type Whirlpool = {
           "isSigner": false
         },
         {
-          "name": "poolCreator",
-          "isMut": false,
+          "name": "funder",
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -1820,8 +1820,8 @@ export const IDL: Whirlpool = {
           "isSigner": false
         },
         {
-          "name": "poolCreator",
-          "isMut": false,
+          "name": "funder",
+          "isMut": true,
           "isSigner": true
         },
         {

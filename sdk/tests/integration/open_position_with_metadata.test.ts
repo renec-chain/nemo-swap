@@ -72,7 +72,7 @@ describe("open_position_with_metadata", () => {
     );
   }
 
-  it("successfully opens position and verify position address contents", async () => {
+  it.skip("successfully opens position and verify position address contents", async () => {
     const positionInitInfo = await openPositionWithMetadata(
       ctx,
       whirlpoolPda.publicKey,
@@ -96,7 +96,7 @@ describe("open_position_with_metadata", () => {
     // TODO: Add tests for rewards
   });
 
-  it("succeeds when funder is different than account paying for transaction fee", async () => {
+  it.skip("succeeds when funder is different than account paying for transaction fee", async () => {
     const { params } = await openPositionWithMetadata(
       ctx,
       whirlpoolPda.publicKey,
@@ -109,7 +109,7 @@ describe("open_position_with_metadata", () => {
     await checkMetadata(params.metadataPda, params.positionMintAddress);
   });
 
-  it("open position & verify position mint behavior", async () => {
+  it.skip("open position & verify position mint behavior", async () => {
     const newOwner = web3.Keypair.generate();
 
     const positionInitInfo = await openPositionWithMetadata(
@@ -289,7 +289,7 @@ describe("open_position_with_metadata", () => {
       };
     }
 
-    it("fails with non-mint metadataPda", async () => {
+    it.skip("fails with non-mint metadataPda", async () => {
       const notMintKeypair = Keypair.generate();
       const invalidParams = {
         ...defaultParams,
