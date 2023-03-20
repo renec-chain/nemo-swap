@@ -1,0 +1,76 @@
+name: Testing
+on:
+  pull_request:
+  push:
+    branches:
+    - master
+    # - localnet
+    # - devnet
+
+env:
+  RUST_TOOLCHAIN: nightly-2021-12-23
+  PROJECT_NAME_UNDERSCORE: nemo_swap
+  CARGO_INCREMENTAL: 0
+  RUSTFLAGS: -Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort
+  RUSTDOCFLAGS: -Cpanic=abort
+
+jobs:
+  unit-test:
+    name: Cargo Unit Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      # Install Rust
+      - name: Cache Cargo registry + index
+        uses: actions/cache@v2
+        id: cache-cargo
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ~/.cargo/.crates.toml
+            ~/.cargo/.crates2.json
+            target
+          key: cargo-${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('Cargo.lock') }}
+      - name: Install Rust nightly
+        uses: actions-rs/toolchain@v1
+        with:
+          override: true
+          profile: minimal
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config build-essential libudev-dev
+      # Install Yarn
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn config get cacheFolder)"
+      - name: Yarn Cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-modules-
+
+      # Install Node
+      - name: Setup Node
+        uses: actions/setup-node@v2
+
+      # Run tests
+      - name: Cache build
+        uses: Swatinem/rust-cache@v1
+      - name: Generate test result and coverage report
+        run: |
+          cargo install cargo2junit grcov;
+          cargo test $CARGO_OPTIONS -- -Z unstable-options --format json | cargo2junit > results.xml;
+      - name: Upload test results
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        with:
+          check_name: Test Results
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          files: results.xml
