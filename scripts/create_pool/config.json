@@ -1,6 +1,6 @@
 {
     "RPC_ENDPOINT_URL": "https://api-mainnet-beta.renec.foundation:8899",
-    "REDEX_PROGRAM_ID": "8wydugeBuuFMKPVMPKvW3zgNZbUFcBzWHBnbuzK3Fgmj",
+    "REDEX_PROGRAM_ID": "__PROGRAM_ID__",
     "PROTOCOL_FEE_RATE": 300,
     "FEE_TIERS": [
         {
