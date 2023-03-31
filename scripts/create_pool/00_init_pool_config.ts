@@ -7,6 +7,7 @@ import config from './config.json'
 import deployed from './deployed.json'
 const fs = require('fs')
 const deployedPath = './create_pool/deployed.json'
+const retryIntervalInSeconds = 10
 
 async function main() {
   const { ctx, wallets } = await loadProvider()
@@ -30,7 +31,9 @@ async function main() {
 
     deployed.REDEX_CONFIG_PUB = initializedConfigInfo.whirlpoolsConfigKeypair.publicKey.toBase58()
     fs.writeFileSync(deployedPath, JSON.stringify(deployed))
-    await delay(10 * 1000)
+    console.log(`wait for ${retryIntervalInSeconds} seconds for the config account to be initialized...`)
+    await delay(retryIntervalInSeconds * 1000)
+    console.log(`it's been ${retryIntervalInSeconds} seconds.`)
   }
   // console.log('test change pool creator', wallets.feeAuthKeypair.publicKey.toBase58())
   // const setPoolCreatorAuthorityParams: SetPoolCreatorAuthorityParams = {
@@ -43,13 +46,21 @@ async function main() {
   // console.log('change pool creator at', txid)
   // await delay(10 * 1000)
 
-  const configAccount = (await ctx.fetcher.getConfig(
+  let configAccount = (await ctx.fetcher.getConfig(
     new PublicKey(deployed.REDEX_CONFIG_PUB)
   )) as WhirlpoolsConfigData
-  
+  while (!configAccount) {
+    console.log(`wait for another ${retryIntervalInSeconds} seconds for the config account to be initialized...`)
+    await delay(retryIntervalInSeconds * 1000)
+    console.log(`it's been ${retryIntervalInSeconds} seconds.`)
+    configAccount = (await ctx.fetcher.getConfig(
+      new PublicKey(deployed.REDEX_CONFIG_PUB)
+    )) as WhirlpoolsConfigData
+  }
+
   console.log('===================================================')
   console.log('ReDEX Pool Config Info:')
-  console.log('public_key:', deployed.REDEX_CONFIG_PUB)
+  console.log('\x1b[32m%s\x1b[0m', `public_key: ${deployed.REDEX_CONFIG_PUB}`)
   console.log('fee_authority:', configAccount.feeAuthority.toBase58())
   console.log('collect_protocol_fees_authority:', configAccount.collectProtocolFeesAuthority.toBase58())
   console.log('reward_emissions_super_authority:', configAccount.rewardEmissionsSuperAuthority.toBase58())
