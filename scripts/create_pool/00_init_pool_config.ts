@@ -49,14 +49,14 @@ async function main() {
   let configAccount = (await ctx.fetcher.getConfig(
     new PublicKey(deployed.REDEX_CONFIG_PUB)
   )) as WhirlpoolsConfigData
-  while (!configAccount) {
-    console.log(`wait for another ${retryIntervalInSeconds} seconds for the config account to be initialized...`)
-    await delay(retryIntervalInSeconds * 1000)
-    console.log(`it's been ${retryIntervalInSeconds} seconds.`)
-    configAccount = (await ctx.fetcher.getConfig(
-      new PublicKey(deployed.REDEX_CONFIG_PUB)
-    )) as WhirlpoolsConfigData
-  }
+  // while (!configAccount) {
+  //   console.log(`wait for another ${retryIntervalInSeconds} seconds for the config account to be initialized...`)
+  //   await delay(retryIntervalInSeconds * 1000)
+  //   console.log(`it's been ${retryIntervalInSeconds} seconds.`)
+  //   configAccount = (await ctx.fetcher.getConfig(
+  //     new PublicKey(deployed.REDEX_CONFIG_PUB)
+  //   )) as WhirlpoolsConfigData
+  // }
 
   console.log('===================================================')
   console.log('ReDEX Pool Config Info:')
