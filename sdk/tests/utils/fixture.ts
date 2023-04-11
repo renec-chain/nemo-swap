@@ -148,6 +148,7 @@ const defaultConfigInitInfo = {
   feeAuthority: PublicKey.default,
   collectProtocolFeesAuthority: PublicKey.default,
   rewardEmissionsSuperAuthority: PublicKey.default,
+  poolCreatorAuthority: PublicKey.default,
   defaultProtocolFeeRate: 0,
   funder: PublicKey.default,
 };
