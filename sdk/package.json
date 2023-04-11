@@ -28,7 +28,6 @@
     "process": "^0.11.10",
     "start-server-and-test": "^2.0.0",
     "ts-jest": "^27.0.3",
-    "ts-mocha": "^10.0.0",
     "typedoc": "~0.22.18",
     "ts-mocha": "^10.0.0",
     "typescript": "^4.5.5"
