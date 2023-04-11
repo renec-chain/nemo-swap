@@ -34,6 +34,7 @@ export const testWhirlpoolData = {
   rewardLastUpdatedTimestamp: new BN("3253252312412523523523"),
   rewardInfos: [],
   tickSpacing: 64,
+  isEnabled: true,
 };
 
 export const testInitializedTickData: TickData = {
