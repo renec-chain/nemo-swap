@@ -26,9 +26,11 @@
     "mocha": "^9.0.3",
     "prettier": "^2.3.2",
     "process": "^0.11.10",
-    "ts-mocha": "^9.0.0",
     "ts-node": "^10.9.1",
     "typedoc": "~0.22.18",
+    "start-server-and-test": "^2.0.0",
+    "ts-jest": "^27.0.3",
+    "ts-mocha": "^10.0.0",
     "typescript": "^4.5.5"
   },
   "scripts": {
@@ -37,7 +39,8 @@
     "prepublishOnly": "yarn build",
     "prettier-format": "prettier --config .prettierrc 'src/**/*.ts' --write",
     "test": "anchor test",
-    "docs": "npx typedoc --options typedoc.json"
+    "docs": "npx typedoc --options typedoc.json",
+    "start-server-and-test": "start-server-and-test"
   },
   "lint-staged": {
     "*.{ts,md}": "yarn run prettier-format"
