@@ -7,17 +7,20 @@ on:
     # - localnet
     # - devnet
 
-env:
-  RUST_TOOLCHAIN: nightly-2021-12-23
-  PROJECT_NAME_UNDERSCORE: nemo_swap
-  CARGO_INCREMENTAL: 0
-  RUSTFLAGS: -Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort
-  RUSTDOCFLAGS: -Cpanic=abort
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   unit-test:
     name: Cargo Unit Test
     runs-on: ubuntu-latest
+    env:
+      RUST_TOOLCHAIN: nightly-2021-12-23
+      PROJECT_NAME_UNDERSCORE: nemo_swap
+      CARGO_INCREMENTAL: 0
+      RUSTFLAGS: -Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort
+      RUSTDOCFLAGS: -Cpanic=abort
     steps:
       - uses: actions/checkout@v2
 
@@ -45,6 +48,39 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y pkg-config build-essential libudev-dev
+      - name: Replace program id
+        run: |
+          sed -i 's/whirlpool = "[^"]*"/whirlpool = "CTMj7RqvF6q3CVSAEEQ7T1PA14j5hKyTioW47W8APscs"/g' ./Anchor.toml
+          sed -i 's/declare_id!("[^"]*");/declare_id!("CTMj7RqvF6q3CVSAEEQ7T1PA14j5hKyTioW47W8APscs");/g' ./programs/whirlpool/src/lib.rs
+
+          cat ./Anchor.toml
+          echo "-----------"
+          cat ./programs/whirlpool/src/lib.rs
+      - name: Cache build
+        uses: Swatinem/rust-cache@v1
+
+      # Run tests
+      - name: Generate test result
+        run: |
+          cargo install cargo2junit;
+          cargo test $CARGO_OPTIONS -- -Z unstable-options --format json | cargo2junit > results.xml;
+      - name: Upload test results
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        with:
+          check_name: Test Results
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          files: results.xml
+
+  integration-test:
+    name: SDK Integration Test
+    runs-on: ubuntu-latest
+    env:
+      CARGO_TERM_COLOR: always
+      RUST_BACKTRACE: 1
+    container: projectserum/build:v0.20.1
+    steps:
+      - uses: actions/checkout@v2
+
       # Install Yarn
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
@@ -53,24 +89,47 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-modules-${{ hashFiles('sdk/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-modules-
-
       # Install Node
       - name: Setup Node
         uses: actions/setup-node@v2
+        with:
+          node-version: 16.x
+
+      - name: Set default rustup toolchain
+        run: |
+          rustup toolchain list
+          rustup default stable
+          rustup toolchain list
+
+      - name: Setup program id
+        run: |
+          sed -i 's/whirlpool = "[^"]*"/whirlpool = "CTMj7RqvF6q3CVSAEEQ7T1PA14j5hKyTioW47W8APscs"/g' ./Anchor.toml
+          sed -i 's/declare_id!("[^"]*")/declare_id!("CTMj7RqvF6q3CVSAEEQ7T1PA14j5hKyTioW47W8APscs")/g' ./programs/whirlpool/src/lib.rs
+          mkdir -p target/deploy;
+          touch ./target/deploy/whirlpool-keypair.json;
+          echo "${{ secrets.WHIRLPOOL_KEYPAIR }}" > ./target/deploy/whirlpool-keypair.json;
+
+      - name: Setup solana & anchor build
+        run: |
+          sh -c "$(curl -sSfL https://release.solana.com/v1.9.29/install)";
+          export PATH=/github/home/.local/share/solana/install/active_release/bin:$PATH;
+          solana --version;
+          solana-keygen new;
+          solana config set --url http://127.0.0.1:8899;
+          solana config get;
+          echo 'ANCHOR_WALLET=/github/home/.config/solana/id.json' >> $GITHUB_ENV;
+          echo 'ANCHOR_PROVIDER_URL=http://127.0.0.1:8899' >> $GITHUB_ENV;
+          anchor build
 
       # Run tests
-      - name: Cache build
-        uses: Swatinem/rust-cache@v1
-      - name: Generate test result and coverage report
+      - name: Run SDK test
         run: |
-          cargo install cargo2junit grcov;
-          cargo test $CARGO_OPTIONS -- -Z unstable-options --format json | cargo2junit > results.xml;
-      - name: Upload test results
-        uses: EnricoMi/publish-unit-test-result-action@v1
-        with:
-          check_name: Test Results
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          files: results.xml
+          export PATH=/github/home/.local/share/solana/install/active_release/bin:$PATH;
+          solana --version;
+          yarn install;
+          cd sdk;
+          yarn run build;
+          yarn run start-server-and-test -- 'solana-test-validator --bpf-program CTMj7RqvF6q3CVSAEEQ7T1PA14j5hKyTioW47W8APscs ../target/deploy/whirlpool.so --faucet-sol --reset --quiet' http://127.0.0.1:8899/health test
