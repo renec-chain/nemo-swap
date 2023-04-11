@@ -26,9 +26,10 @@
     "process": "^0.11.10",
     "typedoc": "~0.22.18",
     "typescript": "^4.5.5",
-    "ts-mocha": "^9.0.0",
     "ts-node": "^10.9.1",
-    "ts-jest": "^27.0.3"
+    "ts-jest": "^27.0.3",
+    "ts-mocha": "^10.0.0",
+    "start-server-and-test": "^2.0.0"
   },
   "scripts": {
     "build": "tsc -p src",
@@ -36,7 +37,8 @@
     "prepublishOnly": "yarn build",
     "prettier-format": "prettier --config .prettierrc 'src/**/*.ts' --write",
     "test": "anchor test",
-    "docs": "npx typedoc --options typedoc.json"
+    "start-server-and-test": "start-server-and-test",
+    "docs": "npx typedoc --excludePrivate --categorizeByGroup false --tsconfig src/tsconfig.json"
   },
   "lint-staged": {
     "*.{ts,md}": "yarn run prettier-format"
