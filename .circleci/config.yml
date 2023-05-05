@@ -1,0 +1,114 @@
+version: 2.1
+orbs:
+  node: circleci/node@5.1.0
+
+commands:
+  program-setup:
+    steps:
+      - restore_cache:
+          keys:
+            - cargo-cache-{{ checksum "Cargo.lock" }}
+            - cargo-cache-
+      - run:
+          name: Set ENV vars
+          command: |
+            source ci/rust-version.sh
+            echo "RUST_STABLE=$rust_stable" >> $BASH_ENV
+            source ci/solana-version.sh
+            echo "SOLANA_VERSION=$solana_version" >> $BASH_ENV
+            source "$BASH_ENV"
+      - run:
+          name: Setup toolchain
+          command: |
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain $RUST_STABLE --profile minimal
+      - run:
+          name: Install dependencies
+          command: |
+            source ./ci/install-build-deps.sh
+      - save_cache:
+          name: Save cargo cache
+          key: cargo-cache-{{ checksum "Cargo.lock" }}
+          paths:
+            - ~/.cargo/bin/
+            - ~/.cargo/registry/index/
+            - ~/.cargo/registry/cache/
+            - ~/.cargo/git/db/
+            - ~/.cargo/.crates.toml
+            - ~/.cargo/.crates2.json
+            - ~/.cache/solana
+
+  sdk-setup:
+    steps:
+      - node/install:
+          install-yarn: true
+          node-version: '16.15.1'
+      - run:
+          name: Node version check
+          command: node -v
+      - restore_cache:
+          keys:
+            - yarn-dependencies-cache-7-{{ checksum "sdk/yarn.lock" }}
+            - yarn-dependencies-cache-7-
+      - run:
+          working_directory: sdk
+          name: Install dependencies
+          command: yarn install
+      - run:
+          working_directory: sdk
+          name: Build SDK
+          command: yarn build
+      - save_cache:
+          name: Save yarn cache
+          key: yarn-dependencies-cache-7-{{ checksum "sdk/yarn.lock" }}
+          paths:
+            - node_modules
+            - ~/.cache/yarn
+            - ~/.cache/Cypress
+
+jobs:
+  program-test:
+    description: Program Test
+    machine: true
+    steps:
+      - checkout
+      - program-setup
+      - run: |
+          ./ci/cargo-test.sh programs/whirlpool
+
+  sdk-test:
+    description: SDK Test
+    machine: true
+    environment:
+      WHIRLPOOL_PROGRAM_ID: CTMj7RqvF6q3CVSAEEQ7T1PA14j5hKyTioW47W8APscs
+    steps:
+      - checkout
+      - program-setup
+      - sdk-setup
+      - run:
+          name: build program
+          command: |
+            sed -i "s/declare_id!(\"[^\"]*\")/declare_id!(\"$WHIRLPOOL_PROGRAM_ID\")/g" ./programs/whirlpool/src/lib.rs
+            source ./ci/install-build-deps.sh
+            source ./ci/install-program-deps.sh
+            cargo +"$RUST_STABLE" build-sbf --sbf-out-dir target/deploy
+      - run:
+          name: Run SDK tests
+          working_directory: sdk
+          command: |
+            source ../ci/solana-version.sh
+            echo "SOLANA_VERSION=$solana_version" >> $BASH_ENV
+            source "$BASH_ENV"
+            yarn run start-server-and-test -- "solana-test-validator --bpf-program $WHIRLPOOL_PROGRAM_ID ../target/deploy/whirlpool.so --reset --quiet" http://localhost:8899/health test
+
+      - store_test_results:
+          path: ./sdk/reports/
+
+      - store_artifacts: # upload test coverage as artifact
+          path: sdk/coverage
+
+workflows:
+  version: 2
+  auto_test:
+    jobs:
+      - program-test
+      - sdk-test
