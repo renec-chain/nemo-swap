@@ -85,7 +85,7 @@ impl Whirlpool {
         token_mint_b: Pubkey,
         token_vault_b: Pubkey,
     ) -> Result<(), ErrorCode> {
-        if token_mint_a.eq(&token_mint_b) {
+        if token_mint_a.ge(&token_mint_b) {
             return Err(ErrorCode::InvalidTokenMintOrder.into());
         }
 
