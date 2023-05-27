@@ -12,7 +12,7 @@ use super::WhirlpoolsConfig;
 #[account]
 #[derive(Default)]
 pub struct Whirlpool {
-    // if the `is_enabled` is false,  
+    // if the `is_enabled` is false,
     // the swap, open/close position and deposit/withdraw liquidity would be disabled.
     pub is_enabled: bool, // 1
 
