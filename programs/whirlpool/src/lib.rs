@@ -1,7 +1,7 @@
 //! A concentrated liquidity AMM contract powered by Orca.
 use anchor_lang::prelude::*;
 
-declare_id!("__PROGRAM_ID__");
+declare_id!("7yyFRQehBQjdSpWYV93jWh4558YbWmc4ofbMWzKTPyJL");
 
 #[doc(hidden)]
 pub mod constants;
@@ -502,10 +502,7 @@ pub mod whirlpool {
 
     /// Sets `enable` flag of the pool to enable or disable this pool.
     /// Only the current pool creator authority has permission to invoke this instruction.
-    pub fn set_enable_flag(
-        ctx: Context<SetEnableFlag>,
-        is_enabled: bool,
-    ) -> ProgramResult {
+    pub fn set_enable_flag(ctx: Context<SetEnableFlag>, is_enabled: bool) -> ProgramResult {
         return instructions::set_enable_flag::handler(ctx, is_enabled);
     }
 }
