@@ -453,7 +453,7 @@ pub mod whirlpool {
     /// Only the current pool creator authority has permission to invoke this instruction.
     ///
     /// ### Authority
-    /// - "pool_creator_authority" - Set authority that can create a new pool in the WhirlpoolConfig
+    /// - "pool_creator_authority" - Set authority that can disable a pool in the WhirlpoolConfig
     pub fn set_pool_creator_authority(ctx: Context<SetPoolCreatorAuthority>) -> ProgramResult {
         return instructions::set_pool_creator_authority::handler(ctx);
     }
