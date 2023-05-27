@@ -12,7 +12,7 @@ use super::WhirlpoolsConfig;
 #[account]
 #[derive(Default)]
 pub struct Whirlpool {
-    // if the `is_enabled` is false,  
+    // if the `is_enabled` is false,
     // the swap, open/close position and deposit/withdraw liquidity would be disabled.
     pub is_enabled: bool, // 1
 
@@ -85,6 +85,10 @@ impl Whirlpool {
         token_mint_b: Pubkey,
         token_vault_b: Pubkey,
     ) -> Result<(), ErrorCode> {
+        if token_mint_a.eq(&token_mint_b) {
+            return Err(ErrorCode::InvalidTokenMintOrder.into());
+        }
+
         if sqrt_price < MIN_SQRT_PRICE_X64 || sqrt_price > MAX_SQRT_PRICE_X64 {
             return Err(ErrorCode::SqrtPriceOutOfBounds.into());
         }
