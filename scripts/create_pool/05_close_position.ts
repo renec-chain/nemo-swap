@@ -14,11 +14,11 @@ import deployed from "./deployed.json";
 async function main() {
   const wallets = loadWallets();
 
-  if (!wallets.user) {
-    throw new Error("Please provide user");
+  if (!wallets.userKeypair) {
+    throw new Error("Please provide user wallet");
   }
 
-  const { ctx } = loadProvider(wallets.user);
+  const { ctx } = loadProvider(wallets.userKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(
@@ -52,7 +52,12 @@ async function main() {
       );
 
       const txid = await tx[0].buildAndExecute();
-      console.log("open a new position at txid:", txid);
+      console.log(
+        "Close a position: " +
+          positions[0].getAddress().toString() +
+          "at txid:",
+        txid
+      );
     }
   }
 }
