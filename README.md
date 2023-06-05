@@ -101,7 +101,7 @@ export ANCHOR_WALLET=/<<userpath>>/.config/solana/id.json // Keypair Path when r
 ```
 
 ```
-solana program deploy /<<path>>/nemo-swap/target/deploy/whirlpool.so
+solana program deploy target/deploy/whirlpool.so
 ```
 
 Copy Program Id and paste to Anchor.toml file. Line whirlpool = "<< Program Id >>"
