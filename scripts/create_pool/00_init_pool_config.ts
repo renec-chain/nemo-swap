@@ -17,16 +17,28 @@ async function main() {
   const wallets = loadWallets();
 
   // Check required roles
-  if (
-    !wallets.deployerKeypair ||
-    !wallets.collectProtocolFeesAuthKeypair ||
-    !wallets.rewardEmissionSupperAuthKeypair ||
-    !wallets.feeAuthKeypair ||
-    !wallets.poolCreatorAuthKeypair
-  ) {
+  if (!wallets.deployerKeypair) {
+    throw new Error("Please provide deployer_wallet wallet");
+  }
+
+  if (!wallets.collectProtocolFeesAuthKeypair) {
     throw new Error(
-      "Please provide collectProtocolFeesAuthKeypair, rewardEmissionSupperAuthKeypair, feeAuthKeypair, poolCreatorAuthKeypair"
+      "Please provide collect_protocol_fees_authority_wallet wallet"
     );
+  }
+
+  if (!wallets.feeAuthKeypair) {
+    throw new Error("Please provide fee_authority_wallet wallet");
+  }
+
+  if (!wallets.rewardEmissionSupperAuthKeypair) {
+    throw new Error(
+      "Please provide reward_emissions_supper_authority_wallet wallet"
+    );
+  }
+
+  if (!wallets.poolCreatorAuthKeypair) {
+    throw new Error("Please provide pool_creator_authority_wallet wallet");
   }
 
   const { ctx } = loadProvider(wallets.deployerKeypair);

@@ -14,8 +14,8 @@ import deployed from "./deployed.json";
 async function main() {
   const wallets = loadWallets();
 
-  if (!wallets.user) {
-    throw new Error("Please provide user");
+  if (!wallets.userKeypair) {
+    throw new Error("Please provide user wallet");
   }
 
   if (deployed.REDEX_CONFIG_PUB === "") {
@@ -25,7 +25,7 @@ async function main() {
     return;
   }
 
-  const { ctx } = loadProvider(wallets.user);
+  const { ctx } = loadProvider(wallets.userKeypair);
 
   const REDEX_CONFIG_PUB = new PublicKey(deployed.REDEX_CONFIG_PUB);
   const client = buildWhirlpoolClient(ctx);
