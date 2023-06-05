@@ -14,7 +14,7 @@ async function main() {
   const wallets = loadWallets();
 
   if (!wallets.poolCreatorAuthKeypair) {
-    throw new Error("Please provide pool_creator_authority");
+    throw new Error("Please provide pool_creator_authority_wallet wallet");
   }
 
   const { ctx } = loadProvider(wallets.poolCreatorAuthKeypair);

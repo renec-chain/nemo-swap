@@ -14,11 +14,11 @@ import deployed from "./deployed.json";
 async function main() {
   const wallets = loadWallets();
 
-  if (!wallets.user) {
-    throw new Error("Please provide user");
+  if (!wallets.userKeypair) {
+    throw new Error("Please provide user wallet");
   }
 
-  const { ctx } = loadProvider(wallets.user);
+  const { ctx } = loadProvider(wallets.userKeypair);
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(
       "ReDEX Pool Config is not found. Please run `npm run 00-create-pool-config` ."

@@ -18,7 +18,7 @@ async function main() {
 
   // Check required roles
   if (!wallets.feeAuthKeypair) {
-    throw new Error("Please provide feeAuthKeypair");
+    throw new Error("Please provide fee_authority_wallet wallet");
   }
   const { ctx } = loadProvider(wallets.feeAuthKeypair);
 
