@@ -10,3 +10,4 @@ sdk/node_modules
 .vscode/
 **/.yalc/
 **/yalc.lock
+scripts/.wallets/
