@@ -13,7 +13,7 @@ pub struct WhirlpoolsConfig {
 }
 
 impl WhirlpoolsConfig {
-    pub const LEN: usize = 8 + 128 + 4;
+    pub const LEN: usize = 8 + 128 + 2;
 
     pub fn update_fee_authority(&mut self, fee_authority: Pubkey) {
         self.fee_authority = fee_authority;
