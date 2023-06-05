@@ -13,7 +13,7 @@ export type NemoswapAccounts = {
   feeAuthKeypair?: Keypair;
   rewardEmissionSupperAuthKeypair?: Keypair;
   poolCreatorAuthKeypair?: Keypair;
-  user?: Keypair;
+  userKeypair?: Keypair;
 };
 
 export const loadProvider = function (payerKeypair: Keypair) {
@@ -44,38 +44,38 @@ export const loadWallets = function (): NemoswapAccounts {
   let userKeypair: Keypair | undefined = undefined;
 
   try {
-    const deployerWallet = require("../.wallets/deployer_wallet.json");
+    const deployerWallet = require("../../.wallets/deployer_wallet.json");
     deployerKeypair = Keypair.fromSecretKey(Uint8Array.from(deployerWallet));
   } catch {}
 
   try {
-    const collectProtocolFeesAuthWallet = require("../.wallets/collect_protocol_fees_authority_wallet.json");
+    const collectProtocolFeesAuthWallet = require("../../.wallets/collect_protocol_fees_authority_wallet.json");
     collectProtocolFeesAuthKeypair = Keypair.fromSecretKey(
       Uint8Array.from(collectProtocolFeesAuthWallet)
     );
   } catch {}
 
   try {
-    const feeAuthWallet = require("../.wallets/fee_authority_wallet.json");
+    const feeAuthWallet = require("../../.wallets/fee_authority_wallet.json");
     feeAuthKeypair = Keypair.fromSecretKey(Uint8Array.from(feeAuthWallet));
   } catch {}
 
   try {
-    const rewardEmissionSupperAuthWallet = require("../.wallets/reward_emissions_supper_authority_wallet.json");
+    const rewardEmissionSupperAuthWallet = require("../../.wallets/reward_emissions_supper_authority_wallet.json");
     rewardEmissionSupperAuthKeypair = Keypair.fromSecretKey(
       Uint8Array.from(rewardEmissionSupperAuthWallet)
     );
   } catch {}
 
   try {
-    const poolCreatorAuthWallet = require("../.wallets/buyer.json");
+    const poolCreatorAuthWallet = require("../../.wallets/pool_creator_authority_wallet.json");
     poolCreatorAuthKeypair = Keypair.fromSecretKey(
       Uint8Array.from(poolCreatorAuthWallet)
     );
   } catch {}
 
   try {
-    const userWallet = require("../.wallets/user.json");
+    const userWallet = require("../../.wallets/user.json");
     userKeypair = Keypair.fromSecretKey(Uint8Array.from(userWallet));
   } catch {}
 
@@ -85,6 +85,7 @@ export const loadWallets = function (): NemoswapAccounts {
     feeAuthKeypair,
     rewardEmissionSupperAuthKeypair,
     poolCreatorAuthKeypair,
+    userKeypair,
   };
 };
 

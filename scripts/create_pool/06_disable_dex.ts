@@ -18,7 +18,7 @@ async function main() {
 
   // Check required roles
   if (!wallets.poolCreatorAuthKeypair) {
-    throw new Error("Please provide poolCreatorAuthKeypair");
+    throw new Error("Please provide pool_creator_authority_wallet wallet");
   }
 
   const { ctx } = loadProvider(wallets.poolCreatorAuthKeypair);
@@ -32,30 +32,35 @@ async function main() {
   const REDEX_CONFIG_PUB = new PublicKey(deployed.REDEX_CONFIG_PUB);
   const client = buildWhirlpoolClient(ctx);
 
-  const pool = config.POOLS[0];
-  const mintAPub = new PublicKey(pool.TOKEN_MINT_A);
-  const mintBPub = new PublicKey(pool.TOKEN_MINT_B);
+  for (let i = 0; i < config.POOLS.length; i++) {
+    const pool = config.POOLS[i];
+    const mintAPub = new PublicKey(pool.TOKEN_MINT_A);
+    const mintBPub = new PublicKey(pool.TOKEN_MINT_B);
+    const tokenMintA = await getTokenMintInfo(ctx, mintAPub);
+    const tokenMintB = await getTokenMintInfo(ctx, mintBPub);
 
-  const tickSpacing = [8, 64];
-  for (let i = 0; i < tickSpacing.length; i++) {
-    let whirlpoolPda = PDAUtil.getWhirlpool(
-      ctx.program.programId,
-      REDEX_CONFIG_PUB,
-      mintAPub,
-      mintBPub,
-      tickSpacing[i]
-    );
+    if (tokenMintA && tokenMintB) {
+      let whirlpoolPda = PDAUtil.getWhirlpool(
+        ctx.program.programId,
+        REDEX_CONFIG_PUB,
+        mintAPub,
+        mintBPub,
+        pool.TICK_SPACING
+      );
 
-    await ctx.program.rpc.setEnableFlag(IS_ENABLE, {
-      accounts: {
-        whirlpoolsConfig: REDEX_CONFIG_PUB,
-        whirlpool: whirlpoolPda.publicKey,
-        poolCreatorAuthority: wallets.poolCreatorAuthKeypair.publicKey,
-      },
-    });
+      await ctx.program.rpc.setEnableFlag(IS_ENABLE, {
+        accounts: {
+          whirlpoolsConfig: REDEX_CONFIG_PUB,
+          whirlpool: whirlpoolPda.publicKey,
+          poolCreatorAuthority: wallets.poolCreatorAuthKeypair.publicKey,
+        },
+      });
 
-    let whirlpool = await client.getPool(whirlpoolPda.publicKey);
-    console.log(whirlpool);
+      let whirlpool = await client.getPool(whirlpoolPda.publicKey);
+      console.log("============================");
+      console.log("Pool address: ", whirlpoolPda.publicKey.toString());
+      console.log("Is enable: ", whirlpool.getData().isEnabled);
+    }
   }
 }
 
