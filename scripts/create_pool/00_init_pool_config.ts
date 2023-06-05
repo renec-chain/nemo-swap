@@ -4,7 +4,6 @@ import {
   WhirlpoolIx,
   InitConfigParams,
   toTx,
-  SetPoolCreatorAuthorityParams,
 } from "@renec/redex-sdk";
 import { loadProvider, delay, loadWallets } from "./utils";
 import config from "./config.json";
