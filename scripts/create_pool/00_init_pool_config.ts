@@ -6,13 +6,66 @@ import {
   toTx,
 } from "@renec/redex-sdk";
 import { loadProvider, delay, loadWallets } from "./utils";
-import config from "./config.json";
-import deployed from "./deployed.json";
-const fs = require("fs");
-const deployedPath = "./create_pool/deployed.json";
+import { configEnv } from "../env.config";
+import fs from "fs";
+import readline from "readline";
+
 const retryIntervalInSeconds = 10;
 
+const CONFIG_INFO_PATH = "env.config.ts";
+
+function storeRedexPubToConfigEnv(redexPub: string) {
+  const content = `
+  export const configEnv = {
+    RPC_END_POINT: "${configEnv.RPC_END_POINT}",
+    REDEX_PROGRAM_ID: "${configEnv.REDEX_PROGRAM_ID}",
+    REDEX_CONFIG_PUB_KEY: "${redexPub}",
+    PROTOCOL_FEE_RATE: ${configEnv.PROTOCOL_FEE_RATE},
+    FEE_TIERS_TICK_SPACING: ${configEnv.FEE_TIERS_TICK_SPACING},
+    FEE_TIERS_DEFAULT_FEE_RATE: ${configEnv.FEE_TIERS_DEFAULT_FEE_RATE},
+  };
+    `;
+
+  console.log(content);
+
+  fs.writeFile(CONFIG_INFO_PATH, content, (err) => {
+    if (err) {
+      console.error("Error writing to env.config.ts:", err);
+    } else {
+      console.log("\n -> Successfully updated env.config.ts\n");
+    }
+  });
+}
+
+async function askForOverideRedexPubkey(): Promise<boolean> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  return new Promise<boolean>((resolve) => {
+    rl.question(
+      `Do you want to override REDEX_CONFIG_PUB=${configEnv.REDEX_CONFIG_PUB_KEY}? (y/n) `,
+      (answer) => {
+        rl.close(); // remember to close the interface
+        if (answer.toLowerCase() === "y") {
+          resolve(true);
+        } else {
+          resolve(false);
+        }
+      }
+    );
+  });
+}
+
 async function main() {
+  let overrideApproval = await askForOverideRedexPubkey();
+
+  if (!overrideApproval) {
+    console.log("Exiting ....");
+    process.exit(0);
+  }
+
   const wallets = loadWallets();
 
   // Check required roles
@@ -42,63 +95,50 @@ async function main() {
 
   const { ctx } = loadProvider(wallets.deployerKeypair);
 
-  if (deployed.REDEX_CONFIG_PUB === "") {
-    console.log("deploying redex pool config...");
+  console.log("deploying redex pool config...");
 
-    const initializedConfigInfo: InitConfigParams = {
-      whirlpoolsConfigKeypair: Keypair.generate(),
-      feeAuthority: wallets.feeAuthKeypair.publicKey,
-      collectProtocolFeesAuthority:
-        wallets.collectProtocolFeesAuthKeypair.publicKey,
-      rewardEmissionsSuperAuthority:
-        wallets.rewardEmissionSupperAuthKeypair.publicKey,
-      poolCreatorAuthority: wallets.poolCreatorAuthKeypair.publicKey,
-      defaultProtocolFeeRate: config.PROTOCOL_FEE_RATE,
-      funder: ctx.wallet.publicKey,
-    };
+  const initializedConfigInfo: InitConfigParams = {
+    whirlpoolsConfigKeypair: Keypair.generate(),
+    feeAuthority: wallets.feeAuthKeypair.publicKey,
+    collectProtocolFeesAuthority:
+      wallets.collectProtocolFeesAuthKeypair.publicKey,
+    rewardEmissionsSuperAuthority:
+      wallets.rewardEmissionSupperAuthKeypair.publicKey,
+    poolCreatorAuthority: wallets.poolCreatorAuthKeypair.publicKey,
+    defaultProtocolFeeRate: configEnv.PROTOCOL_FEE_RATE,
+    funder: ctx.wallet.publicKey,
+  };
 
-    const tx = toTx(
-      ctx,
-      WhirlpoolIx.initializeConfigIx(ctx.program, initializedConfigInfo)
-    );
-    const txid = await tx.buildAndExecute();
-    console.log("redex pool config deployed at txid:", txid);
+  const tx = toTx(
+    ctx,
+    WhirlpoolIx.initializeConfigIx(ctx.program, initializedConfigInfo)
+  );
+  const txid = await tx.buildAndExecute();
+  console.log("redex pool config deployed at txid:", txid);
 
-    deployed.REDEX_CONFIG_PUB =
-      initializedConfigInfo.whirlpoolsConfigKeypair.publicKey.toBase58();
-    fs.writeFileSync(deployedPath, JSON.stringify(deployed));
-    console.log(
-      `wait for ${retryIntervalInSeconds} seconds for the config account to be initialized...`
-    );
-    await delay(retryIntervalInSeconds * 1000);
-    console.log(`it's been ${retryIntervalInSeconds} seconds.`);
-  }
-  // console.log('test change pool creator', wallets.feeAuthKeypair.publicKey.toBase58())
-  // const setPoolCreatorAuthorityParams: SetPoolCreatorAuthorityParams = {
-  //   whirlpoolsConfig: new PublicKey(deployed.REDEX_CONFIG_PUB),
-  //   poolCreatorAuthority: wallets.feeAuthKeypair.publicKey,
-  //   newPoolCreatorAuthority: wallets.payerKeypair.publicKey
-  // }
-  // const tx = toTx(ctx, WhirlpoolIx.setPoolCreatorAuthorityIx(ctx.program, setPoolCreatorAuthorityParams))
-  // const txid = await tx.buildAndExecute()
-  // console.log('change pool creator at', txid)
-  // await delay(10 * 1000)
+  const redexPubkey =
+    initializedConfigInfo.whirlpoolsConfigKeypair.publicKey.toBase58();
+
+  // Store to env.config.ts
+  configEnv.REDEX_CONFIG_PUB_KEY = redexPubkey;
+  console.log("redex pubkey ", redexPubkey);
+  storeRedexPubToConfigEnv(redexPubkey);
+  console.log(
+    `wait for ${retryIntervalInSeconds} seconds for the config account to be initialized...`
+  );
+  await delay(retryIntervalInSeconds * 1000);
+  console.log(`it's been ${retryIntervalInSeconds} seconds.`);
 
   let configAccount = (await ctx.fetcher.getConfig(
-    new PublicKey(deployed.REDEX_CONFIG_PUB)
+    new PublicKey(configEnv.REDEX_CONFIG_PUB_KEY)
   )) as WhirlpoolsConfigData;
-  // while (!configAccount) {
-  //   console.log(`wait for another ${retryIntervalInSeconds} seconds for the config account to be initialized...`)
-  //   await delay(retryIntervalInSeconds * 1000)
-  //   console.log(`it's been ${retryIntervalInSeconds} seconds.`)
-  //   configAccount = (await ctx.fetcher.getConfig(
-  //     new PublicKey(deployed.REDEX_CONFIG_PUB)
-  //   )) as WhirlpoolsConfigData
-  // }
 
   console.log("===================================================");
   console.log("ReDEX Pool Config Info:");
-  console.log("\x1b[32m%s\x1b[0m", `public_key: ${deployed.REDEX_CONFIG_PUB}`);
+  console.log(
+    "\x1b[32m%s\x1b[0m",
+    `public_key: ${configEnv.REDEX_CONFIG_PUB_KEY}`
+  );
   console.log("fee_authority:", configAccount.feeAuthority.toBase58());
   console.log(
     "collect_protocol_fees_authority:",

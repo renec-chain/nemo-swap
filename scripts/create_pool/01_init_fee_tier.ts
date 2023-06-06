@@ -7,11 +7,10 @@ import {
   PDAUtil,
   FeeTierData,
 } from "@renec/redex-sdk";
-import { loadProvider, delay, loadWallets } from "./utils";
+import { loadProvider, loadWallets } from "./utils";
 import config from "./config.json";
+import { configEnv } from "../env.config";
 import deployed from "./deployed.json";
-const fs = require("fs");
-const deployedPath = "./create_pool/deployed.json";
 
 async function main() {
   const wallets = loadWallets();
@@ -22,7 +21,7 @@ async function main() {
   }
   const { ctx } = loadProvider(wallets.feeAuthKeypair);
 
-  if (deployed.REDEX_CONFIG_PUB === "") {
+  if (configEnv.REDEX_CONFIG_PUB_KEY === "") {
     console.log(
       "ReDEX Pool Config is not found. Please run `npm run 00-create-pool-config` ."
     );
