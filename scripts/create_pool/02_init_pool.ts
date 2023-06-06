@@ -1,5 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
 import { PDAUtil, buildWhirlpoolClient, PriceMath } from "@renec/redex-sdk";
+import { PoolUtil } from "@renec/redex-sdk";
 import { loadProvider, getTokenMintInfo, loadWallets } from "./utils";
 import Decimal from "decimal.js";
 import config from "./config.json";
@@ -25,8 +26,17 @@ async function main() {
 
   for (let i = 0; i < config.POOLS.length; i++) {
     const pool = config.POOLS[i];
-    const mintAPub = new PublicKey(pool.TOKEN_MINT_A);
-    const mintBPub = new PublicKey(pool.TOKEN_MINT_B);
+
+    const correctTokenOrder = PoolUtil.orderMints(
+      pool.TOKEN_MINT_A,
+      pool.TOKEN_MINT_B
+    );
+
+    const tokenA = correctTokenOrder[0];
+    const tokenB = correctTokenOrder[1];
+
+    const mintAPub = new PublicKey(tokenA);
+    const mintBPub = new PublicKey(tokenB);
     const tokenMintA = await getTokenMintInfo(ctx, mintAPub);
     const tokenMintB = await getTokenMintInfo(ctx, mintBPub);
 
@@ -70,8 +80,8 @@ async function main() {
       );
       const { poolKey, tx } = await client.createPool(
         REDEX_CONFIG_PUB,
-        pool.TOKEN_MINT_A,
-        pool.TOKEN_MINT_B,
+        tokenA,
+        tokenB,
         pool.TICK_SPACING,
         tickIndex,
         ctx.wallet.publicKey
