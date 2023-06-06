@@ -25,6 +25,38 @@ $ echo $NODE_PATH
 /Users/<home_dir>/.nvm/versions/node/v16.10.0/lib/node_modules
 ```
 
+## Build and deploy program using Makefile
+
+- Setup wallets
+  There are some wallets that need to be used in the `scripts` package. Read the `README.md` in the `scripts` package for more information.
+  For the purpose of building and deploying using `Makefile`, we can create a `deployer_wallet` using the following command.
+
+```bash
+make deploy name=deployer_wallet
+```
+
+If you wish to generate `authority wallets` for running scripts, for example, creating a `fee_authority_wallet`, you can run the following command.
+
+```bash
+make deploy name=fee_authority_wallet
+```
+
+- Build the program
+
+```bash
+make build
+```
+
+This scripts will build the program and place the binary in the `target/deploy` directory. Then it will copy the `artifact` to the `sdk` package.
+
+- Deploy the program
+
+```bash
+CLUSTER=mainnet make deploy
+```
+
+This command deploy the program, under `scripts/.wallets/deployer_wallet.json` authority. The program will be deploy to `CLUSTER` env, which could either be `localnet`, `mainnet` or `testnet`
+
 ## Usage
 
 Instructions on how to interact with the Whirlpools contract is documented in the [Orca Developer Portal](https://orca-so.gitbook.io/orca-developer-portal/orca/welcome).
