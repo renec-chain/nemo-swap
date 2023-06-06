@@ -1,5 +1,5 @@
 import { buildWhirlpoolClient, PriceMath } from "@renec/redex-sdk";
-import { loadProvider, delay, getTokenMintInfo, loadWallets } from "./utils";
+import { loadProvider, loadWallets } from "./utils";
 import deployed from "./deployed.json";
 
 async function main() {
