@@ -32,11 +32,8 @@ async function main() {
       pool.TOKEN_MINT_B
     );
 
-    const tokenA = correctTokenOrder[0];
-    const tokenB = correctTokenOrder[1];
-
-    const mintAPub = new PublicKey(tokenA);
-    const mintBPub = new PublicKey(tokenB);
+    const mintAPub = new PublicKey(correctTokenOrder[0]);
+    const mintBPub = new PublicKey(correctTokenOrder[1]);
     const tokenMintA = await getTokenMintInfo(ctx, mintAPub);
     const tokenMintB = await getTokenMintInfo(ctx, mintBPub);
 
@@ -80,8 +77,8 @@ async function main() {
       );
       const { poolKey, tx } = await client.createPool(
         REDEX_CONFIG_PUB,
-        tokenA,
-        tokenB,
+        mintAPub,
+        mintBPub,
         pool.TICK_SPACING,
         tickIndex,
         ctx.wallet.publicKey

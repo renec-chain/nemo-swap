@@ -4,6 +4,7 @@ import {
   buildWhirlpoolClient,
   PriceMath,
   increaseLiquidityQuoteByInputTokenWithParams,
+  PoolUtil,
 } from "@renec/redex-sdk";
 import { DecimalUtil, Percentage } from "@orca-so/common-sdk";
 import { loadProvider, getTokenMintInfo, loadWallets } from "./utils";
@@ -32,8 +33,15 @@ async function main() {
 
   for (let i = 0; i < config.POOLS.length; i++) {
     const pool = config.POOLS[i];
-    const mintAPub = new PublicKey(pool.TOKEN_MINT_A);
-    const mintBPub = new PublicKey(pool.TOKEN_MINT_B);
+
+    const correctTokenOrder = PoolUtil.orderMints(
+      pool.TOKEN_MINT_A,
+      pool.TOKEN_MINT_B
+    );
+
+    const mintAPub = new PublicKey(correctTokenOrder[0]);
+    const mintBPub = new PublicKey(correctTokenOrder[1]);
+
     const tokenMintA = await getTokenMintInfo(ctx, mintAPub);
     const tokenMintB = await getTokenMintInfo(ctx, mintBPub);
 
