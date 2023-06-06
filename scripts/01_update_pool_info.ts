@@ -1,50 +1,46 @@
 import prompt from "prompt";
 require("dotenv").config();
 import fs from "fs";
+import { env } from "./env.pool";
 
 const POOL_INFO_PATH = "env.pool.ts";
 const schema = {
   properties: {
     TOKEN_MINT_A: {
       description: "Enter TOKEN_MINT_A",
-      default:
-        process.env.TOKEN_MINT_A ||
-        "So11111111111111111111111111111111111111112",
+      default: env.TOKEN_MINT_A,
     },
     TOKEN_MINT_B: {
       description: "Enter TOKEN_MINT_B",
-      default:
-        process.env.TOKEN_MINT_B ||
-        "4Q89182juiadeFgGw3fupnrwnnDmBhf7e7fHWxnUP3S3",
+      default: env.TOKEN_MINT_B,
     },
     TICK_SPACING: {
       description: "Enter TICK_SPACING",
-      default: process.env.TICK_SPACING || 32,
+      default: env.TICK_SPACING || 32,
     },
     INIT_AMOUNT_B_PER_A: {
       description: "Enter INIT_AMOUNT_B_PER_A",
-      default: process.env.INIT_AMOUNT_B_PER_A || "1.0",
+      default: env.INIT_AMOUNT_B_PER_A,
     },
     LOWER_B_PER_A_PRICE: {
       description: "Enter LOWER_B_PER_A_PRICE",
-      default: process.env.LOWER_B_PER_A_PRICE || "0.0001",
+      default: env.LOWER_B_PER_A_PRICE,
     },
     UPPER_B_PER_A_PRICE: {
       description: "Enter UPPER_B_PER_A_PRICE",
-      default: process.env.UPPER_B_PER_A_PRICE || "100",
+      default: env.UPPER_B_PER_A_PRICE,
     },
     SLIPPAGE: {
       description: "Enter SLIPPAGE",
-      default: process.env.SLIPPAGE || "1",
+      default: env.SLIPPAGE,
     },
     INPUT_MINT: {
       description: "Enter INPUT_MINT",
-      default:
-        process.env.INPUT_MINT || "So11111111111111111111111111111111111111112",
+      default: env.INPUT_MINT,
     },
     INPUT_AMOUNT: {
       description: "Enter INPUT_AMOUNT",
-      default: process.env.INPUT_AMOUNT || "0.2",
+      default: env.INPUT_AMOUNT,
     },
   },
 };
@@ -75,7 +71,7 @@ prompt.get(schema, function (err, result) {
     if (err) {
       console.error("Error writing to .env.pool.ts:", err);
     } else {
-      console.log("Successfully updated .env.pool.ts");
+      console.log("Successfully updated .env.pool.ts \n");
     }
   });
 
