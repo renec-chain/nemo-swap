@@ -206,7 +206,7 @@ export class WhirlpoolClientImpl implements WhirlpoolClient {
     return Object.fromEntries(results);
   }
 
-  public async(
+  public async createPool(
     whirlpoolsConfig: Address,
     tokenMintA: Address,
     tokenMintB: Address,
