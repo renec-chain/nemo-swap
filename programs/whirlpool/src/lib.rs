@@ -1,7 +1,7 @@
 //! A concentrated liquidity AMM contract powered by Orca.
 use anchor_lang::prelude::*;
 
-declare_id!("8wFUkeo6humf9BxnjEZEqU32voXQ3fwVKeRF6dMcebyW");
+declare_id!("AbBootmn2V2swFSe95twK8UbLjgWX5hWCwycL4zjhTRn");
 
 #[doc(hidden)]
 pub mod constants;

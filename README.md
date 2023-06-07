@@ -32,10 +32,10 @@ $ echo $NODE_PATH
   For the purpose of building and deploying using `Makefile`, we can create a `deployer_wallet` using the following command.
 
 ```bash
-make deploy name=deployer_wallet
+make deploy keypair_file_path=<path_to_keypair_file>
 ```
 
-If you wish to generate `authority wallets` for running scripts, for example, creating a `fee_authority_wallet`, you can run the following command.
+If the `keypair_file_path` is not specified, the program will be deployed under `scripts/.wallets/deployer_wallet.json`. If you wish to deploy the program under a different wallet, you can specify the `keypair_file_path` to the path of the keypair file, for exp: `make deploy "~/.config/renec/id.json"`
 
 ```bash
 make deploy name=fee_authority_wallet

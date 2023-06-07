@@ -1,11 +1,14 @@
 #!/bin/bash
 
 if [[ -n $1 ]]; then
-    WALLET_NAME=$1
+    KEYPAIR_FILE_PATH=$1
 else
-    echo "Please provide a wallet name"
-    exit 1
+    KEYPAIR_FILE_PATH=$WALLET_PATH/deployer_wallet.json
 fi
 
 PROGRAM_NAME_UNDERSCORE=${PROGRAM_NAME//-/_}
-solana program deploy target/deploy/$PROGRAM_NAME_UNDERSCORE.so --keypair $WALLET_PATH/$WALLET_NAME.json --url $CLUSTER_URL
+
+echo "Deploying $PROGRAM_NAME_UNDERSCORE to $CLUSTER_URL under $KEYPAIR_FILE_PATH"
+
+echo "------"
+solana program deploy target/deploy/$PROGRAM_NAME_UNDERSCORE.so --keypair $KEYPAIR_FILE_PATH --url $CLUSTER_URL
