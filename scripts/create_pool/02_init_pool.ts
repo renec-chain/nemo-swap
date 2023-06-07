@@ -1,10 +1,5 @@
-import { PublicKey, Keypair } from "@solana/web3.js";
-import {
-  PDAUtil,
-  FeeTierData,
-  buildWhirlpoolClient,
-  PriceMath,
-} from "@renec/redex-sdk";
+import { PublicKey } from "@solana/web3.js";
+import { PDAUtil, buildWhirlpoolClient, PriceMath } from "@renec/redex-sdk";
 import { loadProvider, getTokenMintInfo, loadWallets } from "./utils";
 import Decimal from "decimal.js";
 import config from "./config.json";
