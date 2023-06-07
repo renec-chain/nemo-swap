@@ -76,8 +76,8 @@ export function getPoolInfo(poolIndex: number): PoolInfo {
 
   // Get default pool info
   let initialAmountBPerA = new Decimal(pool.INIT_AMOUNT_B_PER_A);
-  let lowerBPerAPrice = new Decimal(pool.INIT_AMOUNT_B_PER_A);
-  let upperBPerAPrice = new Decimal(pool.INIT_AMOUNT_B_PER_A);
+  let lowerBPerAPrice = new Decimal(pool.LOWER_B_PER_A_PRICE);
+  let upperBPerAPrice = new Decimal(pool.UPPER_B_PER_A_PRICE);
 
   let correctInitialAmountBPerA = initialAmountBPerA;
   let correctLowerBPerAPrice = lowerBPerAPrice;

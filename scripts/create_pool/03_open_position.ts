@@ -10,6 +10,7 @@ import { loadProvider, getTokenMintInfo, loadWallets } from "./utils";
 import Decimal from "decimal.js";
 import config from "./config.json";
 import deployed from "./deployed.json";
+import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";
 
 async function main() {
   const wallets = loadWallets();
@@ -31,9 +32,10 @@ async function main() {
   const client = buildWhirlpoolClient(ctx);
 
   for (let i = 0; i < config.POOLS.length; i++) {
-    const pool = config.POOLS[i];
-    const mintAPub = new PublicKey(pool.TOKEN_MINT_A);
-    const mintBPub = new PublicKey(pool.TOKEN_MINT_B);
+    let poolInfo = getPoolInfo(i);
+    await askToConfirmPoolInfo(poolInfo);
+    const mintAPub = new PublicKey(poolInfo.tokenMintA);
+    const mintBPub = new PublicKey(poolInfo.tokenMintB);
     const tokenMintA = await getTokenMintInfo(ctx, mintAPub);
     const tokenMintB = await getTokenMintInfo(ctx, mintBPub);
 
@@ -43,7 +45,7 @@ async function main() {
         REDEX_CONFIG_PUB,
         mintAPub,
         mintBPub,
-        pool.TICK_SPACING
+        poolInfo.tickSpacing
       );
       const whirlpool = await client.getPool(whirlpoolPda.publicKey);
 
