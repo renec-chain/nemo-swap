@@ -75,7 +75,7 @@ export const loadWallets = function (): NemoswapAccounts {
   } catch {}
 
   try {
-    const userWallet = require("../../.wallets/user.json");
+    const userWallet = require("../../.wallets/user_wallet.json");
     userKeypair = Keypair.fromSecretKey(Uint8Array.from(userWallet));
   } catch {}
 

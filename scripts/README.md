@@ -39,9 +39,10 @@ This script will initialize a new ReDEX protocol and create pools to swap.
      - `.wallets/fee_authority_wallet.json` file.
      - `.wallets/collect_protocol_fees_authority_wallet.json` file.
      - `.wallets/reward_emissions_supper_authority_wallet.json` file.
+     - `.wallets/pool_creator_authority_wallet` file.
      - `.wallets/user_wallet.json` file.
 
-   The scripts will conditionally use the keys in their scripts
+   The certain wallets are requierd in the specific files. If you encounter the error, you should check the error message and paste the keys into the correct files.
 
    ```json
    [199,203,42,..]

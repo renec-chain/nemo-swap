@@ -10,7 +10,7 @@ async function main() {
   const wallets = loadWallets();
 
   if (!wallets.userKeypair) {
-    throw new Error("Please provide user wallet");
+    throw new Error("Please provide user_wallet wallet");
   }
 
   const { ctx } = loadProvider(wallets.userKeypair);
