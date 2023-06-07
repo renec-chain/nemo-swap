@@ -44,5 +44,5 @@ build:
 
 deploy: set-cluster-url
 	@$(MAKE) install-deps CLI_VERSION=$(CLI_VERSION)
-	@./dev-scripts/deploy.sh "$(name)"
+	@./dev-scripts/deploy.sh "$(keypair_file_path)"
 	
