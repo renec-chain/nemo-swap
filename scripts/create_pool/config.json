@@ -10,15 +10,15 @@
     ],
     "POOLS": [
         {
-            "TOKEN_MINT_A": "So11111111111111111111111111111111111111112",
-            "TOKEN_MINT_B": "H3ztN9SnJn3fZerXnN4TtdM9XkRpvCibdMKX9w3v4Ggf",
-            "TICK_SPACING": 32,
+            "TOKEN_MINT_A": "4yKRzD9MCGC39hb11kSfgnaA9sbKbBec42jDRAqdaLnP",
+            "TOKEN_MINT_B": "3JVvARFtkKwF6X8HQvt2GTTGsmaranqMk7YCn5RX7HG5",
+            "TICK_SPACING": 30,
             "OPEN_POSITION": true,
-            "INIT_AMOUNT_B_PER_A": "1.0",
+            "INIT_AMOUNT_B_PER_A": "3.0",
             "LOWER_B_PER_A_PRICE": "0.0001",
             "UPPER_B_PER_A_PRICE": "100",
             "SLIPPAGE": "1",
-            "INPUT_MINT": "So11111111111111111111111111111111111111112",
+            "INPUT_MINT": "4yKRzD9MCGC39hb11kSfgnaA9sbKbBec42jDRAqdaLnP",
             "INPUT_AMOUNT": "0.2"
         }
     ]
