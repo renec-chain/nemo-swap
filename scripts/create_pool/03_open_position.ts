@@ -1,4 +1,4 @@
-import { PublicKey, Keypair } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import {
   PDAUtil,
   buildWhirlpoolClient,
@@ -6,7 +6,7 @@ import {
   increaseLiquidityQuoteByInputTokenWithParams,
 } from "@renec/redex-sdk";
 import { DecimalUtil, Percentage } from "@orca-so/common-sdk";
-import { loadProvider, delay, getTokenMintInfo, loadWallets } from "./utils";
+import { loadProvider, getTokenMintInfo, loadWallets } from "./utils";
 import Decimal from "decimal.js";
 import config from "./config.json";
 import deployed from "./deployed.json";
