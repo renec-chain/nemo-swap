@@ -1,0 +1,71 @@
+version: 2.1
+orbs:
+  node: circleci/node@5.1.0
+
+jobs:
+  build-sdk:
+    description: Install & build SDK
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - node/install:
+          install-yarn: true
+          node-version: '16.15.1'
+      - run:
+          name: Node version check
+          command: node -v
+          working_directory: sdk
+      - restore_cache:
+          keys:
+            - yarn-dependencies-cache-7-{{ checksum "sdk/yarn.lock" }}
+            - yarn-dependencies-cache-7-
+      - run:
+          name: Install dependencies
+          command: yarn install
+          working_directory: sdk
+      - save_cache:
+          name: Save yarn cache
+          key: yarn-dependencies-cache-7-{{ checksum "sdk/yarn.lock" }}
+          paths:
+            - node_modules
+            - ~/.cache/yarn
+      - run:
+          name: Build SDK
+          command: yarn build
+          working_directory: sdk
+
+  install-scripts-packages:
+    description: Install scripts packages
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - node/install:
+          install-yarn: true
+          node-version: '16.15.1'
+      - run:
+          name: Node version check
+          command: node -v
+          working_directory: sdk
+      - restore_cache:
+          keys:
+            - yarn-dependencies-cache-7-{{ checksum "sdk/yarn.lock" }}
+            - yarn-dependencies-cache-7-
+      - run:
+          name: Install dependencies
+          command: yarn install
+          working_directory: sdk
+      - save_cache:
+          name: Save yarn cache
+          key: yarn-dependencies-cache-7-{{ checksum "sdk/yarn.lock" }}
+          paths:
+            - node_modules
+            - ~/.cache/yarn
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build-sdk
+      - install-scripts-packages
