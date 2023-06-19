@@ -104,6 +104,12 @@ pub enum ErrorCode {
 
     #[msg("Pool was disabled")]
     PoolWasDisabled, //0x1799
+
+    #[msg("Invalid intermediary mint")]
+    InvalidIntermediaryMint, //0x17
+    
+    #[msg("Duplicate two hop pool")]
+    DuplicateTwoHopPool,
 }
 
 impl From<TryFromIntError> for ErrorCode {
