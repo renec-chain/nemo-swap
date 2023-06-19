@@ -14,11 +14,11 @@
             "TOKEN_MINT_B": "4Q89182juiadeFgGw3fupnrwnnDmBhf7e7fHWxnUP3S3",
             "TICK_SPACING": 32,
             "OPEN_POSITION": true,
-            "INIT_AMOUNT_B_PER_A": "3.0",
+            "INIT_AMOUNT_B_PER_A": "1.0",
             "LOWER_B_PER_A_PRICE": "0.0001",
             "UPPER_B_PER_A_PRICE": "100",
             "SLIPPAGE": "1",
-            "INPUT_MINT": "4yKRzD9MCGC39hb11kSfgnaA9sbKbBec42jDRAqdaLnP",
+            "INPUT_MINT": "So11111111111111111111111111111111111111112",
             "INPUT_AMOUNT": "0.2"
         }
     ]
