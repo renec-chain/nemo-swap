@@ -37,7 +37,7 @@ async function main() {
       console.log("===================================================");
       console.log("token_a:", mintAPub.toBase58());
       console.log("token_b:", mintBPub.toBase58());
-      console.log("tick_spacing:", poolInfo.tokenMintB);
+      console.log("tick_spacing:", poolInfo.tickSpacing);
 
       const whirlpoolPda = PDAUtil.getWhirlpool(
         ctx.program.programId,
