@@ -10,9 +10,15 @@ export async function askToConfirmPoolInfo(poolInfo: PoolInfo): Promise<void> {
     output: process.stdout,
   });
 
+  let message = "";
+  if (poolInfo.isTokenReversed) {
+    message =
+      "\n---> WARNING: This pool token order is reversed, and the correct pool information is adjusted as the following.\n";
+  }
   await new Promise<void>((resolve) => {
     rl.question(
-      ` This is your pool information: 
+      ` ${message} \n
+        This is your pool information: 
           -----------------------------------------------
           token_a: ${poolInfo.tokenMintA}  
           token_b: ${poolInfo.tokenMintB} 
@@ -52,9 +58,6 @@ export function checkTokenReversed(
   }
 }
 
-/**
- * @note This fuction should be fix when use
- */
 export function getPoolInfo(poolIndex: number): PoolInfo {
   let pool = config.POOLS[poolIndex];
 
@@ -101,5 +104,6 @@ export function getPoolInfo(poolIndex: number): PoolInfo {
     slippage: new Decimal(pool.SLIPPAGE),
     inputMint: pool.INPUT_MINT,
     inputAmount: new Decimal(pool.INPUT_AMOUNT),
+    isOpenPosition: pool.OPEN_POSITION,
   };
 }
