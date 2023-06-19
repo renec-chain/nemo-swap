@@ -10,6 +10,8 @@ import { loadProvider, getTokenMintInfo, loadWallets } from "./utils";
 import Decimal from "decimal.js";
 import config from "./config.json";
 import deployed from "./deployed.json";
+import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";
+import { u64 } from "@solana/spl-token";
 
 async function main() {
   const wallets = loadWallets();
@@ -31,9 +33,10 @@ async function main() {
   const client = buildWhirlpoolClient(ctx);
 
   for (let i = 0; i < config.POOLS.length; i++) {
-    const pool = config.POOLS[i];
-    const mintAPub = new PublicKey(pool.TOKEN_MINT_A);
-    const mintBPub = new PublicKey(pool.TOKEN_MINT_B);
+    let poolInfo = getPoolInfo(i);
+    await askToConfirmPoolInfo(poolInfo);
+    const mintAPub = new PublicKey(poolInfo.tokenMintA);
+    const mintBPub = new PublicKey(poolInfo.tokenMintB);
     const tokenMintA = await getTokenMintInfo(ctx, mintAPub);
     const tokenMintB = await getTokenMintInfo(ctx, mintBPub);
 
@@ -43,48 +46,61 @@ async function main() {
         REDEX_CONFIG_PUB,
         mintAPub,
         mintBPub,
-        pool.TICK_SPACING
+        poolInfo.tickSpacing
       );
       const whirlpool = await client.getPool(whirlpoolPda.publicKey);
 
-      if (whirlpool && pool.OPEN_POSITION) {
+      if (whirlpool && poolInfo.isOpenPosition) {
         console.log("===================================================");
         const whirlpoolData = whirlpool.getData();
-        const lowerPrice = new Decimal(pool.LOWER_B_PER_A_PRICE);
-        const upperPrice = new Decimal(pool.UPPER_B_PER_A_PRICE);
+        const lowerPrice = new Decimal(poolInfo.lowerBPerAPrice);
+        const upperPrice = new Decimal(poolInfo.upperBPerAPrice);
         const slippageTolerance = Percentage.fromDecimal(
-          new Decimal(pool.SLIPPAGE)
+          new Decimal(poolInfo.slippage)
         );
 
         console.log("lower_b_per_a:", lowerPrice.toFixed(6));
         console.log("upper_b_per_a:", upperPrice.toFixed(6));
         console.log("slippage:", slippageTolerance.toString());
-        console.log("input_mint:", pool.INPUT_MINT);
-        console.log("input_amount:", pool.INPUT_AMOUNT);
+        console.log("input_mint:", poolInfo.inputMint);
+        console.log("input_amount:", poolInfo.inputAmount);
 
         const tickLowerIndex = PriceMath.priceToInitializableTickIndex(
           lowerPrice,
           tokenMintA.decimals,
           tokenMintB.decimals,
-          pool.TICK_SPACING
+          poolInfo.tickSpacing
         );
         const tickUpperIndex = PriceMath.priceToInitializableTickIndex(
           upperPrice,
           tokenMintA.decimals,
           tokenMintB.decimals,
-          pool.TICK_SPACING
+          poolInfo.tickSpacing
         );
 
-        const inputTokenMint = new PublicKey(pool.INPUT_MINT);
-        const inputTokenAmount = DecimalUtil.toU64(
-          new Decimal(pool.INPUT_AMOUNT),
-          tokenMintA.decimals
-        );
+        const inputTokenMint = new PublicKey(poolInfo.inputMint);
+
+        // Get correct input token amount
+        let inputTokenAmount: u64;
+        if (poolInfo.inputMint === mintAPub.toString()) {
+          inputTokenAmount = DecimalUtil.toU64(
+            new Decimal(poolInfo.inputAmount),
+            tokenMintA.decimals
+          );
+        } else if (poolInfo.inputMint === mintBPub.toString()) {
+          inputTokenAmount = DecimalUtil.toU64(
+            new Decimal(poolInfo.inputAmount),
+            tokenMintB.decimals
+          );
+        } else {
+          throw new Error("Input token is not matched");
+        }
 
         const initTickTx = await whirlpool.initTickArrayForTicks([
           tickLowerIndex,
           tickUpperIndex,
         ]);
+
         const quote = increaseLiquidityQuoteByInputTokenWithParams({
           tokenMintA: mintAPub,
           tokenMintB: mintBPub,
