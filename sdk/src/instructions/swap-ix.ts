@@ -17,7 +17,7 @@ import { Whirlpool } from "../artifacts/whirlpool";
  * @param tickArray0 - PublicKey of the tick-array where the Whirlpool's currentTickIndex resides in
  * @param tickArray1 - The next tick-array in the swap direction. If the swap will not reach the next tick-aray, input the same array as tickArray0.
  * @param tickArray2 - The next tick-array in the swap direction after tickArray2. If the swap will not reach the next tick-aray, input the same array as tickArray1.
- * @param whirlpool - PublicKey for the whirlpool that the position will be opened for.
+ * @param whirlpool - PublicKey for the whirlpool that the swap will occur on.
  * @param tokenOwnerAccountA - PublicKey for the associated token account for tokenA in the collection wallet
  * @param tokenOwnerAccountB - PublicKey for the associated token account for tokenB in the collection wallet
  * @param tokenVaultA - PublicKey for the tokenA vault for this whirlpool.
