@@ -1,10 +1,24 @@
 import * as anchor from "@project-serum/anchor";
 import * as assert from "assert";
-import { toTx, WhirlpoolContext, WhirlpoolData, WhirlpoolIx, 
-  PriceMath, PDAUtil, swapQuoteByInputToken, buildWhirlpoolClient } from "../../src";
+import {
+  toTx,
+  WhirlpoolContext,
+  WhirlpoolData,
+  WhirlpoolIx,
+  PriceMath,
+  PDAUtil,
+  swapQuoteByInputToken,
+  buildWhirlpoolClient,
+} from "../../src";
 import { TickSpacing, ZERO_BN } from "../utils";
-import { initTestPool, openPosition, 
-  fundPositions, initTestPoolWithTokens, initTickArrayRange, FundedPositionParams } from "../utils/init-utils";
+import {
+  initTestPool,
+  openPosition,
+  fundPositions,
+  initTestPoolWithTokens,
+  initTickArrayRange,
+  FundedPositionParams,
+} from "../utils/init-utils";
 import { WhirlpoolTestFixture } from "../utils/fixture";
 import { PoolUtil, toTokenAmount } from "../../src/utils/public/pool-utils";
 import { MathUtil, Percentage } from "@orca-so/common-sdk";
@@ -19,13 +33,10 @@ describe("set_enable_flag", () => {
   const ctx = WhirlpoolContext.fromWorkspace(provider, program);
   const fetcher = ctx.fetcher;
   const client = buildWhirlpoolClient(ctx);
-  const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
   it("successfully set_enable_flag", async () => {
-    const { poolInitInfo, configInitInfo } = await initTestPool(
-      ctx,
-      TickSpacing.Standard
-    );
+    const { poolInitInfo, configInitInfo } = await initTestPool(ctx, TickSpacing.Standard);
     const whirlpoolKey = poolInitInfo.whirlpoolPda.publicKey;
     const whirlpoolsConfigKey = configInitInfo.whirlpoolsConfigKeypair.publicKey;
     const poolCreatorAuthority = configInitInfo.poolCreatorAuthority;
@@ -40,7 +51,7 @@ describe("set_enable_flag", () => {
         whirlpoolsConfig: whirlpoolsConfigKey,
         whirlpool: whirlpoolKey,
         poolCreatorAuthority,
-      }
+      },
     });
 
     whirlpool = (await fetcher.getPool(poolInitInfo.whirlpoolPda.publicKey, true)) as WhirlpoolData;
@@ -48,10 +59,7 @@ describe("set_enable_flag", () => {
   });
 
   it("fails if invalid pool_creator_authority provided", async () => {
-    const { poolInitInfo, configInitInfo } = await initTestPool(
-      ctx,
-      TickSpacing.Standard
-    );
+    const { poolInitInfo, configInitInfo } = await initTestPool(ctx, TickSpacing.Standard);
     const whirlpoolKey = poolInitInfo.whirlpoolPda.publicKey;
     const whirlpoolsConfigKey = configInitInfo.whirlpoolsConfigKeypair.publicKey;
     const otherAuthorityKeypair = anchor.web3.Keypair.generate();
@@ -71,10 +79,7 @@ describe("set_enable_flag", () => {
   });
 
   it("fails open_position if pool enable is false", async () => {
-    const { poolInitInfo, configInitInfo } = await initTestPool(
-      ctx,
-      TickSpacing.Standard
-    );
+    const { poolInitInfo, configInitInfo } = await initTestPool(ctx, TickSpacing.Standard);
     const whirlpoolKey = poolInitInfo.whirlpoolPda.publicKey;
     const whirlpoolsConfigKey = configInitInfo.whirlpoolsConfigKeypair.publicKey;
     const poolCreatorAuthority = configInitInfo.poolCreatorAuthority;
@@ -88,17 +93,12 @@ describe("set_enable_flag", () => {
         whirlpoolsConfig: whirlpoolsConfigKey,
         whirlpool: whirlpoolKey,
         poolCreatorAuthority,
-      }
+      },
     });
     await sleep(1000);
 
     await assert.rejects(
-      openPosition(
-        ctx,
-        whirlpoolKey,
-        tickLowerIndex,
-        tickUpperIndex
-      ),
+      openPosition(ctx, whirlpoolKey, tickLowerIndex, tickUpperIndex),
       /0x1799/ // Pool was disabled
     );
   });
@@ -117,12 +117,15 @@ describe("set_enable_flag", () => {
         whirlpoolsConfig: whirlpoolsConfigKey,
         whirlpool: whirlpoolKey,
         poolCreatorAuthority,
-      }
+      },
     });
     await sleep(1000);
-    const whirlpool = (await fetcher.getPool(poolInitInfo.whirlpoolPda.publicKey, true)) as WhirlpoolData;
+    const whirlpool = (await fetcher.getPool(
+      poolInitInfo.whirlpoolPda.publicKey,
+      true
+    )) as WhirlpoolData;
     assert.equal(whirlpool.isEnabled, isEnabled);
-    
+
     const receiverKeypair = anchor.web3.Keypair.generate();
 
     await assert.rejects(
@@ -139,7 +142,7 @@ describe("set_enable_flag", () => {
       ).buildAndExecute(),
       /0x1799/ // Pool was disabled
     );
-  })
+  });
 
   it("fails increase_liquidity if pool enable is false", async () => {
     const currTick = 0;
@@ -150,7 +153,8 @@ describe("set_enable_flag", () => {
       positions: [{ tickLowerIndex, tickUpperIndex, liquidityAmount: ZERO_BN }],
       initialSqrtPrice: PriceMath.tickIndexToSqrtPriceX64(currTick),
     });
-    const { configInitInfo, poolInitInfo, positions, tokenAccountA, tokenAccountB } = fixture.getInfos();
+    const { configInitInfo, poolInitInfo, positions, tokenAccountA, tokenAccountB } =
+      fixture.getInfos();
     const { whirlpoolPda } = poolInitInfo;
     const positionInitInfo = positions[0];
 
@@ -162,7 +166,7 @@ describe("set_enable_flag", () => {
         whirlpoolsConfig: whirlpoolsConfigKey,
         whirlpool: whirlpoolPda.publicKey,
         poolCreatorAuthority,
-      }
+      },
     });
     await sleep(1000);
 
@@ -195,8 +199,8 @@ describe("set_enable_flag", () => {
       ).buildAndExecute(),
       /0x1799/ // Pool was disabled
     );
-  })
-  
+  });
+
   it("fails decrease_liquidity if pool enable is false", async () => {
     const liquidityAmount = new anchor.BN(1_250_000);
     const tickLower = 7168;
@@ -206,7 +210,8 @@ describe("set_enable_flag", () => {
       initialSqrtPrice: MathUtil.toX64(new Decimal(1.48)),
       positions: [{ tickLowerIndex: tickLower, tickUpperIndex: tickUpper, liquidityAmount }],
     });
-    const { configInitInfo, poolInitInfo, tokenAccountA, tokenAccountB, positions } = fixture.getInfos();
+    const { configInitInfo, poolInitInfo, tokenAccountA, tokenAccountB, positions } =
+      fixture.getInfos();
     const { whirlpoolPda, tokenVaultAKeypair, tokenVaultBKeypair } = poolInitInfo;
     const poolBefore = (await fetcher.getPool(whirlpoolPda.publicKey, true)) as WhirlpoolData;
 
@@ -218,7 +223,7 @@ describe("set_enable_flag", () => {
         whirlpoolsConfig: whirlpoolsConfigKey,
         whirlpool: whirlpoolPda.publicKey,
         poolCreatorAuthority,
-      }
+      },
     });
     await sleep(1000);
 
@@ -253,7 +258,8 @@ describe("set_enable_flag", () => {
   });
 
   it("fails swap if pool enable is false", async () => {
-    const { configInitInfo, poolInitInfo, whirlpoolPda, tokenAccountA, tokenAccountB } = await initTestPoolWithTokens(ctx, TickSpacing.Standard);
+    const { configInitInfo, poolInitInfo, whirlpoolPda, tokenAccountA, tokenAccountB } =
+      await initTestPoolWithTokens(ctx, TickSpacing.Standard);
     const aToB = false;
     await initTickArrayRange(
       ctx,
@@ -288,7 +294,7 @@ describe("set_enable_flag", () => {
         whirlpoolsConfig: whirlpoolsConfigKey,
         whirlpool: whirlpoolPda.publicKey,
         poolCreatorAuthority,
-      }
+      },
     });
     await sleep(1000);
 
