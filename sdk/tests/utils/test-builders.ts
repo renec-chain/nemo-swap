@@ -1,6 +1,11 @@
-import { MathUtil, PDA, Percentage } from "@orca-so/common-sdk";
+import { AddressUtil, MathUtil, PDA, Percentage } from "@orca-so/common-sdk";
 import { AnchorProvider } from "@project-serum/anchor";
-import { ASSOCIATED_TOKEN_PROGRAM_ID, NATIVE_MINT, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  NATIVE_MINT,
+  Token,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import Decimal from "decimal.js";
 import { createAndMintToAssociatedTokenAccount, createMint } from ".";
@@ -12,8 +17,9 @@ import {
   InitTickArrayParams,
   OpenPositionParams,
   PDAUtil,
+  PoolUtil,
   PriceMath,
-  Whirlpool
+  Whirlpool,
 } from "../../src";
 import { WhirlpoolContext } from "../../src/context";
 
@@ -23,19 +29,21 @@ export interface TestWhirlpoolsConfigKeypairs {
   rewardEmissionsSuperAuthorityKeypair: Keypair;
 }
 
+export interface TestConfigParams {
+  configInitInfo: InitConfigParams;
+  configKeypairs: TestWhirlpoolsConfigKeypairs;
+}
+
 export const generateDefaultConfigParams = (
   context: WhirlpoolContext,
   funder?: PublicKey
-): {
-  configInitInfo: InitConfigParams;
-  configKeypairs: TestWhirlpoolsConfigKeypairs;
-} => {
+): TestConfigParams => {
   const configKeypairs: TestWhirlpoolsConfigKeypairs = {
     feeAuthorityKeypair: Keypair.generate(),
     collectProtocolFeesAuthorityKeypair: Keypair.generate(),
     rewardEmissionsSuperAuthorityKeypair: Keypair.generate(),
   };
-  const configInitInfo = {
+  const configInitInfo: InitConfigParams = {
     whirlpoolsConfigKeypair: Keypair.generate(),
     feeAuthority: configKeypairs.feeAuthorityKeypair.publicKey,
     collectProtocolFeesAuthority: configKeypairs.collectProtocolFeesAuthorityKeypair.publicKey,
@@ -51,17 +59,7 @@ export const createInOrderMints = async (context: WhirlpoolContext, tokenAIsNati
   const provider = context.provider;
   const tokenXMintPubKey = tokenAIsNative ? NATIVE_MINT : await createMint(provider);
   const tokenYMintPubKey = await createMint(provider);
-
-  let tokenAMintPubKey, tokenBMintPubKey;
-  if (Buffer.compare(tokenXMintPubKey.toBuffer(), tokenYMintPubKey.toBuffer()) < 0) {
-    tokenAMintPubKey = tokenXMintPubKey;
-    tokenBMintPubKey = tokenYMintPubKey;
-  } else {
-    tokenAMintPubKey = tokenYMintPubKey;
-    tokenBMintPubKey = tokenXMintPubKey;
-  }
-
-  return [tokenAMintPubKey, tokenBMintPubKey];
+  return PoolUtil.orderMints(tokenXMintPubKey, tokenYMintPubKey).map(AddressUtil.toPubKey);
 };
 
 export const generateDefaultInitPoolParams = async (
@@ -82,8 +80,6 @@ export const generateDefaultInitPoolParams = async (
     tokenBMintPubKey,
     tickSpacing
   );
-  const tokenVaultAKeypair = Keypair.generate();
-  const tokenVaultBKeypair = Keypair.generate();
 
   return {
     initSqrtPrice,
@@ -91,8 +87,8 @@ export const generateDefaultInitPoolParams = async (
     tokenMintA: tokenAMintPubKey,
     tokenMintB: tokenBMintPubKey,
     whirlpoolPda,
-    tokenVaultAKeypair,
-    tokenVaultBKeypair,
+    tokenVaultAKeypair: Keypair.generate(),
+    tokenVaultBKeypair: Keypair.generate(),
     feeTierKey,
     tickSpacing,
     funder: funder || context.wallet.publicKey,
