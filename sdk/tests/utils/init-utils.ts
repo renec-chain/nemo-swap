@@ -176,7 +176,7 @@ export async function buildTestAquariums(
       await Promise.all(
         initMintParams.map(({ isNative }) => (isNative ? NATIVE_MINT : createMint(ctx.provider)))
       )
-    ).sort(); // PoolUtil.compareMints
+    ).sort(PoolUtil.compareMints);
 
     const tokenAccounts = await Promise.all(
       initTokenAccParams.map(async (initTokenAccParam) => {
