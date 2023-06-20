@@ -689,6 +689,56 @@ describe("two-hop swap", () => {
     );
   });
 
+  it("fails swaps [2] with two-hop swap, no overlapping mints", async () => {
+    // Add another mint and update pool so there is no overlapping mint
+    aqConfig.initMintParams.push({});
+    aqConfig.initTokenAccParams.push({ mintIndex: 3 });
+    aqConfig.initPoolParams[1].mintIndices = [2, 3];
+    const aquarium = (await buildTestAquariums(ctx, [aqConfig]))[0];
+    const { tokenAccounts, mintKeys, pools } = aquarium;
+
+    const whirlpoolOneKey = pools[0].whirlpoolPda.publicKey;
+    const whirlpoolTwoKey = pools[1].whirlpoolPda.publicKey;
+    const whirlpoolOne = await client.getPool(whirlpoolOneKey, true);
+    const whirlpoolTwo = await client.getPool(whirlpoolTwoKey, true);
+
+    const [_inputToken, intermediaryToken, outputToken] = mintKeys;
+
+    const quote2 = await swapQuoteByOutputToken(
+      whirlpoolTwo,
+      outputToken,
+      new u64(1000),
+      Percentage.fromFraction(1, 100),
+      ctx.program.programId,
+      fetcher,
+      true
+    );
+
+    const quote = await swapQuoteByOutputToken(
+      whirlpoolOne,
+      intermediaryToken,
+      quote2.estimatedAmountIn,
+      Percentage.fromFraction(1, 100),
+      ctx.program.programId,
+      fetcher,
+      true
+    );
+
+    const twoHopQuote = twoHopSwapQuoteFromSwapQuotes(quote, quote2);
+
+    await assert.rejects(
+      toTx(
+        ctx,
+        WhirlpoolIx.twoHopSwapIx(ctx.program, {
+          ...twoHopQuote,
+          ...getParamsFromPools([pools[0], pools[1]], tokenAccounts),
+          tokenAuthority: ctx.wallet.publicKey,
+        })
+      ).buildAndExecute(),
+      /0x179a/ // Invalid intermediary mint
+    );
+  });
+
   it("fails swaps [2] with two-hop swap, amount_specified_is_input=true, second swap price limit", async () => {
     const aquarium = (await buildTestAquariums(ctx, [aqConfig]))[0];
     const { tokenAccounts, mintKeys, pools } = aquarium;
