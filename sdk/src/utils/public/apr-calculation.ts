@@ -1,3 +1,5 @@
+import Decimal from "decimal.js";
+
 export type RewardToken = {
   emissionPerWeek: number;
   tokenPrice: number;
@@ -9,7 +11,6 @@ export type PoolAPRReward = {
 };
 
 /**
- *
  * @param emissionPerWeek : reward for weekly emission
  * @param tokenPrice : price of token in USDT
  * @param tvl : Liquidity is TVL
@@ -20,7 +21,12 @@ function calculateTokenPoolRewardAPR(
   tokenPrice: number,
   tvl: number
 ): number {
-  return (emissionPerWeek * tokenPrice * (365 / 7)) / tvl;
+  // reward = emissionPerWeek x tokenPrice x (365/7) / TVL
+  return new Decimal(emissionPerWeek)
+    .mul(tokenPrice)
+    .mul(new Decimal(365).div(7))
+    .div(tvl)
+    .toNumber();
 }
 
 /**
@@ -39,29 +45,30 @@ export function calculatePoolAPR(
   rewards: { [k: string]: RewardToken } | null,
   toPercent: boolean = true
 ): PoolAPRReward {
-  // compute fee APR
-  const feeAPR = (vol24H * feeRate * 365) / tvl;
+  // feeAPR = vol24H x feeRate x 365 / TVL
+  const feeAPR = new Decimal(vol24H).mul(feeRate).mul(365).div(tvl).toNumber();
 
   // compute reward for each token
-  if (!rewards) {
+  if (!rewards || Object.keys(rewards).length === 0) {
     return {
-      apr: toPercent ? feeAPR * 100 : feeAPR,
+      apr: toPercent ? new Decimal(feeAPR).mul(100).toNumber() : feeAPR,
       rewards: null,
     };
   }
   const rewardEachToken: { [k: string]: number } = {};
-  let totalReward = 0;
+  let totalReward = new Decimal(0);
   // compute reward for each token
   Object.entries(rewards).forEach(([key, value]) => {
     const rewardApr = calculateTokenPoolRewardAPR(value.emissionPerWeek, value.tokenPrice, tvl);
-    totalReward += rewardApr;
-    rewardEachToken[key] = toPercent ? rewardApr * 100 : rewardApr;
+    totalReward = totalReward.add(rewardApr);
+    rewardEachToken[key] = toPercent ? new Decimal(rewardApr).mul(100).toNumber() : rewardApr;
   });
 
-  const totalAPR = feeAPR + totalReward;
+  // totalAPR = feeAPR + totalReward
+  const totalAPR = new Decimal(feeAPR).add(totalReward).toNumber();
 
   return {
-    apr: toPercent ? totalAPR * 100 : totalAPR,
+    apr: toPercent ? new Decimal(totalAPR).mul(100).toNumber() : totalAPR,
     rewards: rewardEachToken,
   };
 }
@@ -72,7 +79,13 @@ export function calculateTokenPositionRewardAPR(
   share: number,
   positionBalance: number
 ): number {
-  return (emissionPerWeek * tokenPrice * (365 / 7) * share) / positionBalance;
+  // rewardAPR = emissionPerWeek x tokenPrice x (365/7) x share / positionBalance
+  return new Decimal(emissionPerWeek)
+    .mul(tokenPrice)
+    .mul(new Decimal(365).div(7))
+    .mul(share)
+    .div(positionBalance)
+    .toNumber();
 }
 
 export function calculatePositionAPR(
@@ -85,20 +98,27 @@ export function calculatePositionAPR(
   toPercent: boolean = true
 ) {
   // share of position's liquidity
-  const share = lp / lpInRange;
+  // share = lp / LP
+  const share = new Decimal(lp).div(lpInRange).toNumber();
 
-  const feeAPR = (vol24H * feeRate * 365 * share) / positionBalance;
+  // feeAPR = vol24H x feeRate x 365 x share / balance
+  const feeAPR = new Decimal(vol24H)
+    .mul(feeRate)
+    .mul(365)
+    .mul(share)
+    .div(positionBalance)
+    .toNumber();
 
   // compute reward for each token
-  if (!rewards) {
+  if (!rewards || Object.keys(rewards).length === 0) {
     return {
-      apr: toPercent ? feeAPR * 100 : feeAPR,
+      apr: toPercent ? new Decimal(feeAPR).mul(100).toNumber() : feeAPR,
       rewards: null,
     };
   }
 
   const rewardEachToken: { [k: string]: number } = {};
-  let totalReward = 0;
+  let totalReward = new Decimal(0);
   // compute reward for each token
   Object.entries(rewards).forEach(([key, value]) => {
     const rewardApr = calculateTokenPositionRewardAPR(
@@ -107,14 +127,15 @@ export function calculatePositionAPR(
       share,
       positionBalance
     );
-    totalReward += rewardApr;
+    totalReward = totalReward.add(rewardApr);
     rewardEachToken[key] = toPercent ? rewardApr * 100 : rewardApr;
   });
 
-  const totalAPR = feeAPR + totalReward;
+  // totalAPR = feeAPR + totalRewardToken
+  const totalAPR = new Decimal(feeAPR).add(totalReward).toNumber();
 
   return {
-    apr: toPercent ? totalAPR * 100 : totalAPR,
+    apr: toPercent ? new Decimal(totalAPR).mul(100).toNumber() : totalAPR,
     rewards: rewardEachToken,
   };
 }
