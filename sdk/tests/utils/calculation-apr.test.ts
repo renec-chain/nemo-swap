@@ -14,16 +14,16 @@ describe("Calculate Pool APR", () => {
   const tvl = 3952908;
   const poolAPRinPercent = 7.191735900351831;
   const poolAPRnotInPercent = 0.07191735900351831;
-  const orcaRewardinPercent = 2.182683000639327;
-  const orcaRewardnotInPercent = 0.02182683000639327;
-  const wLDORewardinPercent = 3.3916423629633563;
-  const wLDORewardnotInPercent = 0.033916423629633563;
-  const poolAPRWithoutRewardinPercent = 1.617410536749148;
-  const poolAPRWithoutRewardnotInPercent = 0.01617410536749148;
-  const poolAPRoneRewardinPercent = 3.800093537388475;
-  const poolAPRoneRewardnotInPercent = 0.03800093537388475;
-  const orcaOneRewardinPercent = 2.182683000639327;
-  const orcaOneRewardnotInPercent = 0.02182683000639327;
+  const orcaRewardinPercent = 2.1826830006393267;
+  const orcaRewardnotInPercent = 0.021826830006393267;
+  const wLDORewardinPercent = 3.391642362963357;
+  const wLDORewardnotInPercent = 0.03391642362963357;
+  const poolAPRWithoutRewardinPercent = 1.6174105367491476;
+  const poolAPRWithoutRewardnotInPercent = 0.016174105367491476;
+  const poolAPRoneRewardinPercent = 3.800093537388474;
+  const poolAPRoneRewardnotInPercent = 0.03800093537388474;
+  const orcaOneRewardinPercent = 2.1826830006393267;
+  const orcaOneRewardnotInPercent = 0.021826830006393267;
 
   it("Success calcualate APR with toPercent=true", () => {
     const res = calculatePoolAPR(vol24H, feeRate, tvl, reward);
@@ -49,6 +49,18 @@ describe("Calculate Pool APR", () => {
 
   it("Success calcualate APR without reward with toPercent=false", () => {
     const res = calculatePoolAPR(vol24H, feeRate, tvl, null, false);
+    assert.equal(res.apr, poolAPRWithoutRewardnotInPercent);
+    assert.equal(res.rewards, null);
+  });
+
+  it("Success calcualate APR reward object empty with toPercent=true", () => {
+    const res = calculatePoolAPR(vol24H, feeRate, tvl, {});
+    assert.equal(res.apr, poolAPRWithoutRewardinPercent);
+    assert.equal(res.rewards, null);
+  });
+
+  it("Success calcualate APR reward object empty with toPercent=false", () => {
+    const res = calculatePoolAPR(vol24H, feeRate, tvl, {}, false);
     assert.equal(res.apr, poolAPRWithoutRewardnotInPercent);
     assert.equal(res.rewards, null);
   });
@@ -81,7 +93,7 @@ describe("Calculate Position APR", () => {
   const orcaRewardinPercent = 12.905539706540386;
   const orcaRewardnotInPercent = 0.12905539706540386;
   const wldoRewardinPercent = 20.053748149771247;
-  const wldoRewardnotInPercent = 0.20053748149771247;
+  const wldoRewardnotInPercent = 0.2005374814977125;
   const positionAPRWithoutRewardinPercent = 11.590742245229308;
   const positionAPRWithoutRewardnotInPercent = 0.11590742245229307;
 
@@ -116,15 +128,19 @@ describe("Calculate Position APR", () => {
   });
 
   it("Success calcualate position APR without reward with toPercent=false", () => {
-    const res = calculatePositionAPR(
-      vol24H,
-      feeRate,
-      lp,
-      lpInRange,
-      positionBalance,
-      null,
-      false
-    );
+    const res = calculatePositionAPR(vol24H, feeRate, lp, lpInRange, positionBalance, null, false);
+    assert.equal(res.apr, positionAPRWithoutRewardnotInPercent);
+    assert.equal(res.rewards, null);
+  });
+
+  it("Success calcualate position APR reward object empty with toPercent=true", () => {
+    const res = calculatePositionAPR(vol24H, feeRate, lp, lpInRange, positionBalance, {});
+    assert.equal(res.apr, positionAPRWithoutRewardinPercent);
+    assert.equal(res.rewards, null);
+  });
+
+  it("Success calcualate position APR reward object empty with toPercent=false", () => {
+    const res = calculatePositionAPR(vol24H, feeRate, lp, lpInRange, positionBalance, {}, false);
     assert.equal(res.apr, positionAPRWithoutRewardnotInPercent);
     assert.equal(res.rewards, null);
   });
