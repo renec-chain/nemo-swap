@@ -8,10 +8,26 @@ export type PoolAPRReward = {
   rewards: { [k: string]: number } | null;
 };
 
+/**
+ *
+ * @param emissionPerWeek : reward for weekly emission
+ * @param tokenPrice : price of token in USDT
+ * @param tvl : Liquidity is TVL
+ * @returns : Reward APR for token
+ */
 function calculateTokenRewardAPR(emissionPerWeek: number, tokenPrice: number, tvl: number): number {
   return (emissionPerWeek * tokenPrice * (365 / 7)) / tvl;
 }
 
+/**
+ *
+ * @param vol24H : volumn 24h of pool
+ * @param feeRate :
+ * @param tvl : Liquidity is TVL
+ * @param rewards : rewards tokens APR maybe contain one or more or nothing reward token
+ * @param toPercent : APR result in percentage or not
+ * @returns  see: PoolAPRReward
+ */
 export function calculatePoolAPR(
   vol24H: number,
   feeRate: number,
