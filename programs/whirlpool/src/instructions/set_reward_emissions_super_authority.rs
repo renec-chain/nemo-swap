@@ -14,7 +14,7 @@ pub struct SetRewardEmissionsSuperAuthority<'info> {
     pub new_reward_emissions_super_authority: UncheckedAccount<'info>,
 }
 
-pub fn handler(ctx: Context<SetRewardEmissionsSuperAuthority>) -> Result<()> {
+pub fn handler(ctx: Context<SetRewardEmissionsSuperAuthority>) -> ProgramResult {
     Ok(ctx
         .accounts
         .whirlpools_config

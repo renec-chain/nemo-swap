@@ -1,6 +1,5 @@
 use crate::errors::ErrorCode;
 use crate::state::*;
-use anchor_lang::prelude::*;
 use std::cell::RefMut;
 
 pub struct SwapTickSequence<'info> {
@@ -40,7 +39,7 @@ impl<'info> SwapTickSequence<'info> {
         array_index: usize,
         tick_index: i32,
         tick_spacing: u16,
-    ) -> Result<&Tick> {
+    ) -> Result<&Tick, ErrorCode> {
         let array = self.arrays.get(array_index);
         match array {
             Some(array) => array.get_tick(tick_index, tick_spacing),
@@ -65,7 +64,7 @@ impl<'info> SwapTickSequence<'info> {
         tick_index: i32,
         tick_spacing: u16,
         update: &TickUpdate,
-    ) -> Result<()> {
+    ) -> Result<(), ErrorCode> {
         let array = self.arrays.get_mut(array_index);
         match array {
             Some(array) => {
@@ -81,7 +80,7 @@ impl<'info> SwapTickSequence<'info> {
         array_index: usize,
         tick_index: i32,
         tick_spacing: u16,
-    ) -> Result<isize> {
+    ) -> Result<isize, ErrorCode> {
         let array = self.arrays.get(array_index);
         match array {
             Some(array) => array.tick_offset(tick_index, tick_spacing),
@@ -109,7 +108,7 @@ impl<'info> SwapTickSequence<'info> {
         tick_spacing: u16,
         a_to_b: bool,
         start_array_index: usize,
-    ) -> Result<(usize, i32)> {
+    ) -> Result<(usize, i32), ErrorCode> {
         let ticks_in_array = TICK_ARRAY_SIZE * tick_spacing as i32;
         let mut search_index = tick_index;
         let mut array_index = start_array_index;

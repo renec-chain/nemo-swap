@@ -31,7 +31,7 @@ pub struct InitializeReward<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn handler(ctx: Context<InitializeReward>, reward_index: u8) -> Result<()> {
+pub fn handler(ctx: Context<InitializeReward>, reward_index: u8) -> ProgramResult {
     let whirlpool = &mut ctx.accounts.whirlpool;
 
     Ok(whirlpool.initialize_reward(

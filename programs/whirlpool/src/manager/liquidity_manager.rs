@@ -31,7 +31,7 @@ pub fn calculate_modify_liquidity<'info>(
     tick_array_upper: &AccountLoader<'info, TickArray>,
     liquidity_delta: i128,
     timestamp: u64,
-) -> Result<ModifyLiquidityUpdate> {
+) -> Result<ModifyLiquidityUpdate, ProgramError> {
     let tick_array_lower = tick_array_lower.load()?;
     let tick_lower =
         tick_array_lower.get_tick(position.tick_lower_index, whirlpool.tick_spacing)?;
@@ -58,7 +58,7 @@ pub fn calculate_fee_and_reward_growths<'info>(
     tick_array_lower: &AccountLoader<'info, TickArray>,
     tick_array_upper: &AccountLoader<'info, TickArray>,
     timestamp: u64,
-) -> Result<(PositionUpdate, [WhirlpoolRewardInfo; NUM_REWARDS])> {
+) -> Result<(PositionUpdate, [WhirlpoolRewardInfo; NUM_REWARDS]), ProgramError> {
     let tick_array_lower = tick_array_lower.load()?;
     let tick_lower =
         tick_array_lower.get_tick(position.tick_lower_index, whirlpool.tick_spacing)?;
@@ -92,7 +92,7 @@ fn _calculate_modify_liquidity(
     tick_upper_index: i32,
     liquidity_delta: i128,
     timestamp: u64,
-) -> Result<ModifyLiquidityUpdate> {
+) -> Result<ModifyLiquidityUpdate, ProgramError> {
     // Disallow only updating position fee and reward growth when position has zero liquidity
     if liquidity_delta == 0 && position.liquidity == 0 {
         return Err(ErrorCode::LiquidityZero.into());
@@ -170,7 +170,7 @@ pub fn calculate_liquidity_token_deltas(
     sqrt_price: u128,
     position: &Position,
     liquidity_delta: i128,
-) -> Result<(u64, u64)> {
+) -> Result<(u64, u64), ErrorCode> {
     if liquidity_delta == 0 {
         return Err(ErrorCode::LiquidityZero.into());
     }
@@ -206,7 +206,7 @@ pub fn sync_modify_liquidity_values<'info>(
     tick_array_upper: &AccountLoader<'info, TickArray>,
     modify_liquidity_update: ModifyLiquidityUpdate,
     reward_last_updated_timestamp: u64,
-) -> Result<()> {
+) -> Result<(), ProgramError> {
     position.update(&modify_liquidity_update.position_update);
 
     tick_array_lower.load_mut()?.update_tick(

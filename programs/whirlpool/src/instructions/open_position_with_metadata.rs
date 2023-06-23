@@ -67,7 +67,7 @@ pub fn handler(
     _bumps: OpenPositionWithMetadataBumps,
     tick_lower_index: i32,
     tick_upper_index: i32,
-) -> Result<()> {
+) -> ProgramResult {
     let whirlpool = &ctx.accounts.whirlpool;
     whirlpool.require_enabled()?;
     let position_mint = &ctx.accounts.position_mint;

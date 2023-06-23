@@ -1,7 +1,9 @@
 use anchor_lang::prelude::*;
 
 use crate::{
-    manager::liquidity_manager::calculate_fee_and_reward_growths, state::*, util::to_timestamp_u64,
+    manager::liquidity_manager::calculate_fee_and_reward_growths,
+    state::*,
+    util::to_timestamp_u64,
 };
 
 #[derive(Accounts)]
@@ -18,7 +20,7 @@ pub struct UpdateFeesAndRewards<'info> {
     pub tick_array_upper: AccountLoader<'info, TickArray>,
 }
 
-pub fn handler(ctx: Context<UpdateFeesAndRewards>) -> Result<()> {
+pub fn handler(ctx: Context<UpdateFeesAndRewards>) -> ProgramResult {
     let whirlpool = &mut ctx.accounts.whirlpool;
     let position = &mut ctx.accounts.position;
     let clock = Clock::get()?;
@@ -29,7 +31,7 @@ pub fn handler(ctx: Context<UpdateFeesAndRewards>) -> Result<()> {
         position,
         &ctx.accounts.tick_array_lower,
         &ctx.accounts.tick_array_upper,
-        timestamp,
+        timestamp
     )?;
 
     whirlpool.update_rewards(reward_infos, timestamp);

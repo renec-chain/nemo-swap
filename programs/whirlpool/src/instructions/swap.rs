@@ -49,7 +49,7 @@ pub fn handler(
     sqrt_price_limit: u128,
     amount_specified_is_input: bool,
     a_to_b: bool, // Zero for one
-) -> Result<()> {
+) -> ProgramResult {
     let whirlpool = &mut ctx.accounts.whirlpool;
     whirlpool.require_enabled()?;
     let clock = Clock::get()?;

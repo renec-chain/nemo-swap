@@ -15,7 +15,7 @@ pub struct PositionBundle {
 impl PositionBundle {
     pub const LEN: usize = 8 + 32 + 32 + 64;
 
-    pub fn initialize(&mut self, position_bundle_mint: Pubkey) -> Result<()> {
+    pub fn initialize(&mut self, position_bundle_mint: Pubkey) -> Result<(), ErrorCode> {
         self.position_bundle_mint = position_bundle_mint;
         // position_bitmap is initialized using Default trait
         Ok(())
@@ -30,15 +30,15 @@ impl PositionBundle {
         true
     }
 
-    pub fn open_bundled_position(&mut self, bundle_index: u16) -> Result<()> {
+    pub fn open_bundled_position(&mut self, bundle_index: u16) -> Result<(), ErrorCode> {
         self.update_bitmap(bundle_index, true)
     }
 
-    pub fn close_bundled_position(&mut self, bundle_index: u16) -> Result<()> {
+    pub fn close_bundled_position(&mut self, bundle_index: u16) -> Result<(), ErrorCode> {
         self.update_bitmap(bundle_index, false)
     }
 
-    fn update_bitmap(&mut self, bundle_index: u16, open: bool) -> Result<()> {
+    fn update_bitmap(&mut self, bundle_index: u16, open: bool) -> Result<(), ErrorCode> {
         if !PositionBundle::is_valid_bundle_index(bundle_index) {
             return Err(ErrorCode::InvalidBundleIndex.into());
         }

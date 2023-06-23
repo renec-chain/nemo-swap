@@ -14,7 +14,7 @@ pub struct SetDefaultProtocolFeeRate<'info> {
 pub fn handler(
     ctx: Context<SetDefaultProtocolFeeRate>,
     default_protocol_fee_rate: u16,
-) -> Result<()> {
+) -> ProgramResult {
     Ok(ctx
         .accounts
         .whirlpools_config

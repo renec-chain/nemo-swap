@@ -26,7 +26,7 @@ pub fn handler(
     ctx: Context<SetRewardEmissions>,
     reward_index: u8,
     emissions_per_second_x64: u128,
-) -> Result<()> {
+) -> ProgramResult {
     let whirlpool = &ctx.accounts.whirlpool;
     let reward_vault = &ctx.accounts.reward_vault;
 

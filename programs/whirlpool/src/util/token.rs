@@ -16,7 +16,7 @@ pub fn transfer_from_owner_to_vault<'info>(
     token_vault: &Account<'info, TokenAccount>,
     token_program: &Program<'info, Token>,
     amount: u64,
-) -> Result<()> {
+) -> Result<(), ProgramError> {
     token::transfer(
         CpiContext::new(
             token_program.to_account_info(),
@@ -36,7 +36,7 @@ pub fn transfer_from_vault_to_owner<'info>(
     token_owner_account: &Account<'info, TokenAccount>,
     token_program: &Program<'info, Token>,
     amount: u64,
-) -> Result<()> {
+) -> Result<(), ProgramError> {
     token::transfer(
         CpiContext::new_with_signer(
             token_program.to_account_info(),
@@ -57,7 +57,7 @@ pub fn burn_and_close_user_position_token<'info>(
     position_mint: &Account<'info, Mint>,
     position_token_account: &Account<'info, TokenAccount>,
     token_program: &Program<'info, Token>,
-) -> Result<()> {
+) -> ProgramResult {
     // Burn a single token in user account
     invoke_signed(
         &burn_checked(
@@ -103,7 +103,7 @@ pub fn mint_position_token_and_remove_authority<'info>(
     position_mint: &Account<'info, Mint>,
     position_token_account: &Account<'info, TokenAccount>,
     token_program: &Program<'info, Token>,
-) -> Result<()> {
+) -> ProgramResult {
     mint_position_token(
         whirlpool,
         position_mint,
@@ -124,7 +124,7 @@ pub fn mint_position_token_with_metadata_and_remove_authority<'info>(
     token_program: &Program<'info, Token>,
     system_program: &Program<'info, System>,
     rent: &Sysvar<'info, Rent>,
-) -> Result<()> {
+) -> ProgramResult {
     mint_position_token(
         whirlpool,
         position_mint,
@@ -173,7 +173,7 @@ fn mint_position_token<'info>(
     position_mint: &Account<'info, Mint>,
     position_token_account: &Account<'info, TokenAccount>,
     token_program: &Program<'info, Token>,
-) -> Result<()> {
+) -> ProgramResult {
     invoke_signed(
         &mint_to(
             token_program.key,
@@ -198,7 +198,7 @@ fn remove_position_token_mint_authority<'info>(
     whirlpool: &Account<'info, Whirlpool>,
     position_mint: &Account<'info, Mint>,
     token_program: &Program<'info, Token>,
-) -> Result<()> {
+) -> ProgramResult {
     invoke_signed(
         &set_authority(
             token_program.key,
@@ -224,7 +224,7 @@ pub fn mint_position_bundle_token_and_remove_authority<'info>(
     position_bundle_token_account: &Account<'info, TokenAccount>,
     token_program: &Program<'info, Token>,
     position_bundle_seeds: &[&[u8]],
-) -> Result<()> {
+) -> ProgramResult {
     mint_position_bundle_token(
         position_bundle,
         position_bundle_mint,
@@ -252,7 +252,7 @@ pub fn mint_position_bundle_token_with_metadata_and_remove_authority<'info>(
     system_program: &Program<'info, System>,
     rent: &Sysvar<'info, Rent>,
     position_bundle_seeds: &[&[u8]],
-) -> Result<()> {
+) -> ProgramResult {
     mint_position_bundle_token(
         position_bundle,
         position_bundle_mint,
@@ -317,7 +317,7 @@ fn mint_position_bundle_token<'info>(
     position_bundle_token_account: &Account<'info, TokenAccount>,
     token_program: &Program<'info, Token>,
     position_bundle_seeds: &[&[u8]],
-) -> Result<()> {
+) -> ProgramResult {
     invoke_signed(
         &mint_to(
             token_program.key,
@@ -344,7 +344,7 @@ fn remove_position_bundle_token_mint_authority<'info>(
     position_bundle_mint: &Account<'info, Mint>,
     token_program: &Program<'info, Token>,
     position_bundle_seeds: &[&[u8]],
-) -> Result<()> {
+) -> ProgramResult {
     invoke_signed(
         &set_authority(
             token_program.key,
@@ -371,7 +371,7 @@ pub fn burn_and_close_position_bundle_token<'info>(
     position_bundle_mint: &Account<'info, Mint>,
     position_bundle_token_account: &Account<'info, TokenAccount>,
     token_program: &Program<'info, Token>,
-) -> Result<()> {
+) -> ProgramResult {
     // use same logic
     burn_and_close_user_position_token(
         position_bundle_authority,

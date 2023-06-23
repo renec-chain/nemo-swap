@@ -1,3 +1,4 @@
+use crate::errors::ErrorCode;
 use crate::manager::swap_manager::*;
 use crate::math::tick_math::*;
 use crate::state::{
@@ -221,7 +222,7 @@ impl SwapTestFixture {
         &self,
         tick_sequence: &mut SwapTickSequence,
         next_timestamp: u64,
-    ) -> Result<PostSwapUpdate> {
+    ) -> Result<PostSwapUpdate, ErrorCode> {
         swap(
             &self.whirlpool,
             tick_sequence,

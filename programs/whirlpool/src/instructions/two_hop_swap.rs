@@ -77,7 +77,7 @@ pub fn handler(
     a_to_b_two: bool,
     sqrt_price_limit_one: u128,
     sqrt_price_limit_two: u128,
-) -> Result<()> {
+) -> ProgramResult {
     let clock = Clock::get()?;
     // Update the global reward growth which increases as a function of time.
     let timestamp = to_timestamp_u64(clock.unix_timestamp)?;

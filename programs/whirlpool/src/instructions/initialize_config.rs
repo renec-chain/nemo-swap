@@ -20,7 +20,7 @@ pub fn handler(
     reward_emissions_super_authority: Pubkey,
     pool_creator_authority: Pubkey,
     default_protocol_fee_rate: u16,
-) -> Result<()> {
+) -> ProgramResult {
     let config = &mut ctx.accounts.config;
 
     Ok(config.initialize(

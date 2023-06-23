@@ -35,7 +35,7 @@ pub struct CloseBundledPosition<'info> {
     pub receiver: UncheckedAccount<'info>,
 }
 
-pub fn handler(ctx: Context<CloseBundledPosition>, bundle_index: u16) -> Result<()> {
+pub fn handler(ctx: Context<CloseBundledPosition>, bundle_index: u16) -> ProgramResult {
     let position_bundle = &mut ctx.accounts.position_bundle;
 
     // Allow delegation

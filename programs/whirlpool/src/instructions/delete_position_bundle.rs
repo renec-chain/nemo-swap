@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Mint, Token, TokenAccount};
+use anchor_spl::token::{ self, Mint, Token, TokenAccount };
 
 use crate::errors::ErrorCode;
 use crate::state::*;
@@ -30,7 +30,7 @@ pub struct DeletePositionBundle<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn handler(ctx: Context<DeletePositionBundle>) -> Result<()> {
+pub fn handler(ctx: Context<DeletePositionBundle>) -> ProgramResult {
     let position_bundle = &ctx.accounts.position_bundle;
 
     if !position_bundle.is_deletable() {
@@ -42,6 +42,6 @@ pub fn handler(ctx: Context<DeletePositionBundle>) -> Result<()> {
         &ctx.accounts.receiver,
         &ctx.accounts.position_bundle_mint,
         &ctx.accounts.position_bundle_token_account,
-        &ctx.accounts.token_program,
+        &ctx.accounts.token_program
     )
 }

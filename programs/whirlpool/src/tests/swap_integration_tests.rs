@@ -1,14 +1,14 @@
 use crate::errors::ErrorCode;
 use crate::manager::swap_manager::*;
 use crate::math::*;
-use crate::state::{MAX_TICK_INDEX, MIN_TICK_INDEX, TICK_ARRAY_SIZE};
+use crate::state::{ MAX_TICK_INDEX, MIN_TICK_INDEX, TICK_ARRAY_SIZE };
 use crate::util::test_utils::swap_test_fixture::*;
-use crate::util::{create_whirlpool_reward_infos, SwapTickSequence};
+use crate::util::{ create_whirlpool_reward_infos, SwapTickSequence };
 use serde::Deserialize;
 use serde_json;
-use serde_with::{serde_as, DisplayFromStr};
+use serde_with::{ serde_as, DisplayFromStr };
 use solana_program::msg;
-use std::cmp::{max, min};
+use std::cmp::{ max, min };
 use std::fs;
 
 #[serde_as]
@@ -53,17 +53,11 @@ struct Expectation {
 /// Current version of Anchor doesn't bubble up errors in a way
 /// where we can compare. v0.23.0 has an updated format that will allow us to do so.
 const CATCHABLE_ERRORS: [(&str, ErrorCode); 8] = [
-    (
-        "MultiplicationShiftRightOverflow",
-        ErrorCode::MultiplicationShiftRightOverflow,
-    ),
+    ("MultiplicationShiftRightOverflow", ErrorCode::MultiplicationShiftRightOverflow),
     ("TokenMaxExceeded", ErrorCode::TokenMaxExceeded),
     ("DivideByZero", ErrorCode::DivideByZero),
     ("SqrtPriceOutOfBounds", ErrorCode::SqrtPriceOutOfBounds),
-    (
-        "InvalidTickArraySequence",
-        ErrorCode::InvalidTickArraySequence,
-    ),
+    ("InvalidTickArraySequence", ErrorCode::InvalidTickArraySequence),
     ("ZeroTradableAmount", ErrorCode::ZeroTradableAmount),
     ("NumberDownCastError", ErrorCode::NumberDownCastError),
     ("MultiplicationOverflow", ErrorCode::MultiplicationOverflow),
@@ -80,8 +74,9 @@ const CATCHABLE_ERRORS: [(&str, ErrorCode); 8] = [
 /// 6. Trade Direction (a->b, b->a)
 /// 7. TradeAmountToken (amountIsInput, amountIsOutput)
 fn run_swap_integration_tests() {
-    let contents =
-        fs::read_to_string("src/tests/swap_test_cases.json").expect("Failure to read the file.");
+    let contents = fs
+        ::read_to_string("src/tests/swap_test_cases.json")
+        .expect("Failure to read the file.");
     let json: Vec<TestCase> = serde_json::from_str(&contents).expect("JSON was not well-formatted");
     let test_iterator = json.iter();
 
@@ -94,8 +89,11 @@ fn run_swap_integration_tests() {
         total_cases += 1;
 
         let derived_start_tick = derive_start_tick(test.curr_tick_index, test.tick_spacing);
-        let last_tick_in_seq =
-            derive_last_tick_in_seq(derived_start_tick, test.tick_spacing, test.a_to_b);
+        let last_tick_in_seq = derive_last_tick_in_seq(
+            derived_start_tick,
+            test.tick_spacing,
+            test.a_to_b
+        );
 
         let swap_test_info = SwapTestFixture::new(SwapTestFixtureInfo {
             tick_spacing: test.tick_spacing,
@@ -120,7 +118,7 @@ fn run_swap_integration_tests() {
         let mut tick_sequence = SwapTickSequence::new(
             swap_test_info.tick_arrays[0].borrow_mut(),
             Some(swap_test_info.tick_arrays[1].borrow_mut()),
-            Some(swap_test_info.tick_arrays[2].borrow_mut()),
+            Some(swap_test_info.tick_arrays[2].borrow_mut())
         );
         let post_swap = swap_test_info.eval(&mut tick_sequence, 1643027024);
 
@@ -149,9 +147,7 @@ fn run_swap_integration_tests() {
                 msg!("");
 
                 fail_cases += 1;
-            } else if expected_error.is_some()
-                && !anchor_lang::error!(expected_error.unwrap()).eq(&e)
-            {
+            } else if expected_error.is_some() && !!expected_error.unwrap().eq(&e) {
                 fail_cases += 1;
 
                 msg!("Test case {} - {}", test_id, test.description);
@@ -181,16 +177,8 @@ fn run_swap_integration_tests() {
                         expectation.exception
                     );
                 } else {
-                    msg!(
-                        "amount_a - {}, expect - {}",
-                        results.amount_a,
-                        expectation.amount_a
-                    );
-                    msg!(
-                        "amount_b - {}, expect - {}",
-                        results.amount_b,
-                        expectation.amount_b
-                    );
+                    msg!("amount_a - {}, expect - {}", results.amount_a, expectation.amount_a);
+                    msg!("amount_b - {}, expect - {}", results.amount_b, expectation.amount_b);
                     msg!(
                         "next_liq - {}, expect - {}",
                         results.next_liquidity,
@@ -210,8 +198,8 @@ fn run_swap_integration_tests() {
                         "next_fee_growth_global - {}, expect - {}, delta - {}",
                         results.next_fee_growth_global,
                         expectation.next_fee_growth_global,
-                        results.next_fee_growth_global as i128
-                            - expectation.next_fee_growth_global as i128,
+                        (results.next_fee_growth_global as i128) -
+                            (expectation.next_fee_growth_global as i128)
                     );
                     msg!(
                         "next_protocol_fee - {}, expect - {}",
@@ -226,12 +214,7 @@ fn run_swap_integration_tests() {
             }
         }
     }
-    msg!(
-        "Total - {}, Pass - {}, Failed - {}",
-        total_cases,
-        pass_cases,
-        fail_cases
-    );
+    msg!("Total - {}, Pass - {}, Failed - {}", total_cases, pass_cases, fail_cases);
     assert_eq!(total_cases, pass_cases);
 }
 
@@ -241,20 +224,16 @@ fn assert_expectation(post_swap: &PostSwapUpdate, expectation: &Expectation) -> 
     let next_liquidity_equal = post_swap.next_liquidity.eq(&expectation.next_liquidity);
     let next_tick_equal = post_swap.next_tick_index.eq(&expectation.next_tick_index);
     let next_sqrt_price_equal = post_swap.next_sqrt_price.eq(&expectation.next_sqrt_price);
-    let next_fees_equal = post_swap
-        .next_fee_growth_global
-        .eq(&expectation.next_fee_growth_global);
-    let next_protocol_fees_equal = post_swap
-        .next_protocol_fee
-        .eq(&expectation.next_protocol_fee);
+    let next_fees_equal = post_swap.next_fee_growth_global.eq(&expectation.next_fee_growth_global);
+    let next_protocol_fees_equal = post_swap.next_protocol_fee.eq(&expectation.next_protocol_fee);
 
-    amount_a_equal
-        && amount_b_equal
-        && next_liquidity_equal
-        && next_tick_equal
-        && next_sqrt_price_equal
-        && next_fees_equal
-        && next_protocol_fees_equal
+    amount_a_equal &&
+        amount_b_equal &&
+        next_liquidity_equal &&
+        next_tick_equal &&
+        next_sqrt_price_equal &&
+        next_fees_equal &&
+        next_protocol_fees_equal
 }
 
 fn derive_error(expected_err: &String) -> Option<ErrorCode> {
@@ -268,22 +247,22 @@ fn derive_error(expected_err: &String) -> Option<ErrorCode> {
 
 /// Given a tick & tick-spacing, derive the start tick of the tick-array that this tick would reside in
 fn derive_start_tick(curr_tick: i32, tick_spacing: u16) -> i32 {
-    let num_of_ticks_in_array = TICK_ARRAY_SIZE * tick_spacing as i32;
+    let num_of_ticks_in_array = TICK_ARRAY_SIZE * (tick_spacing as i32);
     let rem = curr_tick % num_of_ticks_in_array;
     if curr_tick < 0 && rem != 0 {
-        ((curr_tick / num_of_ticks_in_array) - 1) * num_of_ticks_in_array
+        (curr_tick / num_of_ticks_in_array - 1) * num_of_ticks_in_array
     } else {
-        curr_tick / num_of_ticks_in_array * num_of_ticks_in_array
+        (curr_tick / num_of_ticks_in_array) * num_of_ticks_in_array
     }
 }
 
 /// Given a start-tick & tick-spacing, derive the last tick of a 3-tick-array sequence
 fn derive_last_tick_in_seq(start_tick: i32, tick_spacing: u16, a_to_b: bool) -> i32 {
-    let num_of_ticks_in_array = TICK_ARRAY_SIZE * tick_spacing as i32;
+    let num_of_ticks_in_array = TICK_ARRAY_SIZE * (tick_spacing as i32);
     let potential_last = if a_to_b {
-        start_tick - (2 * num_of_ticks_in_array)
+        start_tick - 2 * num_of_ticks_in_array
     } else {
-        start_tick + (3 * num_of_ticks_in_array) - 1
+        start_tick + 3 * num_of_ticks_in_array - 1
     };
     max(min(potential_last, MAX_TICK_INDEX), MIN_TICK_INDEX)
 }

@@ -2,7 +2,7 @@ use std::num::TryFromIntError;
 
 use anchor_lang::prelude::*;
 
-#[error_code]
+#[error]
 #[derive(PartialEq)]
 pub enum ErrorCode {
     #[msg("Enum value could not be converted")]
