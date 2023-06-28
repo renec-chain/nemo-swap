@@ -600,10 +600,10 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@orca-so/common-sdk@^0.1.4":
-  version "0.1.11"
-  resolved "https://registry.npmjs.org/@orca-so/common-sdk/-/common-sdk-0.1.11.tgz"
-  integrity sha512-fk07IyQXtqhYWVjadiXb3DDheEQQDKpK6fmwxA/1xpzRp6cNhZ8tTwmFfXOfJedKiPWgJbI6NU/VIFKPbBVxnA==
+"@orca-so/common-sdk@^0.1.10":
+  version "0.1.12"
+  resolved "https://registry.yarnpkg.com/@orca-so/common-sdk/-/common-sdk-0.1.12.tgz#40dd1577e27e7e24bd388233b758d4035fb3ac58"
+  integrity sha512-YtrwwnrkgnOLWPiXzKPdz+L6XRBfwXMd5zI0MZm2olCmyaM41RpKyHd+NW/adem+Eb2Ey0FVd+Bie6pRlY1Z0g==
   dependencies:
     "@project-serum/anchor" "~0.25.0"
     "@solana/spl-token" "0.1.8"
@@ -643,7 +643,7 @@
   version "0.7.2"
   dependencies:
     "@metaplex-foundation/mpl-token-metadata" "1.2.5"
-    "@orca-so/common-sdk" "^0.1.4"
+    "@orca-so/common-sdk" "^0.1.10"
     "@project-serum/anchor" "~0.25.0"
     "@solana/spl-token" "^0.1.8"
     "@solana/web3.js" "1.66.0"
@@ -1335,6 +1335,13 @@ brace-expansion@^1.1.7:
   dependencies:
     balanced-match "^1.0.0"
     concat-map "0.0.1"
+
+brace-expansion@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/brace-expansion/-/brace-expansion-2.0.1.tgz#1edc459e0f0c548486ecf9fc99f2221364b9a0ae"
+  integrity sha512-XnAIvQ8eM+kC6aULx6wuQiwVsnzsi9d3WxzV3FpWTGA19F621kwdbsAcFKXgKUHZWsy+mY6iL1sHTxWEFCytDA==
+  dependencies:
+    balanced-match "^1.0.0"
 
 braces@^3.0.2, braces@~3.0.2:
   version "3.0.2"
@@ -2081,6 +2088,17 @@ glob@7.1.7, glob@^7.1.1, glob@^7.1.2, glob@^7.1.3, glob@^7.1.4:
     minimatch "^3.0.4"
     once "^1.3.0"
     path-is-absolute "^1.0.0"
+
+glob@^8.0.3:
+  version "8.1.0"
+  resolved "https://registry.yarnpkg.com/glob/-/glob-8.1.0.tgz#d388f656593ef708ee3e34640fdfb99a9fd1c33e"
+  integrity sha512-r8hpEjiQEYlF2QU0df3dS+nxxSIreXQS1qRhMJM0Q5NDdR386C7jb7Hwwod8Fgiuex+k0GFjgft18yvxm5XoCQ==
+  dependencies:
+    fs.realpath "^1.0.0"
+    inflight "^1.0.4"
+    inherits "2"
+    minimatch "^5.0.1"
+    once "^1.3.0"
 
 globals@^11.1.0:
   version "11.12.0"
@@ -2873,6 +2891,11 @@ json5@^1.0.2:
   dependencies:
     minimist "^1.2.0"
 
+jsonc-parser@^3.0.0:
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/jsonc-parser/-/jsonc-parser-3.2.0.tgz#31ff3f4c2b9793f89c67212627c51c6394f88e76"
+  integrity sha512-gfFQZrcTc8CnKXp6Y4/CBT3fTc0OVuDofpre4aEeEpSBPV5X5v4+Vmx+8snU7RLPrNHPKSgLxGo9YuQzz20o+w==
+
 jsonparse@^1.2.0:
   version "1.3.1"
   resolved "https://registry.npmjs.org/jsonparse/-/jsonparse-1.3.1.tgz"
@@ -2959,6 +2982,11 @@ lru-cache@^6.0.0:
   dependencies:
     yallist "^4.0.0"
 
+lunr@^2.3.9:
+  version "2.3.9"
+  resolved "https://registry.yarnpkg.com/lunr/-/lunr-2.3.9.tgz#18b123142832337dd6e964df1a5a7707b25d35e1"
+  integrity sha512-zTU3DaZaF3Rt9rhN3uBMGQD3dD2/vFQqnvZCDv4dl5iOzq2IZQqTxu90r4E5J+nP70J3ilqVCrbho2eWaeW8Ow==
+
 make-dir@^3.0.0:
   version "3.1.0"
   resolved "https://registry.npmjs.org/make-dir/-/make-dir-3.1.0.tgz"
@@ -2982,6 +3010,11 @@ map-stream@~0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/map-stream/-/map-stream-0.1.0.tgz#e56aa94c4c8055a16404a0674b78f215f7c8e194"
   integrity sha512-CkYQrPYZfWnu/DAmVCpTSX/xHpKZ80eKh2lAkyA6AJTef6bW+6JpbQZN5rofum7da+SyN1bi5ctTm+lTfcCW3g==
+
+marked@^4.0.16:
+  version "4.3.0"
+  resolved "https://registry.yarnpkg.com/marked/-/marked-4.3.0.tgz#796362821b019f734054582038b116481b456cf3"
+  integrity sha512-PRsaiG84bK+AMvxziE/lCFss8juXjNaWzVbN5tXAm4XjeaS9NAHhop+PjQxz2A9h8Q4M/xGmzP8vqNwy6JeK0A==
 
 merge-stream@^2.0.0:
   version "2.0.0"
@@ -3024,6 +3057,13 @@ minimatch@3.0.4, minimatch@^3.0.4:
   integrity sha512-yJHVQEhyqPLUTgt9B83PXu6W3rx4MvvHvSUvToogpwoGDOUQ+yDrR0HRot+yOCdCO7u4hX3pWft6kWBBcqh0UA==
   dependencies:
     brace-expansion "^1.1.7"
+
+minimatch@^5.0.1, minimatch@^5.1.0:
+  version "5.1.6"
+  resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-5.1.6.tgz#1cfcb8cf5522ea69952cd2af95ae09477f122a96"
+  integrity sha512-lKwV/1brpG6mBUFHtb7NUmtABCb2WZZmm2wNiOA5hAb8VdCS4B3dtMWyvcoViccwAW/COERjXLt0zP1zXUN26g==
+  dependencies:
+    brace-expansion "^2.0.1"
 
 minimist@^1.2.0, minimist@^1.2.6, minimist@^1.2.7:
   version "1.2.8"
@@ -3519,6 +3559,15 @@ shebang-regex@^3.0.0:
   resolved "https://registry.npmjs.org/shebang-regex/-/shebang-regex-3.0.0.tgz"
   integrity sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==
 
+shiki@^0.10.1:
+  version "0.10.1"
+  resolved "https://registry.yarnpkg.com/shiki/-/shiki-0.10.1.tgz#6f9a16205a823b56c072d0f1a0bcd0f2646bef14"
+  integrity sha512-VsY7QJVzU51j5o1+DguUd+6vmCmZ5v/6gYu4vyYAhzjuNQU6P/vmSy4uQaOhvje031qQMiW0d2BwgMH52vqMng==
+  dependencies:
+    jsonc-parser "^3.0.0"
+    vscode-oniguruma "^1.6.1"
+    vscode-textmate "5.2.0"
+
 signal-exit@^3.0.2, signal-exit@^3.0.3:
   version "3.0.7"
   resolved "https://registry.npmjs.org/signal-exit/-/signal-exit-3.0.7.tgz"
@@ -3881,6 +3930,17 @@ typedarray-to-buffer@^3.1.5:
   dependencies:
     is-typedarray "^1.0.0"
 
+typedoc@~0.22.18:
+  version "0.22.18"
+  resolved "https://registry.yarnpkg.com/typedoc/-/typedoc-0.22.18.tgz#1d000c33b66b88fd8cdfea14a26113a83b7e6591"
+  integrity sha512-NK9RlLhRUGMvc6Rw5USEYgT4DVAUFk7IF7Q6MYfpJ88KnTZP7EneEa4RcP+tX1auAcz7QT1Iy0bUSZBYYHdoyA==
+  dependencies:
+    glob "^8.0.3"
+    lunr "^2.3.9"
+    marked "^4.0.16"
+    minimatch "^5.1.0"
+    shiki "^0.10.1"
+
 typescript@^4.5.5, typescript@^4.9.4:
   version "4.9.5"
   resolved "https://registry.npmjs.org/typescript/-/typescript-4.9.5.tgz"
@@ -3932,6 +3992,16 @@ v8-to-istanbul@^8.1.0:
     "@types/istanbul-lib-coverage" "^2.0.1"
     convert-source-map "^1.6.0"
     source-map "^0.7.3"
+
+vscode-oniguruma@^1.6.1:
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/vscode-oniguruma/-/vscode-oniguruma-1.7.0.tgz#439bfad8fe71abd7798338d1cd3dc53a8beea94b"
+  integrity sha512-L9WMGRfrjOhgHSdOYgCt/yRMsXzLDJSL7BPrOZt73gU0iWO4mpqzqQzOz5srxqTvMBaR0XZTSrVWo4j55Rc6cA==
+
+vscode-textmate@5.2.0:
+  version "5.2.0"
+  resolved "https://registry.yarnpkg.com/vscode-textmate/-/vscode-textmate-5.2.0.tgz#01f01760a391e8222fe4f33fbccbd1ad71aed74e"
+  integrity sha512-Uw5ooOQxRASHgu6C7GVvUxisKXfSgW4oFlO+aa+PAkgmH89O3CXxEEzNRNtHSqtXFTl0nAC1uYj0GMSH27uwtQ==
 
 w3c-hr-time@^1.0.2:
   version "1.0.2"
