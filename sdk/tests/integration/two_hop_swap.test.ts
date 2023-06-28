@@ -563,7 +563,7 @@ describe("two-hop swap", () => {
           tokenAuthority: ctx.wallet.publicKey,
         })
       ).buildAndExecute(),
-      /0x1799/ // Invalid intermediary mint
+      /0x179a/ // Invalid intermediary mint
     );
   });
 
