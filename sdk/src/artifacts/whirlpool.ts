@@ -1884,18 +1884,18 @@ export type Whirlpool = {
     },
     {
       "code": 6041,
+      "name": "PoolWasDisabled",
+      "msg": "Pool was disabled"
+    },
+    {
+      "code": 6042,
       "name": "InvalidIntermediaryMint",
       "msg": "Invalid intermediary mint"
     },
     {
-      "code": 6042,
+      "code": 6043,
       "name": "DuplicateTwoHopPool",
       "msg": "Duplicate two hop pool"
-    },
-    {
-      "code": 6043,
-      "name": "PoolWasDisabled",
-      "msg": "Pool was disabled"
     }
   ]
 };
@@ -3786,18 +3786,18 @@ export const IDL: Whirlpool = {
     },
     {
       "code": 6041,
+      "name": "PoolWasDisabled",
+      "msg": "Pool was disabled"
+    },
+    {
+      "code": 6042,
       "name": "InvalidIntermediaryMint",
       "msg": "Invalid intermediary mint"
     },
     {
-      "code": 6042,
+      "code": 6043,
       "name": "DuplicateTwoHopPool",
       "msg": "Duplicate two hop pool"
-    },
-    {
-      "code": 6043,
-      "name": "PoolWasDisabled",
-      "msg": "Pool was disabled"
     }
   ]
 };
