@@ -539,9 +539,4 @@ pub mod whirlpool {
             sqrt_price_limit_two
         );
     }
-    /// Sets `enable` flag of the pool to enable or disable this pool.
-    /// Only the current pool creator authority has permission to invoke this instruction.
-    pub fn set_enable_flag(ctx: Context<SetEnableFlag>, is_enabled: bool) -> ProgramResult {
-        return instructions::set_enable_flag::handler(ctx, is_enabled);
-    }
 }
