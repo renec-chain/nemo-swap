@@ -1110,6 +1110,32 @@ export type Whirlpool = {
       "args": []
     },
     {
+      "name": "setEnableFlag",
+      "accounts": [
+        {
+          "name": "whirlpoolsConfig",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolCreatorAuthority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "isEnabled",
+          "type": "bool"
+        }
+      ]
+    },
+    {
       "name": "twoHopSwap",
       "accounts": [
         {
@@ -1241,32 +1267,6 @@ export type Whirlpool = {
         {
           "name": "sqrtPriceLimitTwo",
           "type": "u128"
-        }
-      ]
-    },
-    {
-      "name": "setEnableFlag",
-      "accounts": [
-        {
-          "name": "whirlpoolsConfig",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "whirlpool",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "poolCreatorAuthority",
-          "isMut": false,
-          "isSigner": true
-        }
-      ],
-      "args": [
-        {
-          "name": "isEnabled",
-          "type": "bool"
         }
       ]
     }
@@ -3012,6 +3012,32 @@ export const IDL: Whirlpool = {
       "args": []
     },
     {
+      "name": "setEnableFlag",
+      "accounts": [
+        {
+          "name": "whirlpoolsConfig",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolCreatorAuthority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "isEnabled",
+          "type": "bool"
+        }
+      ]
+    },
+    {
       "name": "twoHopSwap",
       "accounts": [
         {
@@ -3143,32 +3169,6 @@ export const IDL: Whirlpool = {
         {
           "name": "sqrtPriceLimitTwo",
           "type": "u128"
-        }
-      ]
-    },
-    {
-      "name": "setEnableFlag",
-      "accounts": [
-        {
-          "name": "whirlpoolsConfig",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "whirlpool",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "poolCreatorAuthority",
-          "isMut": false,
-          "isSigner": true
-        }
-      ],
-      "args": [
-        {
-          "name": "isEnabled",
-          "type": "bool"
         }
       ]
     }

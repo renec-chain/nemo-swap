@@ -1110,6 +1110,32 @@
       "args": []
     },
     {
+      "name": "setEnableFlag",
+      "accounts": [
+        {
+          "name": "whirlpoolsConfig",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolCreatorAuthority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "isEnabled",
+          "type": "bool"
+        }
+      ]
+    },
+    {
       "name": "twoHopSwap",
       "accounts": [
         {
@@ -1241,32 +1267,6 @@
         {
           "name": "sqrtPriceLimitTwo",
           "type": "u128"
-        }
-      ]
-    },
-    {
-      "name": "setEnableFlag",
-      "accounts": [
-        {
-          "name": "whirlpoolsConfig",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "whirlpool",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "poolCreatorAuthority",
-          "isMut": false,
-          "isSigner": true
-        }
-      ],
-      "args": [
-        {
-          "name": "isEnabled",
-          "type": "bool"
         }
       ]
     }
