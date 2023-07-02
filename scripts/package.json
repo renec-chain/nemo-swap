@@ -5,7 +5,9 @@
     "00_init_pool_config": "ts-node ./create_pool/00_init_pool_config.ts",
     "01_init_fee_tier": "ts-node ./create_pool/01_init_fee_tier.ts",
     "02_init_pool": "ts-node ./create_pool/02_init_pool.ts",
-    "03_open_position": "ts-node ./create_pool/03_open_position.ts"
+    "03_open_position": "ts-node ./create_pool/03_open_position.ts",
+    "05_close_position": "ts-node ./create_pool/05_close_position.ts",
+    "update_fee_rate_of_pool": "ts-node ./create_pool/update_fee_rate_of_pool.ts"
   },
   "dependencies": {
     "@project-serum/anchor": "~0.25.0",
