@@ -1,6 +1,13 @@
 import * as anchor from "@project-serum/anchor";
 
-async function getProgramSignatures(
+/**
+ * Get all program's signature until specify signature
+ * @param connection
+ * @param programId
+ * @param untilSignature :  until signature if undefined it will get max 1000 latest signature
+ * @returns list string signature
+ */
+async function getUntilProgramSignatures(
   connection: anchor.web3.Connection,
   programId: string,
   untilSignature?: string
@@ -17,6 +24,77 @@ async function getProgramSignatures(
     .map((item) => item.signature);
 }
 
+/**
+ * Get all signature from before signature to oldest signature or 1000 signatures from this.
+ * @param connection
+ * @param programId
+ * @param beforeSignature
+ * @returns list string signature
+ */
+async function getBeforeProgramSignatures(
+  connection: anchor.web3.Connection,
+  programId: string,
+  beforeSignature: string
+): Promise<string[]> {
+  const programIdPubKey = new anchor.web3.PublicKey(programId);
+  const confirmedSignatureInfo =
+    await connection.getConfirmedSignaturesForAddress2(
+      programIdPubKey,
+      { before: beforeSignature },
+      "finalized"
+    );
+  return confirmedSignatureInfo
+    .filter((item) => item.err == null)
+    .map((item) => item.signature);
+}
+
+/**
+ *
+ * @param connection
+ * @param programId
+ * @param untilSignature  if until signature not provide. This function will get all signatures executed by program
+ *                     otherwise get all signature until provided signature
+ * @returns
+ */
+async function getProgramSignatures(
+  connection: anchor.web3.Connection,
+  programId: string,
+  untilSignature?: string
+) {
+  const signatures: string[] = [];
+  let beforeSignature: string | undefined;
+  while (true) {
+    if (!beforeSignature) {
+      const untilSignaturesData = await getUntilProgramSignatures(
+        connection,
+        programId,
+        untilSignature
+      );
+      signatures.push(...untilSignaturesData);
+      beforeSignature = untilSignaturesData[untilSignaturesData.length - 1];
+    }
+
+    const beforeSignatureData = await getBeforeProgramSignatures(
+      connection,
+      programId,
+      beforeSignature
+    );
+    if (!beforeSignatureData.length) {
+      break;
+    }
+    signatures.push(...beforeSignatureData);
+    beforeSignature = beforeSignatureData[beforeSignatureData.length - 1];
+  }
+
+  return signatures;
+}
+
+/**
+ *  Logic parsed transaction to detect create pool transaction
+ * @param connection
+ * @param batchSignatures
+ * @returns list create pool transaction
+ */
 async function getParsedPoolTransactions(
   connection: anchor.web3.Connection,
   batchSignatures: Array<string[]>
@@ -33,18 +111,24 @@ async function getParsedPoolTransactions(
         "Program log: Instruction: InitializePool"
       );
     });
-    console.log("result: ", result)
     createPoolTransactions.push(...result);
   }
   return createPoolTransactions;
 }
 
-function splitTransactions(signatures: string[]): Array<string[]> {
+/**
+ * Because limitation of number of account to request get info. We have to split into subarray.
+ * @param signatures
+ * @returns list batch signatures
+ */
+function splitTransactions(
+  signatures: string[],
+  chunkSize = 10
+): Array<string[]> {
   const batchSignatures: Array<string[]> = [];
-  if (signatures.length < 10) {
+  if (signatures.length < chunkSize) {
     batchSignatures.push(signatures);
   } else {
-    const chunkSize = 10;
     for (let i = 0; i < signatures.length; i += chunkSize) {
       const chunk = signatures.slice(i, i + chunkSize);
       batchSignatures.push(chunk);
@@ -66,20 +150,31 @@ async function main() {
   const connection = new anchor.web3.Connection(rpc);
   //
 
-  const untilSignature = undefined
+  const untilSignature = undefined;
+
+  // get all signature
+  // if first time fetch program signature. `untilSignature` param will set undefined
+  // In this case, it will fetch all transaction executed by program and parsed to get all pool account created
+  // In some common case. We already get a lot of signatures to get pool account
+  // In this case. We have to provide `untilSignature` to fetch all new signature and detect new pool create.
   const signatures = await getProgramSignatures(
     connection,
     programId,
     untilSignature
   );
-  console.log(`Founded: ${signatures.length} signatures`)
+  console.log(`Founded: ${signatures.length} signatures`);
+
+  // split huge signatures into batch of sub array
   const batchSignatures = splitTransactions(signatures);
+
+  // get and detect create pool transaction
   const transactions = await getParsedPoolTransactions(
     connection,
     batchSignatures
   );
+  console.log(`Pool transaction: ${transactions.length} transactions`);
 
-  console.log(`Pool transaction: ${transactions.length} transactions`)
+  // Logic handle parsing create pool transaction to get pool account
   const newPoolAccounts: string[] = [];
   for (const transaction of transactions) {
     if (transaction) {
