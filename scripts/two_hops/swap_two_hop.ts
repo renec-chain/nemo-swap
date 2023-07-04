@@ -1,4 +1,4 @@
-import { PublicKey, TransactionInstruction } from "@solana/web3.js";
+import { PublicKey, TransactionInstruction, Keypair } from "@solana/web3.js";
 import {
   PDAUtil,
   buildWhirlpoolClient,
@@ -42,7 +42,7 @@ function compareInstructions(
   return true;
 }
 
-function construct_swap_2_instruction(
+function constructSwap2Instruction(
   instruction1: Instruction,
   instruction2: Instruction
 ): Instruction {
@@ -52,8 +52,6 @@ function construct_swap_2_instruction(
     signers: [],
   };
 
-  // NOTE: currently, the clean up instructions are being empty, so we ignore it
-  // cleanUpInstructions are only appear in decreaseLiquidity, collectFees, collectReward and closePosition txs
   for (let j = 0; j < instruction2.instructions.length; j++) {
     let found = false;
 
@@ -74,7 +72,11 @@ function construct_swap_2_instruction(
     }
   }
 
+  // NOTE: currently, the clean up instructions are being empty, so we ignore it
+  // cleanUpInstructions are only appear in decreaseLiquidity, collectFees, collectReward and closePosition txs
   new_instruction2.cleanupInstructions = instruction2.cleanupInstructions;
+
+  // no need to worry about signers, since duplicate signers are allowed by the run time
   new_instruction2.signers = instruction2.signers;
 
   return new_instruction2;
@@ -152,7 +154,7 @@ async function main() {
   let instruction2 = swap2.compressIx(true);
 
   // Get correct instruction 2
-  instruction2 = construct_swap_2_instruction(instruction1, instruction2);
+  instruction2 = constructSwap2Instruction(instruction1, instruction2);
 
   // Append instruction 2 to transaction 1
   swap1.addInstruction(instruction2);
