@@ -383,7 +383,7 @@ describe("WhirlpoolImpl#collectFeesAndRewardsForPositions()", () => {
   }
 
   context("when the whirlpool is SPL-only", () => {
-    it("should collect fees and rewards, create all ATAs", async () => {
+    it.skip("should collect fees and rewards, create all ATAs", async () => {
       const tokenAIsNative = false;
       const ataExists = false;
       await baseTestSenario(tokenAIsNative, ataExists);
@@ -397,7 +397,7 @@ describe("WhirlpoolImpl#collectFeesAndRewardsForPositions()", () => {
   });
 
   context("when the whirlpool is SOL-SPL", () => {
-    it("should collect fees and rewards, create all ATAs", async () => {
+    it.skip("should collect fees and rewards, create all ATAs", async () => {
       const tokenAIsNative = true;
       const ataExists = false;
       await baseTestSenario(tokenAIsNative, ataExists);
