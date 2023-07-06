@@ -1,7 +1,7 @@
 import readline from "readline";
 import Decimal from "decimal.js";
 import config from "../config.json";
-import { PoolUtil } from "@renec/redex-sdk";
+import { PoolUtil, WhirlpoolsConfigData } from "@renec/redex-sdk";
 import { PoolInfo } from "./types";
 
 export async function askToConfirmPoolInfo(poolInfo: PoolInfo): Promise<void> {
@@ -29,6 +29,43 @@ export async function askToConfirmPoolInfo(poolInfo: PoolInfo): Promise<void> {
           slippage: ${poolInfo.slippage.toFixed(6)} 
           input_mint: ${poolInfo.inputMint} 
           input_amount: ${poolInfo.inputAmount.toFixed(6)}
+          -----------------------------------------------
+          Do you want to proceed? (y/n) `,
+      (answer) => {
+        rl.close();
+        if (answer.toLowerCase() !== "y") {
+          console.log("Aborting ....");
+          process.exit(0);
+        }
+        resolve();
+      }
+    );
+  });
+}
+
+export async function askToConfirmConfig(
+  configPubkey: string,
+  configInfo: WhirlpoolsConfigData
+): Promise<void> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  let message = "";
+
+  await new Promise<void>((resolve) => {
+    rl.question(
+      ` ${message} \n
+        This is the existing pool config information: 
+
+        CONFIG_PUB_KEY: ${configPubkey}
+          -----------------------------------------------
+          fee_authority: ${configInfo.feeAuthority}  
+          collect_protocol_fees_authority: ${configInfo.collectProtocolFeesAuthority}
+          reward_emissions_supper_authority: ${configInfo.rewardEmissionsSuperAuthority}
+          pool_creator_authority: ${configInfo.poolCreatorAuthority}
+          default_fee_rate: ${configInfo.defaultFeeRate}
           -----------------------------------------------
           Do you want to proceed? (y/n) `,
       (answer) => {

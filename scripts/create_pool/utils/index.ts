@@ -2,7 +2,7 @@ import { PublicKey, Connection, Keypair } from "@solana/web3.js";
 import { AnchorProvider, Wallet, BN } from "@project-serum/anchor";
 import { WhirlpoolContext, TokenInfo } from "@renec/redex-sdk";
 import { NATIVE_MINT, u64 } from "@solana/spl-token";
-import config from "../config.json";
+import { configEnv } from "../../env.config";
 
 export const ZERO_BN = new BN(0);
 export const ONE_SOL = 1000000000;
@@ -18,12 +18,12 @@ export type NemoswapAccounts = {
 
 export const loadProvider = function (payerKeypair: Keypair) {
   const wallets = loadWallets();
-  const connection = new Connection(config.RPC_ENDPOINT_URL);
+  const connection = new Connection(configEnv.RPC_END_POINT);
   const wallet = new Wallet(payerKeypair);
   const provider = new AnchorProvider(connection, wallet, {});
   const ctx = WhirlpoolContext.withProvider(
     provider,
-    new PublicKey(config.REDEX_PROGRAM_ID)
+    new PublicKey(configEnv.REDEX_PROGRAM_ID)
   );
   console.log("endpoint:", ctx.connection.rpcEndpoint);
   console.log("wallet pubkey:", ctx.wallet.publicKey.toBase58());
