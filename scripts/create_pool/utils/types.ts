@@ -12,5 +12,4 @@ export type PoolInfo = {
   slippage: Decimal;
   inputMint: Address;
   inputAmount: Decimal;
-  isOpenPosition: boolean;
 };

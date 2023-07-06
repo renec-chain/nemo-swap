@@ -5,6 +5,7 @@ import { PoolUtil, WhirlpoolsConfigData } from "@renec/redex-sdk";
 import { PoolInfo } from "./types";
 import { PublicKey } from "@solana/web3.js";
 import { configEnv } from "../../env.config";
+import { poolEnv } from "../../env.pool";
 import fs from "fs";
 import { CONFIG_INFO_PATH } from "../../consts";
 
@@ -71,7 +72,7 @@ export async function askToConfirmConfig(
           pool_creator_authority: ${configInfo.poolCreatorAuthority}
           default_fee_rate: ${configInfo.defaultProtocolFeeRate}
           -----------------------------------------------
-          Do you want to proceed? (y/n) `,
+          By proceeding, the new CONFIG_PUB_KEY will be overrided. Do you want to proceed? (y/n) `,
       (answer) => {
         rl.close();
         if (answer.toLowerCase() !== "y") {
@@ -132,12 +133,10 @@ export function checkTokenReversed(
   }
 }
 
-export function getPoolInfo(poolIndex: number): PoolInfo {
-  let pool = config.POOLS[poolIndex];
-
+export function getPoolInfo(): PoolInfo {
   const correctTokenOrder = PoolUtil.orderMints(
-    pool.TOKEN_MINT_A,
-    pool.TOKEN_MINT_B
+    poolEnv.TOKEN_MINT_A,
+    poolEnv.TOKEN_MINT_B
   );
 
   let mintAPub = correctTokenOrder[0].toString();
@@ -145,22 +144,22 @@ export function getPoolInfo(poolIndex: number): PoolInfo {
 
   // Check if pool is reversed
   let isTokenReversed = checkTokenReversed(
-    pool.TOKEN_MINT_A,
-    pool.TOKEN_MINT_B,
+    poolEnv.TOKEN_MINT_A,
+    poolEnv.TOKEN_MINT_B,
     mintAPub,
     mintBPub
   );
 
-  // Get default pool info
-  let initialAmountBPerA = new Decimal(pool.INIT_AMOUNT_B_PER_A);
-  let lowerBPerAPrice = new Decimal(pool.LOWER_B_PER_A_PRICE);
-  let upperBPerAPrice = new Decimal(pool.UPPER_B_PER_A_PRICE);
+  // Get default poolEnv info
+  let initialAmountBPerA = new Decimal(poolEnv.INIT_AMOUNT_B_PER_A);
+  let lowerBPerAPrice = new Decimal(poolEnv.LOWER_B_PER_A_PRICE);
+  let upperBPerAPrice = new Decimal(poolEnv.UPPER_B_PER_A_PRICE);
 
   let correctInitialAmountBPerA = initialAmountBPerA;
   let correctLowerBPerAPrice = lowerBPerAPrice;
   let correctUpperBPerAPrice = upperBPerAPrice;
 
-  // Get correct pool info
+  // Get correct poolEnv info
   if (isTokenReversed) {
     correctInitialAmountBPerA = initialAmountBPerA.pow(-1);
     correctLowerBPerAPrice = upperBPerAPrice.pow(-1);
@@ -171,13 +170,12 @@ export function getPoolInfo(poolIndex: number): PoolInfo {
     isTokenReversed,
     tokenMintA: mintAPub,
     tokenMintB: mintBPub,
-    tickSpacing: pool.TICK_SPACING,
+    tickSpacing: poolEnv.TICK_SPACING,
     initialAmountBPerA: correctInitialAmountBPerA,
     lowerBPerAPrice: correctLowerBPerAPrice,
     upperBPerAPrice: correctUpperBPerAPrice,
-    slippage: new Decimal(pool.SLIPPAGE),
-    inputMint: pool.INPUT_MINT,
-    inputAmount: new Decimal(pool.INPUT_AMOUNT),
-    isOpenPosition: pool.OPEN_POSITION,
+    slippage: new Decimal(poolEnv.SLIPPAGE),
+    inputMint: poolEnv.INPUT_MINT,
+    inputAmount: new Decimal(poolEnv.INPUT_AMOUNT),
   };
 }

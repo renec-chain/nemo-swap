@@ -59,6 +59,7 @@ async function main() {
     const txid = await tx.buildAndExecute();
     console.log("fee tier account deployed at txid:", txid);
 
+    await ctx.fetcher.refreshAll();
     feeTierAccount = (await ctx.fetcher.getFeeTier(
       feeTierPda.publicKey
     )) as FeeTierData;
