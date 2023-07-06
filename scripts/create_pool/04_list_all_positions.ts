@@ -1,6 +1,7 @@
 import { buildWhirlpoolClient, PriceMath } from "@renec/redex-sdk";
-import { loadProvider, delay, getTokenMintInfo, loadWallets } from "./utils";
-import deployed from "./deployed.json";
+import { loadProvider, loadWallets } from "./utils";
+import { PublicKey } from "@solana/web3.js";
+import { configEnv } from "../env.config";
 
 async function main() {
   const wallets = loadWallets();
@@ -10,7 +11,11 @@ async function main() {
   }
 
   const { ctx } = loadProvider(wallets.userKeypair);
-  if (deployed.REDEX_CONFIG_PUB === "") {
+  let REDEX_CONFIG_PUB: PublicKey;
+
+  try {
+    REDEX_CONFIG_PUB = new PublicKey(configEnv.REDEX_CONFIG_PUB);
+  } catch (e) {
     console.log(
       "ReDEX Pool Config is not found. Please run `npm run 00-create-pool-config` ."
     );

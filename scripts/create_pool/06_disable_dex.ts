@@ -1,10 +1,10 @@
 import { PublicKey } from "@solana/web3.js";
 import { PDAUtil, buildWhirlpoolClient } from "@renec/redex-sdk";
 import { loadProvider, getTokenMintInfo, loadWallets } from "./utils";
-import config from "./config.json";
-import deployed from "./deployed.json";
+import { configEnv } from "../env.config";
+import { poolEnv } from "../env.pool";
 
-const IS_ENABLE = false;
+const IS_ENABLE = true;
 
 async function main() {
   const wallets = loadWallets();
@@ -15,45 +15,45 @@ async function main() {
   }
 
   const { ctx } = loadProvider(wallets.poolCreatorAuthKeypair);
+  let REDEX_CONFIG_PUB: PublicKey;
 
-  if (deployed.REDEX_CONFIG_PUB === "") {
+  try {
+    REDEX_CONFIG_PUB = new PublicKey(configEnv.REDEX_CONFIG_PUB);
+  } catch (e) {
     console.log(
       "ReDEX Pool Config is not found. Please run `npm run 00-create-pool-config` ."
     );
     return;
   }
-  const REDEX_CONFIG_PUB = new PublicKey(deployed.REDEX_CONFIG_PUB);
+
   const client = buildWhirlpoolClient(ctx);
 
-  for (let i = 0; i < config.POOLS.length; i++) {
-    const pool = config.POOLS[i];
-    const mintAPub = new PublicKey(pool.TOKEN_MINT_A);
-    const mintBPub = new PublicKey(pool.TOKEN_MINT_B);
-    const tokenMintA = await getTokenMintInfo(ctx, mintAPub);
-    const tokenMintB = await getTokenMintInfo(ctx, mintBPub);
+  const mintAPub = new PublicKey(poolEnv.TOKEN_MINT_A);
+  const mintBPub = new PublicKey(poolEnv.TOKEN_MINT_B);
+  const tokenMintA = await getTokenMintInfo(ctx, mintAPub);
+  const tokenMintB = await getTokenMintInfo(ctx, mintBPub);
 
-    if (tokenMintA && tokenMintB) {
-      let whirlpoolPda = PDAUtil.getWhirlpool(
-        ctx.program.programId,
-        REDEX_CONFIG_PUB,
-        mintAPub,
-        mintBPub,
-        pool.TICK_SPACING
-      );
+  if (tokenMintA && tokenMintB) {
+    let whirlpoolPda = PDAUtil.getWhirlpool(
+      ctx.program.programId,
+      REDEX_CONFIG_PUB,
+      mintAPub,
+      mintBPub,
+      poolEnv.TICK_SPACING
+    );
 
-      await ctx.program.rpc.setEnableFlag(IS_ENABLE, {
-        accounts: {
-          whirlpoolsConfig: REDEX_CONFIG_PUB,
-          whirlpool: whirlpoolPda.publicKey,
-          poolCreatorAuthority: wallets.poolCreatorAuthKeypair.publicKey,
-        },
-      });
+    await ctx.program.rpc.setEnableFlag(IS_ENABLE, {
+      accounts: {
+        whirlpoolsConfig: REDEX_CONFIG_PUB,
+        whirlpool: whirlpoolPda.publicKey,
+        poolCreatorAuthority: wallets.poolCreatorAuthKeypair.publicKey,
+      },
+    });
 
-      let whirlpool = await client.getPool(whirlpoolPda.publicKey);
-      console.log("============================");
-      console.log("Pool address: ", whirlpoolPda.publicKey.toString());
-      console.log("Is enable: ", whirlpool.getData().isEnabled);
-    }
+    let whirlpool = await client.getPool(whirlpoolPda.publicKey);
+    console.log("============================");
+    console.log("Pool address: ", whirlpoolPda.publicKey.toString());
+    console.log("Is enable: ", whirlpool.getData().isEnabled);
   }
 }
 
