@@ -77,10 +77,6 @@ async function main() {
 
   // Show pool config info
   await ctx.fetcher.refreshAll();
-  console.log(
-    `wait for ${sleepInterval} seconds for the config account to be initialized...`
-  );
-  await delay(sleepInterval * 1000);
 
   let configAccount = (await ctx.fetcher.getConfig(
     new PublicKey(configEnv.REDEX_CONFIG_PUB_KEY)

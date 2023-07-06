@@ -1,11 +1,12 @@
 import { PublicKey, Connection, Keypair } from "@solana/web3.js";
 import { AnchorProvider, Wallet, BN } from "@project-serum/anchor";
-import { WhirlpoolContext, TokenInfo } from "@renec/redex-sdk";
+import { WhirlpoolContext, TokenInfo, AccountFetcher } from "@renec/redex-sdk";
 import { NATIVE_MINT, u64 } from "@solana/spl-token";
 import { configEnv } from "../../env.config";
 
 export const ZERO_BN = new BN(0);
 export const ONE_SOL = 1000000000;
+export const SLEEP_INTERVAL = 10;
 
 export type NemoswapAccounts = {
   deployerKeypair?: Keypair;
@@ -18,7 +19,7 @@ export type NemoswapAccounts = {
 
 export const loadProvider = function (payerKeypair: Keypair) {
   const wallets = loadWallets();
-  const connection = new Connection(configEnv.RPC_END_POINT);
+  const connection = new Connection(configEnv.RPC_END_POINT, "confirmed");
   const wallet = new Wallet(payerKeypair);
   const provider = new AnchorProvider(connection, wallet, {});
   const ctx = WhirlpoolContext.withProvider(
