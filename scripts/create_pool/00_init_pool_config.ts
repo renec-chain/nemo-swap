@@ -6,11 +6,9 @@ import {
   toTx,
 } from "@renec/redex-sdk";
 import { loadProvider, delay, loadWallets } from "./utils";
-import fs from "fs";
 import { configEnv } from "../env.config";
-import { askToConfirmConfig } from "./utils/pool";
-const deployedPath = "./create_pool/deployed.json";
-const retryIntervalInSeconds = 10;
+import { askToConfirmConfig, saveConfigInfo } from "./utils/pool";
+const sleepInterval = 10;
 
 async function main() {
   const wallets = loadWallets();
@@ -48,50 +46,70 @@ async function main() {
   );
 
   if (configData != null) {
-    askToConfirmConfig(configEnv.REDEX_CONFIG_PUB_KEY, configData);
+    await askToConfirmConfig(configEnv.REDEX_CONFIG_PUB_KEY, configData);
   }
 
-  // // init pool
-  // const initializedConfigInfo: InitConfigParams = {
-  //   whirlpoolsConfigKeypair: Keypair.generate(),
-  //   feeAuthority: wallets.feeAuthKeypair.publicKey,
-  //   collectProtocolFeesAuthority:
-  //     wallets.collectProtocolFeesAuthKeypair.publicKey,
-  //   rewardEmissionsSuperAuthority:
-  //     wallets.rewardEmissionSupperAuthKeypair.publicKey,
-  //   poolCreatorAuthority: wallets.poolCreatorAuthKeypair.publicKey,
-  //   defaultProtocolFeeRate: configEnv.PROTOCOL_FEE_RATE,
-  //   funder: ctx.wallet.publicKey,
-  // };
+  // init pool
+  const initializedConfigInfo: InitConfigParams = {
+    whirlpoolsConfigKeypair: Keypair.generate(),
+    feeAuthority: wallets.feeAuthKeypair.publicKey,
+    collectProtocolFeesAuthority:
+      wallets.collectProtocolFeesAuthKeypair.publicKey,
+    rewardEmissionsSuperAuthority:
+      wallets.rewardEmissionSupperAuthKeypair.publicKey,
+    poolCreatorAuthority: wallets.poolCreatorAuthKeypair.publicKey,
+    defaultProtocolFeeRate: configEnv.PROTOCOL_FEE_RATE,
+    funder: ctx.wallet.publicKey,
+  };
 
-  // const tx = toTx(
-  //   ctx,
-  //   WhirlpoolIx.initializeConfigIx(ctx.program, initializedConfigInfo)
-  // );
-  // const txid = await tx.buildAndExecute();
-  // console.log("redex pool config deployed at txid:", txid);
+  const tx = toTx(
+    ctx,
+    WhirlpoolIx.initializeConfigIx(ctx.program, initializedConfigInfo)
+  );
+  const txid = await tx.buildAndExecute();
+  console.log("redex pool config deployed at txid:", txid);
 
-  // console.log("===================================================");
-  // console.log("ReDEX Pool Config Info:");
-  // console.log("\x1b[32m%s\x1b[0m", `public_key: ${deployed.REDEX_CONFIG_PUB}`);
-  // console.log("fee_authority:", configAccount.feeAuthority.toBase58());
-  // console.log(
-  //   "collect_protocol_fees_authority:",
-  //   configAccount.collectProtocolFeesAuthority.toBase58()
-  // );
-  // console.log(
-  //   "reward_emissions_super_authority:",
-  //   configAccount.rewardEmissionsSuperAuthority.toBase58()
-  // );
-  // console.log(
-  //   "pool_creator_authority:",
-  //   configAccount.poolCreatorAuthority.toBase58()
-  // );
-  // console.log(
-  //   "default_protocol_fee_rate:",
-  //   configAccount.defaultProtocolFeeRate
-  // );
-  // console.log("===================================================");
+  // Save config info
+  configEnv.REDEX_CONFIG_PUB_KEY =
+    initializedConfigInfo.whirlpoolsConfigKeypair.publicKey.toString();
+
+  await saveConfigInfo(configEnv);
+
+  // Show pool config info
+  await ctx.fetcher.refreshAll();
+  console.log(
+    `wait for ${sleepInterval} seconds for the config account to be initialized...`
+  );
+  await delay(sleepInterval * 1000);
+
+  let configAccount = (await ctx.fetcher.getConfig(
+    new PublicKey(configEnv.REDEX_CONFIG_PUB_KEY)
+  )) as WhirlpoolsConfigData;
+
+  console.log("===================================================");
+  console.log("ReDEX Pool Config Info:");
+  console.log(
+    "\x1b[32m%s\x1b[0m",
+    `public_key: ${configEnv.REDEX_CONFIG_PUB_KEY}`
+  );
+  console.log("fee_authority:", configAccount.feeAuthority.toBase58());
+  console.log(
+    "collect_protocol_fees_authority:",
+    configAccount.collectProtocolFeesAuthority.toBase58()
+  );
+  console.log(
+    "reward_emissions_super_authority:",
+    configAccount.rewardEmissionsSuperAuthority.toBase58()
+  );
+  console.log(
+    "pool_creator_authority:",
+    configAccount.poolCreatorAuthority.toBase58()
+  );
+  console.log(
+    "default_protocol_fee_rate:",
+    configAccount.defaultProtocolFeeRate
+  );
+  console.log("===================================================");
 }
 
 main().catch((reason) => {

@@ -3,6 +3,10 @@ import Decimal from "decimal.js";
 import config from "../config.json";
 import { PoolUtil, WhirlpoolsConfigData } from "@renec/redex-sdk";
 import { PoolInfo } from "./types";
+import { PublicKey } from "@solana/web3.js";
+import { configEnv } from "../../env.config";
+import fs from "fs";
+import { CONFIG_INFO_PATH } from "../../consts";
 
 export async function askToConfirmPoolInfo(poolInfo: PoolInfo): Promise<void> {
   const rl = readline.createInterface({
@@ -65,7 +69,7 @@ export async function askToConfirmConfig(
           collect_protocol_fees_authority: ${configInfo.collectProtocolFeesAuthority}
           reward_emissions_supper_authority: ${configInfo.rewardEmissionsSuperAuthority}
           pool_creator_authority: ${configInfo.poolCreatorAuthority}
-          default_fee_rate: ${configInfo.defaultFeeRate}
+          default_fee_rate: ${configInfo.defaultProtocolFeeRate}
           -----------------------------------------------
           Do you want to proceed? (y/n) `,
       (answer) => {
@@ -77,6 +81,39 @@ export async function askToConfirmConfig(
         resolve();
       }
     );
+  });
+}
+
+export async function saveConfigInfo(config: typeof configEnv) {
+  const content = `
+  export const configEnv = {
+    RPC_END_POINT: "${config.RPC_END_POINT}",
+    REDEX_PROGRAM_ID: "${config.REDEX_PROGRAM_ID}",
+    REDEX_CONFIG_PUB_KEY: "${config.REDEX_CONFIG_PUB_KEY}",
+    PROTOCOL_FEE_RATE: ${config.PROTOCOL_FEE_RATE},
+    FEE_TIERS_TICK_SPACING: ${config.FEE_TIERS_TICK_SPACING},
+    FEE_TIERS_DEFAULT_FEE_RATE: ${config.FEE_TIERS_DEFAULT_FEE_RATE},
+  };
+    `;
+
+  fs.writeFile(CONFIG_INFO_PATH, content, (err) => {
+    if (err) {
+      console.error("Error writing to env.config.ts:", err);
+    } else {
+      console.log("Successfully updated env.config.ts\n");
+    }
+  });
+}
+
+export async function showConfigInfo() {
+  fs.readFile(CONFIG_INFO_PATH, "utf8", function (err, data) {
+    if (err) {
+      console.log("\n\n **_** Error reading env.config.ts:", err);
+    } else {
+      console.log("=======================================================");
+      console.log(data);
+      console.log("=======================================================");
+    }
   });
 }
 
