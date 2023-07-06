@@ -42,11 +42,11 @@ async function main() {
 
   // Get existing pool config info
   let configData = await ctx.fetcher.getConfig(
-    new PublicKey(configEnv.REDEX_CONFIG_PUB_KEY)
+    new PublicKey(configEnv.REDEX_CONFIG_PUB)
   );
 
   if (configData != null) {
-    await askToConfirmConfig(configEnv.REDEX_CONFIG_PUB_KEY, configData);
+    await askToConfirmConfig(configEnv.REDEX_CONFIG_PUB, configData);
   }
 
   // init pool
@@ -70,7 +70,7 @@ async function main() {
   console.log("redex pool config deployed at txid:", txid);
 
   // Save config info
-  configEnv.REDEX_CONFIG_PUB_KEY =
+  configEnv.REDEX_CONFIG_PUB =
     initializedConfigInfo.whirlpoolsConfigKeypair.publicKey.toString();
 
   await saveConfigInfo(configEnv);
@@ -79,15 +79,12 @@ async function main() {
   await ctx.fetcher.refreshAll();
 
   let configAccount = (await ctx.fetcher.getConfig(
-    new PublicKey(configEnv.REDEX_CONFIG_PUB_KEY)
+    new PublicKey(configEnv.REDEX_CONFIG_PUB)
   )) as WhirlpoolsConfigData;
 
   console.log("===================================================");
   console.log("ReDEX Pool Config Info:");
-  console.log(
-    "\x1b[32m%s\x1b[0m",
-    `public_key: ${configEnv.REDEX_CONFIG_PUB_KEY}`
-  );
+  console.log("\x1b[32m%s\x1b[0m", `public_key: ${configEnv.REDEX_CONFIG_PUB}`);
   console.log("fee_authority:", configAccount.feeAuthority.toBase58());
   console.log(
     "collect_protocol_fees_authority:",

@@ -90,7 +90,7 @@ export async function saveConfigInfo(config: typeof configEnv) {
   export const configEnv = {
     RPC_END_POINT: "${config.RPC_END_POINT}",
     REDEX_PROGRAM_ID: "${config.REDEX_PROGRAM_ID}",
-    REDEX_CONFIG_PUB_KEY: "${config.REDEX_CONFIG_PUB_KEY}",
+    REDEX_CONFIG_PUB: "${config.REDEX_CONFIG_PUB}",
     PROTOCOL_FEE_RATE: ${config.PROTOCOL_FEE_RATE},
     FEE_TIERS_TICK_SPACING: ${config.FEE_TIERS_TICK_SPACING},
     FEE_TIERS_DEFAULT_FEE_RATE: ${config.FEE_TIERS_DEFAULT_FEE_RATE},

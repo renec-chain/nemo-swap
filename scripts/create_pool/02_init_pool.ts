@@ -21,7 +21,7 @@ async function main() {
 
   let REDEX_CONFIG_PUB: PublicKey;
   try {
-    REDEX_CONFIG_PUB = new PublicKey(configEnv.REDEX_CONFIG_PUB_KEY);
+    REDEX_CONFIG_PUB = new PublicKey(configEnv.REDEX_CONFIG_PUB);
   } catch (e) {
     console.log(
       "ReDEX Pool Config is not found. Please run `npm run 00-create-pool-config` ."

@@ -19,13 +19,13 @@ async function main() {
   }
   const { ctx } = loadProvider(wallets.feeAuthKeypair);
 
-  if (configEnv.REDEX_CONFIG_PUB_KEY === "") {
+  if (configEnv.REDEX_CONFIG_PUB === "") {
     console.log(
       "ReDEX Pool Config is not found. Please run `npm run 00-create-pool-config` ."
     );
     return;
   }
-  const REDEX_CONFIG_PUB = new PublicKey(configEnv.REDEX_CONFIG_PUB_KEY);
+  const REDEX_CONFIG_PUB = new PublicKey(configEnv.REDEX_CONFIG_PUB);
   const configAccount = (await ctx.fetcher.getConfig(
     REDEX_CONFIG_PUB
   )) as WhirlpoolsConfigData;
