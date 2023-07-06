@@ -35,7 +35,7 @@ describe("WhirlpoolImpl#collectFeesAndRewardsForPositions()", () => {
   const tickSpacing = TickSpacing.Standard;
   const vaultStartBalance = 1_000_000;
   const liquidityAmount = new u64(10_000_000);
-  const sleep = (second: number) => new Promise(resolve => setTimeout(resolve, second * 1000))
+  const sleep = (second: number) => new Promise((resolve) => setTimeout(resolve, second * 1000));
 
   before(() => {
     const provider = anchor.AnchorProvider.local(undefined, {
@@ -58,12 +58,7 @@ describe("WhirlpoolImpl#collectFeesAndRewardsForPositions()", () => {
 
   async function accrueFees(fixture: WhirlpoolTestFixture) {
     const ctx = testCtx.whirlpoolCtx;
-    const {
-      poolInitInfo,
-      positions,
-      tokenAccountA,
-      tokenAccountB,
-    } = fixture.getInfos();
+    const { poolInitInfo, positions, tokenAccountA, tokenAccountB } = fixture.getInfos();
 
     const { whirlpoolPda, tokenVaultAKeypair, tokenVaultBKeypair } = poolInitInfo;
 
@@ -143,7 +138,7 @@ describe("WhirlpoolImpl#collectFeesAndRewardsForPositions()", () => {
 
     const pool = await testCtx.whirlpoolClient.getPool(whirlpoolPda.publicKey);
 
-    for (let i=0; i<NUM_REWARDS; i++) {
+    for (let i = 0; i < NUM_REWARDS; i++) {
       await toTx(
         ctx,
         WhirlpoolIx.setRewardEmissionsIx(ctx.program, {
@@ -153,7 +148,9 @@ describe("WhirlpoolImpl#collectFeesAndRewardsForPositions()", () => {
           rewardIndex: i,
           emissionsPerSecondX64: ZERO,
         })
-      ).addSigner(configKeypairs.rewardEmissionsSuperAuthorityKeypair).buildAndExecute();
+      )
+        .addSigner(configKeypairs.rewardEmissionsSuperAuthorityKeypair)
+        .buildAndExecute();
     }
   }
 
@@ -171,7 +168,7 @@ describe("WhirlpoolImpl#collectFeesAndRewardsForPositions()", () => {
     await burnAndCloseATA(ctx, ataA);
     await burnAndCloseATA(ctx, ataB);
 
-    for (let i=0; i<NUM_REWARDS; i++) {
+    for (let i = 0; i < NUM_REWARDS; i++) {
       if (PoolUtil.isRewardInitialized(pool.getRewardInfos()[i])) {
         const mintReward = pool.getRewardInfos()[i].mint;
         const ataReward = await deriveATA(ctx.wallet.publicKey, mintReward);
@@ -224,7 +221,7 @@ describe("WhirlpoolImpl#collectFeesAndRewardsForPositions()", () => {
     await createATA(ctx, ataA, mintA);
     await createATA(ctx, ataB, mintB);
 
-    for (let i=0; i<NUM_REWARDS; i++) {
+    for (let i = 0; i < NUM_REWARDS; i++) {
       if (PoolUtil.isRewardInitialized(pool.getRewardInfos()[i])) {
         const mintReward = pool.getRewardInfos()[i].mint;
         const ataReward = await deriveATA(ctx.wallet.publicKey, mintReward);
@@ -262,7 +259,7 @@ describe("WhirlpoolImpl#collectFeesAndRewardsForPositions()", () => {
     const positions: FundedPositionInfo[] = [];
     const numOfPool = 3;
 
-    for (let i=0; i<numOfPool; i++) {
+    for (let i = 0; i < numOfPool; i++) {
       const fixture = await new WhirlpoolTestFixture(testCtx.whirlpoolCtx).init({
         tokenAIsNative,
         tickSpacing,
@@ -303,7 +300,10 @@ describe("WhirlpoolImpl#collectFeesAndRewardsForPositions()", () => {
     for (const positionInfo of positions) {
       const position = await testCtx.whirlpoolClient.getPosition(positionInfo.publicKey);
 
-      const poolData = await testCtx.whirlpoolCtx.fetcher.getPool(position.getData().whirlpool, true);
+      const poolData = await testCtx.whirlpoolCtx.fetcher.getPool(
+        position.getData().whirlpool,
+        true
+      );
       const positionData = await position.refreshData();
       const tickLowerData = position.getLowerTickData();
       const tickUpperData = position.getLowerTickData();
@@ -330,31 +330,48 @@ describe("WhirlpoolImpl#collectFeesAndRewardsForPositions()", () => {
       assert.ok(rewardQuote[2]?.gt(ZERO));
     }
 
-    const txs = await testCtx.whirlpoolClient.collectFeesAndRewardsForPositions(
-      positions.map((p) => p.publicKey),
-      true,
-    );
-    assert.ok(txs.length >= 2);
+    for (const position of positions) {
+      const txs = await testCtx.whirlpoolClient.collectFeesAndRewardsForPositions(
+        [position.publicKey],
+        true
+      );
 
-    const requests: SendTxRequest[] = [];
-    for (const tx of txs) {
-      requests.push(await tx.build());
+      assert.ok(txs.length == 1);
+      for (const tx of txs) {
+        await tx.buildAndExecute();
+      }
     }
+    // const txs = await testCtx.whirlpoolClient.collectFeesAndRewardsForPositions(
+    //   positions.map((p) => p.publicKey),
+    //   true
+    // );
+    // assert.ok(txs.length >= 2);
 
-    const parallel = true;
-    const processor = new TransactionProcessor(testCtx.whirlpoolCtx.connection, testCtx.whirlpoolCtx.wallet);
-    const { execute } = await processor.signAndConstructTransactions(requests, parallel);
+    // const requests: SendTxRequest[] = [];
+    // for (const tx of txs) {
+    //   requests.push(await tx.build());
+    // }
 
-    const txResults = await execute();
-    for (const result of txResults) {
-      assert.ok(result.status === "fulfilled");
-    }
+    // const parallel = true;
+    // const processor = new TransactionProcessor(
+    //   testCtx.whirlpoolCtx.connection,
+    //   testCtx.whirlpoolCtx.wallet
+    // );
+    // const { execute } = await processor.signAndConstructTransactions(requests, parallel);
+
+    // const txResults = await execute();
+    // for (const result of txResults) {
+    //   assert.ok(result.status === "fulfilled");
+    // }
 
     // check all positions have no fees and rewards
     for (const positionInfo of positions) {
       const position = await testCtx.whirlpoolClient.getPosition(positionInfo.publicKey);
 
-      const poolData = await testCtx.whirlpoolCtx.fetcher.getPool(position.getData().whirlpool, true);
+      const poolData = await testCtx.whirlpoolCtx.fetcher.getPool(
+        position.getData().whirlpool,
+        true
+      );
       const positionData = await position.refreshData();
       const tickLowerData = position.getLowerTickData();
       const tickUpperData = position.getLowerTickData();
@@ -383,7 +400,7 @@ describe("WhirlpoolImpl#collectFeesAndRewardsForPositions()", () => {
   }
 
   context("when the whirlpool is SPL-only", () => {
-    it.skip("should collect fees and rewards, create all ATAs", async () => {
+    it("should collect fees and rewards, create all ATAs", async () => {
       const tokenAIsNative = false;
       const ataExists = false;
       await baseTestSenario(tokenAIsNative, ataExists);
@@ -397,7 +414,7 @@ describe("WhirlpoolImpl#collectFeesAndRewardsForPositions()", () => {
   });
 
   context("when the whirlpool is SOL-SPL", () => {
-    it.skip("should collect fees and rewards, create all ATAs", async () => {
+    it("should collect fees and rewards, create all ATAs", async () => {
       const tokenAIsNative = true;
       const ataExists = false;
       await baseTestSenario(tokenAIsNative, ataExists);

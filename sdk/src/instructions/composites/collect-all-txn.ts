@@ -7,11 +7,13 @@ import { PositionData, WhirlpoolContext } from "../..";
 import { WhirlpoolIx } from "../../ix";
 import { WhirlpoolData } from "../../types/public";
 import { PDAUtil, PoolUtil, TickUtil } from "../../utils/public";
-import { getAssociatedTokenAddressSync, createWSOLAccountInstructions } from "../../utils/spl-token-utils";
+import {
+  getAssociatedTokenAddressSync,
+  createWSOLAccountInstructions,
+} from "../../utils/spl-token-utils";
 import { convertListToMap, checkMergedTransactionSizeIsValid } from "../../utils/txn-utils";
 import { getTokenMintsFromWhirlpools } from "../../utils/whirlpool-ata-utils";
 import { updateFeesAndRewardsIx } from "../update-fees-and-rewards-ix";
-
 /**
  * Parameters to collect all fees and rewards from a list of positions.
  *
@@ -125,7 +127,7 @@ export async function collectAllForPositionsTxns(
       allMints.mintMap.map((tokenMint) => ({ tokenMint })),
       async () => accountExemption,
       payerKey,
-      true // CreateIdempotent
+      false // CreateIdempotent
     ),
     allMints.mintMap.map((mint) => mint.toBase58())
   );
@@ -144,7 +146,7 @@ export async function collectAllForPositionsTxns(
       resolvedAtas[NATIVE_MINT.toBase58()] = createWSOLAccountInstructions(
         receiverKey,
         ZERO,
-        accountExemption,
+        accountExemption
       );
     }
 
@@ -158,7 +160,7 @@ export async function collectAllForPositionsTxns(
       positionOwnerKey,
       positionAuthorityKey,
       resolvedAtas,
-      touchedMints,
+      touchedMints
     );
     const positionTxBuilder = new TransactionBuilder(ctx.connection, ctx.wallet);
     positionTxBuilder.addInstructions(collectIxForPosition);
@@ -169,7 +171,7 @@ export async function collectAllForPositionsTxns(
     const mergeable = await checkMergedTransactionSizeIsValid(
       ctx,
       [pendingTxBuilder, positionTxBuilder],
-      latestBlockhash,
+      latestBlockhash
     );
     if (mergeable) {
       pendingTxBuilder.addInstruction(positionTxBuilder.compressIx(false));
@@ -204,7 +206,7 @@ const constructCollectIxForPosition = (
   positionOwner: PublicKey,
   positionAuthority: PublicKey,
   resolvedAtas: Record<string, ResolvedTokenAddressInstruction>,
-  touchedMints: Set<string>,
+  touchedMints: Set<string>
 ) => {
   const ixForPosition: Instruction[] = [];
   const {
