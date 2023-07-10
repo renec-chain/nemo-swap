@@ -16,9 +16,9 @@ const schema = {
       description: "Enter REDEX_PROGRAM_ID",
       default: configEnv.REDEX_PROGRAM_ID,
     },
-    REDEX_CONFIG_PUB_KEY: {
+    REDEX_CONFIG_PUB: {
       description: "Enter REDEX_CONFIG_PUB_KEY",
-      default: configEnv.REDEX_CONFIG_PUB_KEY,
+      default: configEnv.REDEX_CONFIG_PUB,
     },
     PROTOCOL_FEE_RATE: {
       description: "Enter PROTOCOL_FEE_RATE",
