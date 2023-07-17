@@ -10,7 +10,7 @@ import config from "./config.json";
 import deployed from "./deployed.json";
 const fs = require("fs");
 const deployedPath = "./create_pool/deployed.json";
-const retryIntervalInSeconds = 10;
+const retryIntervalInSeconds = 15;
 
 async function main() {
   const wallets = loadWallets();

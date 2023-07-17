@@ -81,7 +81,7 @@ async function main() {
         ctx.wallet.publicKey
       );
       const txid = await tx.buildAndExecute();
-      console.log("new pool account deployed at txid:", txid);
+      console.log(`new pool account ${poolKey.toString()} deployed at txid:`, txid);
     }
   }
 }
