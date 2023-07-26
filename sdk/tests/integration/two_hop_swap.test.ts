@@ -48,6 +48,7 @@ describe("two-hop swap", () => {
       arrayCount: 3,
       aToB,
     });
+    //
     aqConfig.initTickArrayRangeParams.push({
       poolIndex: 1,
       startTickIndex: 22528,
