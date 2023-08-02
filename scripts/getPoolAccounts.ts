@@ -34,13 +34,14 @@ async function getUntilProgramSignatures(
 async function getBeforeProgramSignatures(
   connection: anchor.web3.Connection,
   programId: string,
-  beforeSignature: string
+  beforeSignature: string,
+  untilSignature?: string
 ): Promise<string[]> {
   const programIdPubKey = new anchor.web3.PublicKey(programId);
   const confirmedSignatureInfo =
     await connection.getConfirmedSignaturesForAddress2(
       programIdPubKey,
-      { before: beforeSignature },
+      { before: beforeSignature, until: untilSignature },
       "finalized"
     );
   return confirmedSignatureInfo
@@ -71,13 +72,19 @@ async function getProgramSignatures(
         untilSignature
       );
       signatures.push(...untilSignaturesData);
-      beforeSignature = untilSignaturesData[untilSignaturesData.length - 1];
+
+      if (untilSignaturesData.length < 1000) {
+        break;
+      } else {
+        beforeSignature = untilSignaturesData[untilSignaturesData.length - 1];
+      }
     }
 
     const beforeSignatureData = await getBeforeProgramSignatures(
       connection,
       programId,
-      beforeSignature
+      beforeSignature,
+      untilSignature
     );
     if (!beforeSignatureData.length) {
       break;
@@ -146,11 +153,12 @@ async function main() {
 
   const programId = isMainnet
     ? ""
-    : "7yyFRQehBQjdSpWYV93jWh4558YbWmc4ofbMWzKTPyJL";
+    : "4ERwQLtitCdCvSqjzrrVUTeZNfisLNuo3J8HVrbo6mn6";
   const connection = new anchor.web3.Connection(rpc);
   //
 
-  const untilSignature = undefined;
+  const untilSignature =
+    "3dGC1zLoyhzzp1uZjzcFkEcmrzoG3J5EbZj4M6XJPDc8K8ym9C2nrmJbGmxgjVgyZterQrqudHfGV16U1TKENj6d";
 
   // get all signature
   // if first time fetch program signature. `untilSignature` param will set undefined
