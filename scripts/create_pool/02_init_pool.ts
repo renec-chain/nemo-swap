@@ -12,6 +12,10 @@ async function main() {
   if (!wallets.poolCreatorAuthKeypair) {
     throw new Error("Please provide pool_creator_authority_wallet wallet");
   }
+  console.log(
+    "pool creator: ",
+    wallets.poolCreatorAuthKeypair.publicKey.toString()
+  );
 
   const { ctx } = loadProvider(wallets.poolCreatorAuthKeypair);
 
@@ -67,7 +71,7 @@ async function main() {
 
       const currentA2BPrice = new Decimal(poolInfo.initialAmountBPerA);
       const tickIndex = PriceMath.priceToInitializableTickIndex(
-        currentA2BPrice, 
+        currentA2BPrice,
         tokenMintA.decimals,
         tokenMintB.decimals,
         poolInfo.tickSpacing
@@ -81,7 +85,10 @@ async function main() {
         ctx.wallet.publicKey
       );
       const txid = await tx.buildAndExecute();
-      console.log(`new pool account ${poolKey.toString()} deployed at txid:`, txid);
+      console.log(
+        `new pool account ${poolKey.toString()} deployed at txid:`,
+        txid
+      );
     }
   }
 }

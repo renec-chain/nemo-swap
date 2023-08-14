@@ -19,6 +19,7 @@ async function main() {
   if (!wallets.userKeypair) {
     throw new Error("Please provide user_wallet wallet");
   }
+  console.log("user: ", wallets.userKeypair.publicKey.toString());
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(

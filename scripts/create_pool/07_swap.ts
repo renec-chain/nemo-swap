@@ -30,11 +30,13 @@ async function main() {
   }
   const REDEX_CONFIG_PUB = new PublicKey(deployed.REDEX_CONFIG_PUB);
   const whirlpoolKey = new PublicKey(
-    "HCH1BZhvWvyVEUUMLHKHthvRucExkDAYqPso5NvvP1Z7"
+    "HmruH4dvo1FdsLNDpFFnurtm6ih3YhwcbiDNnHu8bec2"
   );
   const client = buildWhirlpoolClient(ctx);
   const whirlpool = await client.getPool(whirlpoolKey, true);
   const whirlpoolData = whirlpool.getData();
+  console.log("pool 1 - tokenMintA: ", whirlpoolData.tokenMintA.toString());
+  console.log("pool 1 - tokenMintB: ", whirlpoolData.tokenMintB.toString());
   const quote = await swapQuoteByInputToken(
     whirlpool,
     whirlpoolData.tokenMintB,
