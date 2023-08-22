@@ -1,28 +1,20 @@
-import { PublicKey, Keypair, Transaction } from "@solana/web3.js";
+import { PublicKey} from "@solana/web3.js";
 import {
-  MathUtil,
   Percentage,
-  deriveATA,
   resolveOrCreateATAs,
-  ZERO
+  ZERO,
+  TransactionBuilder,
 } from "@orca-so/common-sdk";
 import {
   PDAUtil,
   buildWhirlpoolClient,
-  PriceMath,
   swapQuoteByInputToken,
   twoHopSwapQuoteFromSwapQuotes,
   WhirlpoolIx,
-  InitPoolParams,
-  WhirlpoolContext,
 } from "@renec/redex-sdk";
-import { loadProvider, getTokenMintInfo, loadWallets } from "./utils";
-import Decimal from "decimal.js";
-import config from "./config.json";
+import { loadProvider, loadWallets } from "./utils";
 import deployed from "./deployed.json";
-import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";
-import { u64, Token } from "@solana/spl-token";
-import { Instruction } from "@project-serum/anchor";
+import { u64 } from "@solana/spl-token";
 
 async function main() {
   const wallets = loadWallets();
@@ -41,11 +33,11 @@ async function main() {
   }
 
   const whirlpoolKey1 = new PublicKey(
-    "HmruH4dvo1FdsLNDpFFnurtm6ih3YhwcbiDNnHu8bec2"
+    "Bfb9AgpqK6y6wxVQZSryXbRDnWKc6dwjAHmnL9sXuXNB"
   );
 
   const whirlpoolKey2 = new PublicKey(
-    "7BL2mnqmFErEKpx4EwTTXXmjn4BvxUzD5Nrgr7afj1Q9"
+    "CYY6QDsFYqmJ2MtiS6EWbjnVR61EGWx89h9NfU7oK4Cw"
   );
   const client = buildWhirlpoolClient(ctx);
   const whirlpool1 = await client.getPool(whirlpoolKey1, true);
@@ -71,7 +63,7 @@ async function main() {
 
   const quote2 = await swapQuoteByInputToken(
     whirlpool2,
-    whirlpoolData2.tokenMintB,
+    whirlpoolData2.tokenMintA,
     quote1.estimatedAmountOut,
     Percentage.fromFraction(1, 100),
     ctx.program.programId,
@@ -90,7 +82,7 @@ async function main() {
     whirlpoolKey2
   ).publicKey;
 
-  const transactions = new Transaction();
+  const txBuilder = new TransactionBuilder(ctx.connection, ctx.wallet)
 
   const [resolvedAtaOneA, resolvedAtaOneB, resolvedAtaTwoA, resolvedAtaTwoB] =
     await resolveOrCreateATAs(
@@ -114,13 +106,13 @@ async function main() {
   const { address: tokenOwnerAccountTwoB, ...tokenOwnerAccountTwoBIx } =
     resolvedAtaTwoB;
 
-  createATAInstructions.push(...tokenOwnerAccountOneAIx.instructions);
-  createATAInstructions.push(...tokenOwnerAccountOneBIx.instructions);
-  createATAInstructions.push(...tokenOwnerAccountTwoAIx.instructions);
-  createATAInstructions.push(...tokenOwnerAccountTwoBIx.instructions);
+  createATAInstructions.push(tokenOwnerAccountOneAIx);
+  createATAInstructions.push(tokenOwnerAccountOneBIx);
+  createATAInstructions.push(tokenOwnerAccountTwoAIx);
+  createATAInstructions.push(tokenOwnerAccountTwoBIx);
   if (createATAInstructions.length) {
     console.log(`add: ${createATAInstructions.length} create ATAs account instructions`)
-    transactions.add(...createATAInstructions);
+    txBuilder.addInstructions(createATAInstructions);
   }
 
   const poolParams = {
@@ -138,19 +130,17 @@ async function main() {
     oracleTwo,
   };
 
-  const tx = WhirlpoolIx.twoHopSwapIx(ctx.program, {
+  const ix = WhirlpoolIx.twoHopSwapIx(ctx.program, {
     ...twoHopSwapQuote,
     ...poolParams,
     tokenAuthority: wallets.userKeypair.publicKey,
   });
 
-  const transaction = transactions.add(...tx.instructions);
-  transaction.recentBlockhash = (
-    await ctx.connection.getLatestBlockhash()
-  ).blockhash;
-  transaction.sign(wallets.userKeypair);
-  const sig = await ctx.connection.sendRawTransaction(transaction.serialize());
-  console.log("transaction: ", sig);
+  const tx = await txBuilder.addInstruction(ix)
+    .addSigner(wallets.userKeypair)
+    .buildAndExecute();
+
+  console.log("transaction: ", tx);
 }
 
 main().catch((reason) => {

@@ -1,6 +1,6 @@
 {
-  "name": "@renec/redex-sdk",
-  "version": "0.7.2",
+  "name": "@renec-foundation/redex-sdk",
+  "version": "0.8.1",
   "description": "Typescript SDK to interact with Orca's Whirlpool program.",
   "license": "Apache-2.0",
   "main": "dist/index.js",
