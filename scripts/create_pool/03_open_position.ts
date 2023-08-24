@@ -19,6 +19,7 @@ async function main() {
   if (!wallets.userKeypair) {
     throw new Error("Please provide user_wallet wallet");
   }
+  console.log("user: ", wallets.userKeypair.publicKey.toString());
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(
@@ -71,12 +72,15 @@ async function main() {
           tokenMintB.decimals,
           poolInfo.tickSpacing
         );
+        console.log("tick lower index: ", tickLowerIndex);
         const tickUpperIndex = PriceMath.priceToInitializableTickIndex(
           upperPrice,
           tokenMintA.decimals,
           tokenMintB.decimals,
           poolInfo.tickSpacing
         );
+
+        console.log("tick upper index: ", tickUpperIndex);
 
         const inputTokenMint = new PublicKey(poolInfo.inputMint);
 
@@ -100,7 +104,7 @@ async function main() {
           tickLowerIndex,
           tickUpperIndex,
         ]);
-
+        console.log("input token amount: ", inputTokenAmount.toString());
         const quote = increaseLiquidityQuoteByInputTokenWithParams({
           tokenMintA: mintAPub,
           tokenMintB: mintBPub,
@@ -112,6 +116,8 @@ async function main() {
           inputTokenAmount,
           slippageTolerance,
         });
+
+        console.log("quote: ", quote.liquidityAmount.toString());
 
         const { tx } = await whirlpool.openPosition(
           tickLowerIndex,

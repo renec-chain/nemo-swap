@@ -12,6 +12,10 @@ async function main() {
   if (!wallets.poolCreatorAuthKeypair) {
     throw new Error("Please provide pool_creator_authority_wallet wallet");
   }
+  console.log(
+    "pool creator: ",
+    wallets.poolCreatorAuthKeypair.publicKey.toString()
+  );
 
   const { ctx } = loadProvider(wallets.poolCreatorAuthKeypair);
 
@@ -38,6 +42,7 @@ async function main() {
       console.log("token_a:", mintAPub.toBase58());
       console.log("token_b:", mintBPub.toBase58());
       console.log("tick_spacing:", poolInfo.tickSpacing);
+      console.log("tick_spacing:", poolInfo.tokenMintB);
 
       const whirlpoolPda = PDAUtil.getWhirlpool(
         ctx.program.programId,
@@ -80,7 +85,10 @@ async function main() {
         ctx.wallet.publicKey
       );
       const txid = await tx.buildAndExecute();
-      console.log("new pool account deployed at txid:", txid);
+      console.log(
+        `new pool account ${poolKey.toString()} deployed at txid:`,
+        txid
+      );
     }
   }
 }

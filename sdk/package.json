@@ -1,13 +1,13 @@
 {
-  "name": "@renec/redex-sdk",
-  "version": "0.7.2",
+  "name": "@renec-foundation/redex-sdk",
+  "version": "0.8.1",
   "description": "Typescript SDK to interact with Orca's Whirlpool program.",
   "license": "Apache-2.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "dependencies": {
     "@metaplex-foundation/mpl-token-metadata": "1.2.5",
-    "@orca-so/common-sdk": "^0.1.4",
+    "@orca-so/common-sdk": "^0.1.10",
     "@project-serum/anchor": "~0.25.0",
     "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "1.66.0",
@@ -28,6 +28,7 @@
     "process": "^0.11.10",
     "start-server-and-test": "^2.0.0",
     "ts-jest": "^27.0.3",
+    "typedoc": "~0.22.18",
     "ts-mocha": "^10.0.0",
     "typescript": "^4.5.5"
   },
@@ -38,7 +39,7 @@
     "prettier-format": "prettier --config .prettierrc 'src/**/*.ts' --write",
     "test": "anchor test",
     "start-server-and-test": "start-server-and-test",
-    "docs": "npx typedoc --excludePrivate --categorizeByGroup false --tsconfig src/tsconfig.json"
+    "docs": "npx typedoc --options typedoc.json"
   },
   "lint-staged": {
     "*.{ts,md}": "yarn run prettier-format"

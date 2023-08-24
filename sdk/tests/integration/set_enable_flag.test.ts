@@ -122,7 +122,6 @@ describe("set_enable_flag", () => {
     await sleep(1000);
     const whirlpool = (await fetcher.getPool(poolInitInfo.whirlpoolPda.publicKey, true)) as WhirlpoolData;
     assert.equal(whirlpool.isEnabled, isEnabled);
-    
     const receiverKeypair = anchor.web3.Keypair.generate();
 
     await assert.rejects(
@@ -196,7 +195,6 @@ describe("set_enable_flag", () => {
       /0x1799/ // Pool was disabled
     );
   })
-  
   it("fails decrease_liquidity if pool enable is false", async () => {
     const liquidityAmount = new anchor.BN(1_250_000);
     const tickLower = 7168;

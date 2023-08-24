@@ -5,7 +5,7 @@ import { Whirlpool } from "./artifacts/whirlpool";
 import * as ix from "./instructions";
 
 /**
- * Instruction set for the Whirlpools program.
+ * Instruction builders for the Whirlpools program.
  *
  * @category Core
  */
@@ -182,12 +182,36 @@ export class WhirlpoolIx {
    *
    * ### Parameters
    * @param program - program object containing services required to generate the instruction
-   * @param params - SwapParams object
+   * @param params - {@link SwapParams}
    * @returns - Instruction to perform the action.
    */
   public static swapIx(program: Program<Whirlpool>, params: ix.SwapParams) {
     return ix.swapIx(program, params);
   }
+
+  /**
+   * Perform a two-hop-swap in this Whirlpool
+   *
+   * #### Special Errors
+   * - `ZeroTradableAmount` - User provided parameter `amount` is 0.
+   * - `InvalidSqrtPriceLimitDirection` - User provided parameter `sqrt_price_limit` does not match the direction of the trade.
+   * - `SqrtPriceOutOfBounds` - User provided parameter `sqrt_price_limit` is over Whirlppool's max/min bounds for sqrt-price.
+   * - `InvalidTickArraySequence` - User provided tick-arrays are not in sequential order required to proceed in this trade direction.
+   * - `TickArraySequenceInvalidIndex` - The swap loop attempted to access an invalid array index during the query of the next initialized tick.
+   * - `TickArrayIndexOutofBounds` - The swap loop attempted to access an invalid array index during tick crossing.
+   * - `LiquidityOverflow` - Liquidity value overflowed 128bits during tick crossing.
+   * - `InvalidTickSpacing` - The swap pool was initialized with tick-spacing of 0.
+   * - `DuplicateTwoHopPool` - Swaps on the same pool are not allowed.
+   * - `InvalidIntermediaryMint` - The first and second leg of the hops do not share a common token.
+   *
+   * ### Parameters
+   * @param program - program object containing services required to generate the instruction
+   * @param params - TwoHopSwapParams object
+   * @returns - Instruction to perform the action.
+   */
+    public static twoHopSwapIx(program: Program<Whirlpool>, params: ix.TwoHopSwapParams) {
+      return ix.twoHopSwapIx(program, params);
+    }
 
   /**
    * Update the accrued fees and rewards for a position.
@@ -433,14 +457,16 @@ export class WhirlpoolIx {
   }
 
   /**
+   * DEPRECATED - use ${@link WhirlpoolClient} collectFeesAndRewardsForPositions function
    * A set of transactions to collect all fees and rewards from a list of positions.
    *
+   * @deprecated
    * @param ctx - WhirlpoolContext object for the current environment.
    * @param params - CollectAllPositionAddressParams object.
    * @param refresh - if true, will always fetch for the latest values on chain to compute.
    * @returns
    */
-  public static collectAllForPositionsTxns(
+  public static async collectAllForPositionsTxns(
     ctx: WhirlpoolContext,
     params: ix.CollectAllPositionAddressParams,
     refresh: boolean

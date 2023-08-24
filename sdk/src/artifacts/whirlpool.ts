@@ -1134,6 +1134,141 @@ export type Whirlpool = {
           "type": "bool"
         }
       ]
+    },
+    {
+      "name": "twoHopSwap",
+      "accounts": [
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "whirlpoolOne",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpoolTwo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenOwnerAccountOneA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenVaultOneA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenOwnerAccountOneB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenVaultOneB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenOwnerAccountTwoA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenVaultTwoA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenOwnerAccountTwoB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenVaultTwoB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayOne0",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayOne1",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayOne2",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayTwo0",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayTwo1",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayTwo2",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "oracleOne",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "oracleTwo",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "otherAmountThreshold",
+          "type": "u64"
+        },
+        {
+          "name": "amountSpecifiedIsInput",
+          "type": "bool"
+        },
+        {
+          "name": "aToBOne",
+          "type": "bool"
+        },
+        {
+          "name": "aToBTwo",
+          "type": "bool"
+        },
+        {
+          "name": "sqrtPriceLimitOne",
+          "type": "u128"
+        },
+        {
+          "name": "sqrtPriceLimitTwo",
+          "type": "u128"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -1751,6 +1886,16 @@ export type Whirlpool = {
       "code": 6041,
       "name": "PoolWasDisabled",
       "msg": "Pool was disabled"
+    },
+    {
+      "code": 6042,
+      "name": "InvalidIntermediaryMint",
+      "msg": "Invalid intermediary mint"
+    },
+    {
+      "code": 6043,
+      "name": "DuplicateTwoHopPool",
+      "msg": "Duplicate two hop pool"
     }
   ]
 };
@@ -2891,6 +3036,141 @@ export const IDL: Whirlpool = {
           "type": "bool"
         }
       ]
+    },
+    {
+      "name": "twoHopSwap",
+      "accounts": [
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "whirlpoolOne",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpoolTwo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenOwnerAccountOneA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenVaultOneA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenOwnerAccountOneB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenVaultOneB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenOwnerAccountTwoA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenVaultTwoA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenOwnerAccountTwoB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenVaultTwoB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayOne0",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayOne1",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayOne2",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayTwo0",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayTwo1",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayTwo2",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "oracleOne",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "oracleTwo",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "otherAmountThreshold",
+          "type": "u64"
+        },
+        {
+          "name": "amountSpecifiedIsInput",
+          "type": "bool"
+        },
+        {
+          "name": "aToBOne",
+          "type": "bool"
+        },
+        {
+          "name": "aToBTwo",
+          "type": "bool"
+        },
+        {
+          "name": "sqrtPriceLimitOne",
+          "type": "u128"
+        },
+        {
+          "name": "sqrtPriceLimitTwo",
+          "type": "u128"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -3508,6 +3788,16 @@ export const IDL: Whirlpool = {
       "code": 6041,
       "name": "PoolWasDisabled",
       "msg": "Pool was disabled"
+    },
+    {
+      "code": 6042,
+      "name": "InvalidIntermediaryMint",
+      "msg": "Invalid intermediary mint"
+    },
+    {
+      "code": 6043,
+      "name": "DuplicateTwoHopPool",
+      "msg": "Duplicate two hop pool"
     }
   ]
 };

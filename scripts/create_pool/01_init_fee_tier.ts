@@ -20,6 +20,7 @@ async function main() {
   if (!wallets.feeAuthKeypair) {
     throw new Error("Please provide fee_authority_wallet wallet");
   }
+  console.log("fee auth: ", wallets.feeAuthKeypair.publicKey.toString());
   const { ctx } = loadProvider(wallets.feeAuthKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {

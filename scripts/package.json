@@ -7,6 +7,8 @@
     "02_init_pool": "ts-node ./create_pool/02_init_pool.ts",
     "03_open_position": "ts-node ./create_pool/03_open_position.ts",
     "05_close_position": "ts-node ./create_pool/05_close_position.ts",
+    "07_swap": "ts-node ./create_pool/07_swap.ts",
+    "08_two_hop_swap": "ts-node ./create_pool/08_two_hop_swap.ts",
     "update_fee_rate_of_pool": "ts-node ./create_pool/update_fee_rate_of_pool.ts"
   },
   "dependencies": {
