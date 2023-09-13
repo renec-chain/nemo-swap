@@ -1,10 +1,5 @@
-import { PublicKey} from "@solana/web3.js";
-import {
-  Percentage,
-  resolveOrCreateATAs,
-  ZERO,
-  TransactionBuilder,
-} from "@orca-so/common-sdk";
+import { PublicKey, Transaction } from "@solana/web3.js";
+import { Percentage, resolveOrCreateATAs, ZERO } from "@orca-so/common-sdk";
 import {
   PDAUtil,
   buildWhirlpoolClient,
@@ -14,7 +9,9 @@ import {
 } from "@renec/redex-sdk";
 import { loadProvider, loadWallets } from "./utils";
 import deployed from "./deployed.json";
-import { u64 } from "@solana/spl-token";
+import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";
+import { u64, Token, NATIVE_MINT } from "@solana/spl-token";
+import { Instruction } from "@project-serum/anchor";
 
 async function main() {
   const wallets = loadWallets();
@@ -33,13 +30,19 @@ async function main() {
   }
 
   const whirlpoolKey1 = new PublicKey(
-    "Bfb9AgpqK6y6wxVQZSryXbRDnWKc6dwjAHmnL9sXuXNB"
+    "BQ2sH6LqkhnNZofKXtApHz12frTv1wfbihMg6osMnHx8"
   );
 
   const whirlpoolKey2 = new PublicKey(
-    "CYY6QDsFYqmJ2MtiS6EWbjnVR61EGWx89h9NfU7oK4Cw"
+    "7uBREo1HRKmqQvWHahmAU92E3eZNFQBSKffwLx5jGBV7"
   );
+
+  // pool reVND/reUSD : 7uBREo1HRKmqQvWHahmAU92E3eZNFQBSKffwLx5jGBV7
+  // pool RENEC/ reusd: BQ2sH6LqkhnNZofKXtApHz12frTv1wfbihMg6osMnHx8
+
   const client = buildWhirlpoolClient(ctx);
+
+  // load
   const whirlpool1 = await client.getPool(whirlpoolKey1, true);
   const whirlpoolData1 = whirlpool1.getData();
   console.log("pool 1 - tokenMintA: ", whirlpoolData1.tokenMintA.toString());
@@ -53,7 +56,7 @@ async function main() {
   const amount = new u64(1000);
   const quote1 = await swapQuoteByInputToken(
     whirlpool1,
-    whirlpoolData1.tokenMintB,
+    whirlpoolData1.tokenMintA,
     amount,
     Percentage.fromFraction(1, 100),
     ctx.program.programId,
@@ -82,7 +85,7 @@ async function main() {
     whirlpoolKey2
   ).publicKey;
 
-  const txBuilder = new TransactionBuilder(ctx.connection, ctx.wallet)
+  const transactions = new Transaction();
 
   const [resolvedAtaOneA, resolvedAtaOneB, resolvedAtaTwoA, resolvedAtaTwoB] =
     await resolveOrCreateATAs(
@@ -94,7 +97,9 @@ async function main() {
         { tokenMint: whirlpoolData2.tokenMintA, wrappedSolAmountIn: ZERO },
         { tokenMint: whirlpoolData2.tokenMintB, wrappedSolAmountIn: ZERO },
       ],
-      () => ctx.fetcher.getAccountRentExempt()
+      () => ctx.fetcher.getAccountRentExempt(),
+      wallets.userKeypair.publicKey,
+      true
     );
   const createATAInstructions = [];
   const { address: tokenOwnerAccountOneA, ...tokenOwnerAccountOneAIx } =
@@ -106,13 +111,20 @@ async function main() {
   const { address: tokenOwnerAccountTwoB, ...tokenOwnerAccountTwoBIx } =
     resolvedAtaTwoB;
 
-  createATAInstructions.push(tokenOwnerAccountOneAIx);
-  createATAInstructions.push(tokenOwnerAccountOneBIx);
-  createATAInstructions.push(tokenOwnerAccountTwoAIx);
-  createATAInstructions.push(tokenOwnerAccountTwoBIx);
+  createATAInstructions.push(...tokenOwnerAccountOneAIx.instructions);
+  createATAInstructions.push(...tokenOwnerAccountOneBIx.instructions);
+  createATAInstructions.push(...tokenOwnerAccountTwoAIx.instructions);
+  createATAInstructions.push(...tokenOwnerAccountTwoBIx.instructions);
+  const signersATAs = [];
+  signersATAs.push(...tokenOwnerAccountOneAIx.signers);
+  signersATAs.push(...tokenOwnerAccountOneBIx.signers);
+  signersATAs.push(...tokenOwnerAccountTwoAIx.signers);
+  signersATAs.push(...tokenOwnerAccountTwoBIx.signers);
   if (createATAInstructions.length) {
-    console.log(`add: ${createATAInstructions.length} create ATAs account instructions`)
-    txBuilder.addInstructions(createATAInstructions);
+    console.log(
+      `add: ${createATAInstructions.length} create ATAs account instructions`
+    );
+    transactions.add(...createATAInstructions);
   }
 
   const poolParams = {
@@ -130,19 +142,26 @@ async function main() {
     oracleTwo,
   };
 
-  const ix = WhirlpoolIx.twoHopSwapIx(ctx.program, {
+  const tx = WhirlpoolIx.twoHopSwapIx(ctx.program, {
     ...twoHopSwapQuote,
     ...poolParams,
     tokenAuthority: wallets.userKeypair.publicKey,
   });
 
-  const tx = await txBuilder.addInstruction(ix)
-    .addSigner(wallets.userKeypair)
-    .buildAndExecute();
+  transactions.add(...tx.instructions);
 
-  console.log("transaction: ", tx);
+  transactions.recentBlockhash = (
+    await ctx.connection.getLatestBlockhash()
+  ).blockhash;
+  transactions.feePayer = wallets.userKeypair.publicKey;
+  transactions.sign(wallets.userKeypair, ...signersATAs);
+
+  const sig = await ctx.connection.sendRawTransaction(transactions.serialize());
+  console.log("transaction: ", sig);
 }
 
 main().catch((reason) => {
   console.log("ERROR:", reason);
 });
+
+// Input : client, pool1, pool2,
