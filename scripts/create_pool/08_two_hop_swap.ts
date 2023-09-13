@@ -1,4 +1,4 @@
-import { PublicKey} from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import {
   Percentage,
   resolveOrCreateATAs,
@@ -19,25 +19,14 @@ import { u64 } from "@solana/spl-token";
 async function main() {
   const wallets = loadWallets();
 
-  if (!wallets.poolCreatorAuthKeypair) {
-    throw new Error("Please provide pool_creator_authority_wallet wallet");
-  }
-
-  const { ctx } = loadProvider(wallets.poolCreatorAuthKeypair);
-
-  if (deployed.REDEX_CONFIG_PUB === "") {
-    console.log(
-      "ReDEX Pool Config is not found. Please run `npm run 00-create-pool-config` ."
-    );
-    return;
-  }
+  const { ctx } = loadProvider(wallets.userKeypair);
 
   const whirlpoolKey1 = new PublicKey(
-    "Bfb9AgpqK6y6wxVQZSryXbRDnWKc6dwjAHmnL9sXuXNB"
+    "BQ2sH6LqkhnNZofKXtApHz12frTv1wfbihMg6osMnHx8"
   );
 
   const whirlpoolKey2 = new PublicKey(
-    "CYY6QDsFYqmJ2MtiS6EWbjnVR61EGWx89h9NfU7oK4Cw"
+    "7uBREo1HRKmqQvWHahmAU92E3eZNFQBSKffwLx5jGBV7"
   );
   const client = buildWhirlpoolClient(ctx);
   const whirlpool1 = await client.getPool(whirlpoolKey1, true);
@@ -50,10 +39,13 @@ async function main() {
 
   console.log("pool 2 - tokenMintA: ", whirlpoolData2.tokenMintA.toString());
   console.log("pool 2 - tokenMintB: ", whirlpoolData2.tokenMintB.toString());
-  const amount = new u64(1000);
+
+  console.log("user balance: ", wallets.userKeypair.publicKey.toBase58());
+
+  const amount = new u64(1000000000);
   const quote1 = await swapQuoteByInputToken(
     whirlpool1,
-    whirlpoolData1.tokenMintB,
+    whirlpoolData1.tokenMintA,
     amount,
     Percentage.fromFraction(1, 100),
     ctx.program.programId,
@@ -63,7 +55,7 @@ async function main() {
 
   const quote2 = await swapQuoteByInputToken(
     whirlpool2,
-    whirlpoolData2.tokenMintA,
+    whirlpoolData2.tokenMintB,
     quote1.estimatedAmountOut,
     Percentage.fromFraction(1, 100),
     ctx.program.programId,
@@ -82,14 +74,14 @@ async function main() {
     whirlpoolKey2
   ).publicKey;
 
-  const txBuilder = new TransactionBuilder(ctx.connection, ctx.wallet)
+  const txBuilder = new TransactionBuilder(ctx.connection, ctx.wallet);
 
   const [resolvedAtaOneA, resolvedAtaOneB, resolvedAtaTwoA, resolvedAtaTwoB] =
     await resolveOrCreateATAs(
       ctx.connection,
       wallets.userKeypair.publicKey,
       [
-        { tokenMint: whirlpoolData1.tokenMintA, wrappedSolAmountIn: ZERO },
+        { tokenMint: whirlpoolData1.tokenMintA, wrappedSolAmountIn: amount },
         { tokenMint: whirlpoolData1.tokenMintB, wrappedSolAmountIn: ZERO },
         { tokenMint: whirlpoolData2.tokenMintA, wrappedSolAmountIn: ZERO },
         { tokenMint: whirlpoolData2.tokenMintB, wrappedSolAmountIn: ZERO },
@@ -109,9 +101,10 @@ async function main() {
   createATAInstructions.push(tokenOwnerAccountOneAIx);
   createATAInstructions.push(tokenOwnerAccountOneBIx);
   createATAInstructions.push(tokenOwnerAccountTwoAIx);
-  createATAInstructions.push(tokenOwnerAccountTwoBIx);
   if (createATAInstructions.length) {
-    console.log(`add: ${createATAInstructions.length} create ATAs account instructions`)
+    console.log(
+      `add: ${createATAInstructions.length} create ATAs account instructions`
+    );
     txBuilder.addInstructions(createATAInstructions);
   }
 
@@ -136,7 +129,8 @@ async function main() {
     tokenAuthority: wallets.userKeypair.publicKey,
   });
 
-  const tx = await txBuilder.addInstruction(ix)
+  const tx = await txBuilder
+    .addInstruction(ix)
     .addSigner(wallets.userKeypair)
     .buildAndExecute();
 

@@ -40,13 +40,13 @@ async function main() {
   const quote = await swapQuoteByInputToken(
     whirlpool,
     whirlpoolData.tokenMintB,
-    new u64(1000),
+    new u64(100),
     Percentage.fromFraction(1, 100),
     ctx.program.programId,
     ctx.fetcher,
     true
   );
-  console.log(quote);
+  console.log(wallets.userKeypair.publicKey.toString());
   const tx = await whirlpool.swap(quote, wallets.userKeypair.publicKey);
   tx.addSigner(wallets.userKeypair);
   const sig = await tx.buildAndExecute();

@@ -75,7 +75,7 @@ export const loadWallets = function (): NemoswapAccounts {
   } catch {}
 
   try {
-    const userWallet = require("../../.wallets/user_wallet.json");
+    const userWallet = require("/Users/minhdo/.config/solana/id.json");
     userKeypair = Keypair.fromSecretKey(Uint8Array.from(userWallet));
   } catch {}
 
