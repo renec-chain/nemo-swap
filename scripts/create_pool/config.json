@@ -1,9 +1,5 @@
 {
-<<<<<<< HEAD
-  "RPC_ENDPOINT_URL": "https://api-mainnet-beta.renec.foundation:8899",
-=======
   "RPC_ENDPOINT_URL": "https://api-mainnet-beta.renec.foundation:8899/",
->>>>>>> 2ec624c (multi signer for two hop)
   "REDEX_PROGRAM_ID": "7rh7ZtPzHqdY82RWjHf1Q8NaQiWnyNqkC48vSixcBvad",
   "PROTOCOL_FEE_RATE": 300,
   "FEE_TIERS": [
