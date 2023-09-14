@@ -3,12 +3,9 @@ import { MathUtil, Percentage } from "@orca-so/common-sdk";
 import {
   PDAUtil,
   buildWhirlpoolClient,
-  PriceMath,
   swapQuoteByInputToken,
 } from "@renec/redex-sdk";
 import { loadProvider, getTokenMintInfo, loadWallets } from "./utils";
-import Decimal from "decimal.js";
-import config from "./config.json";
 import deployed from "./deployed.json";
 import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";
 import { u64 } from "@solana/spl-token";
@@ -33,24 +30,43 @@ async function main() {
     "HmruH4dvo1FdsLNDpFFnurtm6ih3YhwcbiDNnHu8bec2"
   );
   const client = buildWhirlpoolClient(ctx);
-  const whirlpool = await client.getPool(whirlpoolKey, true);
-  const whirlpoolData = whirlpool.getData();
-  console.log("pool 1 - tokenMintA: ", whirlpoolData.tokenMintA.toString());
-  console.log("pool 1 - tokenMintB: ", whirlpoolData.tokenMintB.toString());
-  const quote = await swapQuoteByInputToken(
-    whirlpool,
-    whirlpoolData.tokenMintB,
-    new u64(1000),
-    Percentage.fromFraction(1, 100),
-    ctx.program.programId,
-    ctx.fetcher,
-    true
-  );
-  console.log(quote);
-  const tx = await whirlpool.swap(quote, wallets.userKeypair.publicKey);
-  tx.addSigner(wallets.userKeypair);
-  const sig = await tx.buildAndExecute();
-  console.log(sig);
+
+  let poolInfo = getPoolInfo(0);
+  await askToConfirmPoolInfo(poolInfo);
+  const mintAPub = new PublicKey(poolInfo.tokenMintA);
+  const mintBPub = new PublicKey(poolInfo.tokenMintB);
+  const tokenMintA = await getTokenMintInfo(ctx, mintAPub);
+  const tokenMintB = await getTokenMintInfo(ctx, mintBPub);
+
+  if (tokenMintA && tokenMintB) {
+    const whirlpoolPda = PDAUtil.getWhirlpool(
+      ctx.program.programId,
+      REDEX_CONFIG_PUB,
+      mintAPub,
+      mintBPub,
+      poolInfo.tickSpacing
+    );
+    const whirlpool = await client.getPool(whirlpoolPda.publicKey);
+    const whirlpoolData = whirlpool.getData();
+
+    console.log("Token mint a: ", whirlpoolData.tokenMintA.toString());
+    console.log("Token mint b: ", whirlpoolData.tokenMintB.toString());
+
+    const quote = await swapQuoteByInputToken(
+      whirlpool,
+      whirlpoolData.tokenMintA,
+      new u64(1),
+      Percentage.fromFraction(1, 100),
+      ctx.program.programId,
+      ctx.fetcher,
+      true
+    );
+    console.log(quote);
+    const tx = await whirlpool.swap(quote, wallets.userKeypair.publicKey);
+    tx.addSigner(wallets.userKeypair);
+    const sig = await tx.buildAndExecute();
+    console.log(sig);
+  }
 }
 
 main().catch((reason) => {

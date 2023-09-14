@@ -26,3 +26,4 @@ export * from "./swap-ix";
 export * from "./two-hop-swap-ix";
 export * from "./update-fees-and-rewards-ix";
 export * from "./set-enable-flag-ix";
+export * from "./swap_with_fee_discount";

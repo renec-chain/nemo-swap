@@ -5,8 +5,8 @@ AMOUNT=""
 # Parse the arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --name)
-      WALLET_NAME="$2"
+    --keypair_file_path)
+      KEYPAIR_FILE_PATH="$2"
       shift 2
       ;;
     *)
@@ -22,13 +22,13 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Check if name is empty
-if [[ -z $WALLET_NAME ]]; then
+if [[ -z $KEYPAIR_FILE_PATH ]]; then
   echo "Please provide a wallet name"
   exit 1
 fi
 
 # Get wallet
-WALLET_ADDRESS=$(solana address -k "$WALLET_PATH/$WALLET_NAME.json")
+WALLET_ADDRESS=$(solana address -k "$KEYPAIR_FILE_PATH")
 
 
 echo "Fauceting wallet on $CLUSTER_URL..."

@@ -19,6 +19,7 @@ import { PDAUtil } from "./pda-utils";
 import { PoolUtil } from "./pool-utils";
 import { TickUtil } from "./tick-utils";
 import { SwapDirection, TokenType } from "./types";
+import { SwapWithFeeDiscountParams } from "../../instructions";
 
 /**
  * @category Whirlpool Utils
@@ -173,7 +174,7 @@ export class SwapUtils {
 
   /**
    * Convert a quote object and WhirlpoolClient's {@link Whirlpool} object into a {@link SwapParams} type
-   * to be plugged into {@link WhirlpoolIx.swapIx}.
+   * to be plugged into {@link whirlpool.swapIx}.
    *
    * @param quote - A {@link SwapQuote} type generated from {@link swapQuoteWithParams}
    * @param ctx - {@link WhirlpoolContext}
@@ -200,6 +201,35 @@ export class SwapUtils {
     ]);
     const oraclePda = PDAUtil.getOracle(ctx.program.programId, addr);
     const params: SwapParams = {
+      whirlpool: whirlpool.getAddress(),
+      tokenOwnerAccountA: aToB ? inputTokenATA : outputTokenATA,
+      tokenOwnerAccountB: aToB ? outputTokenATA : inputTokenATA,
+      tokenVaultA: data.tokenVaultA,
+      tokenVaultB: data.tokenVaultB,
+      oracle: oraclePda.publicKey,
+      tokenAuthority: wallet,
+      ...quote,
+    };
+    return params;
+  }
+
+  public static getSwapWithFeeDiscountParamsFromQuote(
+    quote: SwapInput,
+    ctx: WhirlpoolContext,
+    whirlpool: Whirlpool,
+    inputTokenAssociatedAddress: Address,
+    outputTokenAssociatedAddress: Address,
+    wallet: PublicKey
+  ) {
+    const addr = whirlpool.getAddress();
+    const data = whirlpool.getData();
+    const aToB = quote.aToB;
+    const [inputTokenATA, outputTokenATA] = AddressUtil.toPubKeys([
+      inputTokenAssociatedAddress,
+      outputTokenAssociatedAddress,
+    ]);
+    const oraclePda = PDAUtil.getOracle(ctx.program.programId, addr);
+    const params: SwapWithFeeDiscountParams = {
       whirlpool: whirlpool.getAddress(),
       tokenOwnerAccountA: aToB ? inputTokenATA : outputTokenATA,
       tokenOwnerAccountB: aToB ? outputTokenATA : inputTokenATA,
