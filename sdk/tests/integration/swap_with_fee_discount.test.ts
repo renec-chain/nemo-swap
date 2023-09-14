@@ -19,6 +19,7 @@ import {
   toTx,
   WhirlpoolContext,
   WhirlpoolIx,
+  swapWithFeeDiscountQuoteByInputToken,
 } from "../../src";
 import { getTokenBalance, MAX_U64, TickSpacing, ZERO_BN } from "../utils";
 import {
@@ -74,10 +75,10 @@ describe("swap", () => {
     const whirlpoolKey = poolInitInfo.whirlpoolPda.publicKey;
     const whirlpool = await client.getPool(whirlpoolKey, true);
     const whirlpoolData = whirlpool.getData();
-    const quote = await swapQuoteByInputToken(
+    const quote = await swapWithFeeDiscountQuoteByInputToken(
       whirlpool,
       whirlpoolData.tokenMintB,
-      new u64(100000),
+      new u64(1000000),
       Percentage.fromFraction(1, 100),
       ctx.program.programId,
       fetcher,
@@ -97,9 +98,6 @@ describe("swap", () => {
         oracle: oraclePda.publicKey,
       })
     ).buildAndExecute();
-
-    console.log("estimatedAmountIn", quote.estimatedAmountIn.toString());
-    console.log("estimatedAmountOut", quote.estimatedAmountOut.toString());
 
     assert.equal(
       await getTokenBalance(provider, poolInitInfo.tokenVaultAKeypair.publicKey),
