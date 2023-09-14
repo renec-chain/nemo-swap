@@ -5,10 +5,11 @@ import { u64 } from "@solana/spl-token";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import * as assert from "assert";
 import {
-  buildWhirlpoolClient, PriceMath,
+  buildWhirlpoolClient,
+  PriceMath,
   swapQuoteByInputToken,
   Whirlpool,
-  WhirlpoolContext
+  WhirlpoolContext,
 } from "../../../../src";
 import { SwapErrorCode, WhirlpoolsError } from "../../../../src/errors/errors";
 import { swapQuoteByInputTokenWithDevFees } from "../../../../src/quotes/public/dev-fee-swap-quote";
@@ -16,12 +17,12 @@ import {
   assertDevFeeQuotes,
   assertDevTokenAmount,
   assertQuoteAndResults,
-  TickSpacing
+  TickSpacing,
 } from "../../../utils";
 import {
   arrayTickIndexToTickIndex,
   buildPosition,
-  setupSwapTest
+  setupSwapTest,
 } from "../../../utils/swap-test-utils";
 import { getVaultAmounts } from "../../../utils/whirlpools-test-utils";
 
@@ -216,45 +217,48 @@ describe("whirlpool-dev-fee-swap", () => {
     const currIndex = arrayTickIndexToTickIndex({ arrayIndex: 1, offsetIndex: 1 }, tickSpacing);
     const aToB = true;
     const tokenAIsNative = true;
-    const whirlpool = await setupSwapTest({
-      ctx,
-      client,
-      tickSpacing,
-      initSqrtPrice: PriceMath.tickIndexToSqrtPriceX64(currIndex),
-      initArrayStartTicks: [-16896, -11264, -5632, 0, 5632],
-      fundedPositions: [
-        buildPosition(
-          // a
-          { arrayIndex: -1, offsetIndex: 10 },
-          { arrayIndex: 1, offsetIndex: 23 },
-          tickSpacing,
-          new anchor.BN(990_000_000)
-        ),
-        buildPosition(
-          // a
-          { arrayIndex: -1, offsetIndex: 10 },
-          { arrayIndex: 0, offsetIndex: 23 },
-          tickSpacing,
-          new anchor.BN(990_000_000)
-        ),
-        buildPosition(
-          // a
-          { arrayIndex: 0, offsetIndex: 22 },
-          { arrayIndex: 1, offsetIndex: 23 },
-          tickSpacing,
-          new anchor.BN(1_990_000_000)
-        ),
-        buildPosition(
-          // a
-          { arrayIndex: 0, offsetIndex: 23 },
-          { arrayIndex: 1, offsetIndex: 23 },
-          tickSpacing,
-          new anchor.BN(990_000_000)
-        ),
-      ],
-    }, tokenAIsNative);
+    const whirlpool = await setupSwapTest(
+      {
+        ctx,
+        client,
+        tickSpacing,
+        initSqrtPrice: PriceMath.tickIndexToSqrtPriceX64(currIndex),
+        initArrayStartTicks: [-16896, -11264, -5632, 0, 5632],
+        fundedPositions: [
+          buildPosition(
+            // a
+            { arrayIndex: -1, offsetIndex: 10 },
+            { arrayIndex: 1, offsetIndex: 23 },
+            tickSpacing,
+            new anchor.BN(990_000_000)
+          ),
+          buildPosition(
+            // a
+            { arrayIndex: -1, offsetIndex: 10 },
+            { arrayIndex: 0, offsetIndex: 23 },
+            tickSpacing,
+            new anchor.BN(990_000_000)
+          ),
+          buildPosition(
+            // a
+            { arrayIndex: 0, offsetIndex: 22 },
+            { arrayIndex: 1, offsetIndex: 23 },
+            tickSpacing,
+            new anchor.BN(1_990_000_000)
+          ),
+          buildPosition(
+            // a
+            { arrayIndex: 0, offsetIndex: 23 },
+            { arrayIndex: 1, offsetIndex: 23 },
+            tickSpacing,
+            new anchor.BN(990_000_000)
+          ),
+        ],
+      },
+      tokenAIsNative
+    );
 
-    const { devWallet, balance: preDevWalletBalance } = await setupDevWallet(ctx, 10_000_000)
+    const { devWallet, balance: preDevWalletBalance } = await setupDevWallet(ctx, 10_000_000);
 
     const devFeePercentage = Percentage.fromFraction(1, 10000); // 0.01%
     const inputTokenAmount = new u64(1_000_000_000); // Swap 1SOL
@@ -290,7 +294,13 @@ describe("whirlpool-dev-fee-swap", () => {
       beforeVaultAmounts,
       afterVaultAmounts
     );
-    await assertDevTokenAmount(ctx, inputTokenQuoteWithDevFees, swapToken, devWallet.publicKey, preDevWalletBalance);
+    await assertDevTokenAmount(
+      ctx,
+      inputTokenQuoteWithDevFees,
+      swapToken,
+      devWallet.publicKey,
+      preDevWalletBalance
+    );
   });
 
   it("swap with dev-fee 50%", async () => {
@@ -478,5 +488,5 @@ async function setupDevWallet(ctx: WhirlpoolContext, airdrop: number) {
   const txn = await ctx.provider.connection.requestAirdrop(devWallet.publicKey, airdrop);
   await ctx.provider.connection.confirmTransaction(txn);
   const balance = await ctx.provider.connection.getBalance(devWallet.publicKey);
-  return { devWallet, balance }
+  return { devWallet, balance };
 }
