@@ -199,31 +199,7 @@ export class WhirlpoolImpl implements Whirlpool {
     );
   }
 
-  /**
-   * @dev this function take the created `wrenec` ata of user, to reduce tx size
-   */
-  async swapWithWRenecAta(
-    quote: SwapInput,
-    wRenecAta?: PublicKey
-  ): Promise<{ tx: TransactionBuilder; createdWRenecAta: PublicKey | undefined }> {
-    const sourceWalletKey = this.ctx.wallet.publicKey;
-    return swapAsyncWithWRenecAta(
-      this.ctx,
-      {
-        swapInput: quote,
-        whirlpool: this,
-        wallet: sourceWalletKey,
-      },
-      true,
-      wRenecAta
-    );
-  }
-
-  async swapWithFeeDiscount(
-    quote: SwapInput,
-    discountTokenMint: PublicKey,
-    sourceWallet?: Address
-  ): Promise<TransactionBuilder> {
+  async swapWithFeeDiscount(quote: SwapInput, sourceWallet?: Address): Promise<TransactionBuilder> {
     const sourceWalletKey = sourceWallet
       ? AddressUtil.toPubKey(sourceWallet)
       : this.ctx.wallet.publicKey;
@@ -234,7 +210,6 @@ export class WhirlpoolImpl implements Whirlpool {
         whirlpool: this,
         wallet: sourceWalletKey,
       },
-      discountTokenMint,
       true
     );
   }

@@ -234,13 +234,6 @@ export class WhirlpoolIx {
     return ix.twoHopSwapIx(program, params);
   }
 
-  public static twoHopSwapWithFeeDiscountIx(
-    program: Program<Whirlpool>,
-    params: ix.TwoHopSwapWithFeeDiscountParams
-  ) {
-    return ix.twoHopSwapWithFeeDiscountIx(program, params);
-  }
-
   /**
    * Update the accrued fees and rewards for a position.
    *
