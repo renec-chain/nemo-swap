@@ -189,6 +189,13 @@ export class WhirlpoolIx {
     return ix.swapIx(program, params);
   }
 
+  public static swapWithFeeDiscountIx(
+    program: Program<Whirlpool>,
+    params: ix.SwapWithFeeDiscountParams
+  ) {
+    return ix.swapWithFeeDiscountIx(program, params);
+  }
+
   /**
    * Perform a two-hop-swap in this Whirlpool
    *
@@ -209,9 +216,9 @@ export class WhirlpoolIx {
    * @param params - TwoHopSwapParams object
    * @returns - Instruction to perform the action.
    */
-    public static twoHopSwapIx(program: Program<Whirlpool>, params: ix.TwoHopSwapParams) {
-      return ix.twoHopSwapIx(program, params);
-    }
+  public static twoHopSwapIx(program: Program<Whirlpool>, params: ix.TwoHopSwapParams) {
+    return ix.twoHopSwapIx(program, params);
+  }
 
   /**
    * Update the accrued fees and rewards for a position.

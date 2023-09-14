@@ -1,4 +1,4 @@
-import { PublicKey, Connection, Keypair } from "@solana/web3.js";
+import { PublicKey, Connection, Keypair, Commitment } from "@solana/web3.js";
 import { AnchorProvider, Wallet, BN } from "@project-serum/anchor";
 import { WhirlpoolContext, TokenInfo } from "@renec/redex-sdk";
 import { NATIVE_MINT, u64 } from "@solana/spl-token";
@@ -18,7 +18,9 @@ export type NemoswapAccounts = {
 
 export const loadProvider = function (payerKeypair: Keypair) {
   const wallets = loadWallets();
-  const connection = new Connection(config.RPC_ENDPOINT_URL);
+  const commitment: Commitment = "confirmed";
+
+  const connection = new Connection(config.RPC_ENDPOINT_URL, { commitment });
   const wallet = new Wallet(payerKeypair);
   const provider = new AnchorProvider(connection, wallet, {});
   const ctx = WhirlpoolContext.withProvider(

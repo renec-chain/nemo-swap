@@ -36,7 +36,7 @@ import-wallet: install-deps
 
 faucet: 
 	@$(MAKE) install-deps CLI_VERSION=$(CLI_VERSION)
-	@./dev-scripts/faucet.sh --name "$(name)" $(amount)
+	@./dev-scripts/faucet.sh --keypair_file_path "$(keypair_file_path)" $(amount)
 
 build: 
 	@$(MAKE) install-deps CLI_VERSION=$(CLI_VERSION) ANCHOR_VERSION=$(ANCHOR_VERSION)
@@ -46,3 +46,8 @@ deploy: set-cluster-url
 	@$(MAKE) install-deps CLI_VERSION=$(CLI_VERSION)
 	@./dev-scripts/deploy.sh "$(keypair_file_path)"
 	
+
+deploy-test: set-cluster-url
+	@$(MAKE) install-deps CLI_VERSION=$(CLI_VERSION)  
+	@$(MAKE) CLUSTER=localnet faucet keypair_file_path=$(keypair_file_path) amount=50 
+	@./dev-scripts/deploy.sh "$(keypair_file_path)"
