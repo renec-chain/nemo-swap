@@ -229,8 +229,6 @@ export class SwapUtils {
     whirlpool: Whirlpool,
     inputTokenAssociatedAddress: Address,
     outputTokenAssociatedAddress: Address,
-    discountTokenMint: PublicKey,
-    ataDiscountTokenKey: PublicKey,
     wallet: PublicKey
   ) {
     const addr = whirlpool.getAddress();
@@ -241,12 +239,6 @@ export class SwapUtils {
       outputTokenAssociatedAddress,
     ]);
     const oraclePda = PDAUtil.getOracle(ctx.program.programId, addr);
-    const whirlpoolDiscountInfoPDA = PDAUtil.getWhirlpoolDiscountInfo(
-      ctx.program.programId,
-      whirlpool.getAddress(),
-      discountTokenMint
-    );
-
     const params: SwapWithFeeDiscountParams = {
       whirlpool: whirlpool.getAddress(),
       tokenOwnerAccountA: aToB ? inputTokenATA : outputTokenATA,
@@ -255,9 +247,6 @@ export class SwapUtils {
       tokenVaultB: data.tokenVaultB,
       oracle: oraclePda.publicKey,
       tokenAuthority: wallet,
-      whirlpoolDiscountInfo: whirlpoolDiscountInfoPDA.publicKey,
-      discountToken: discountTokenMint,
-      discountTokenOwnerAccount: ataDiscountTokenKey,
       ...quote,
     };
     return params;

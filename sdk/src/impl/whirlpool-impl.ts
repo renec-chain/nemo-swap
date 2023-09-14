@@ -234,7 +234,6 @@ export class WhirlpoolImpl implements Whirlpool {
         whirlpool: this,
         wallet: sourceWalletKey,
       },
-      discountTokenMint,
       true
     );
   }

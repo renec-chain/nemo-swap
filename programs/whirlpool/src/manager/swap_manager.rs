@@ -201,7 +201,6 @@ pub fn swap(
 /// Additonal function: Computes the swap, applying fee discount
 pub fn swap_with_fee_discount(
     whirlpool: &Whirlpool,
-    whirlpool_discount_info: &WhirlpoolDiscountInfo,
     swap_tick_sequence: &mut SwapTickSequence,
     amount: u64,
     sqrt_price_limit: u128,
@@ -231,7 +230,6 @@ pub fn swap_with_fee_discount(
     let mut amount_remaining: u64 = amount;
     let mut amount_calculated: u64 = 0;
     let mut discount_fee_accumulated: u64 = 0;
-    let mut burn_fee_accumulated: u64 = 0;
     let mut curr_sqrt_price = whirlpool.sqrt_price;
     let mut curr_tick_index = whirlpool.tick_current_index;
     let mut curr_liquidity = whirlpool.liquidity;
@@ -266,18 +264,14 @@ pub fn swap_with_fee_discount(
             a_to_b,
         )?;
 
-        // Apply discount
-        // fee =  10 RENEC ->
-        // 4 RENEC fee as NSF - user pay 2 to burn only -> discount 20% fee
-        // 6 RENEC go to pool
-        // Whitelist support pairs only
-        (discount_fee_accumulated, burn_fee_accumulated) = apply_fee_discount(
-            &whirlpool_discount_info,
-            &mut swap_computation,
-            discount_fee_accumulated,
-            burn_fee_accumulated,
-        )?;
+        //Apply discount
+        discount_fee_accumulated =
+            apply_fee_discount(&mut swap_computation, discount_fee_accumulated)?;
 
+        /*
+         * if exact input ->
+         * if exact output -> amount_remaining == amount out
+         */
         if amount_specified_is_input {
             amount_remaining = amount_remaining
                 .checked_sub(swap_computation.amount_in)
@@ -374,11 +368,22 @@ pub fn swap_with_fee_discount(
         curr_sqrt_price = swap_computation.next_price;
     }
 
-    let (amount_a, amount_b) = if a_to_b == amount_specified_is_input {
-        (amount - amount_remaining, amount_calculated)
-    } else {
-        (amount_calculated, amount - amount_remaining)
-    };
+    let (amount_a, amount_b, discount_fee_a, discount_fee_b) =
+        if a_to_b == amount_specified_is_input {
+            (
+                amount - amount_remaining,
+                amount_calculated,
+                discount_fee_accumulated,
+                0,
+            )
+        } else {
+            (
+                amount_calculated,
+                amount - amount_remaining,
+                0,
+                discount_fee_accumulated,
+            )
+        };
 
     Ok((
         PostSwapUpdate {
@@ -391,51 +396,20 @@ pub fn swap_with_fee_discount(
             next_reward_infos,
             next_protocol_fee: curr_protocol_fee,
         },
-        discount_fee_accumulated,
-        burn_fee_accumulated,
+        discount_fee_a,
+        discount_fee_b,
     ))
 }
 
 fn apply_fee_discount(
-    whirlpool_discount_info: &WhirlpoolDiscountInfo,
     swap_computation: &mut SwapStepComputation,
     discount_fee_accumulated: u64,
-    burn_fee_accoumulated: u64,
-) -> Result<(u64, u64), ErrorCode> {
-    // max conversion rate is at 99.99% (9999)
-    if whirlpool_discount_info.token_conversion_fee_rate as u128 > DISCOUNT_FEE_RATE_MUL_VALUE {
-        return Err(ErrorCode::FeeRateMaxExceeded.into());
-    }
+) -> Result<u64, ErrorCode> {
+    let discount_amount = swap_computation.fee_amount * 99 / 100; // discount 99%
+    swap_computation.fee_amount = swap_computation.fee_amount - discount_amount;
+    let updated_discount_fee_amount = discount_fee_accumulated + discount_amount;
 
-    if whirlpool_discount_info.discount_fee_rate as u128 >= DISCOUNT_FEE_RATE_MUL_VALUE {
-        return Err(ErrorCode::FeeRateMaxExceeded.into());
-    }
-
-    // this never fail, u64 x u16
-    let token_conversion_amount = (swap_computation.fee_amount as u128
-        * whirlpool_discount_info.token_conversion_fee_rate as u128
-        / DISCOUNT_FEE_RATE_MUL_VALUE) as u64;
-
-    swap_computation.fee_amount = swap_computation.fee_amount - token_conversion_amount;
-
-    // get burn amount and discount amount
-    // this never fails, u64 x u16
-    let discount_amount = (token_conversion_amount as u128
-        * whirlpool_discount_info.discount_fee_rate as u128
-        / DISCOUNT_FEE_RATE_MUL_VALUE) as u64;
-
-    let burn_amount = token_conversion_amount - discount_amount;
-
-    // update accumulated amount
-    let updated_discount_fee_amount = discount_fee_accumulated
-        .checked_add(discount_amount)
-        .ok_or(ErrorCode::AmountCalcOverflow)?;
-
-    let updated_burn_fee_amount = burn_fee_accoumulated
-        .checked_add(burn_amount)
-        .ok_or(ErrorCode::AmountCalcOverflow)?;
-
-    Ok((updated_discount_fee_amount, updated_burn_fee_amount))
+    Ok(updated_discount_fee_amount)
 }
 
 fn calculate_fees(

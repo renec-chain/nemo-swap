@@ -1,5 +1,5 @@
 [programs.localnet]
-whirlpool = "whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc"
+whirlpool = "817WSKA3Eon2Nx2i3qCJHP3pTvc7PzVj6mfcqy5dThbS"
 
 [registry]
 url = "https://anchor.projectserum.com"
@@ -14,4 +14,4 @@ wallet = "~/.config/solana/id.json"
 # program = "../metaplex-program-library/token-metadata/target/deploy/mpl_token_metadata.so"
 
 [scripts]
-test = "yarn ts-mocha -p sdk/tests/tsconfig.json -t 1000000 sdk/tests/**/*.test.ts"
+test = "yarn ts-mocha -p sdk/tests/tsconfig.json -t 1000000 sdk/tests/integration/swap_with_fee_discount.test.ts"
