@@ -4,7 +4,7 @@ import BN from "bn.js";
 import { PROTOCOL_FEE_RATE_MUL_VALUE, WhirlpoolData } from "../../types/public";
 import { PriceMath } from "../../utils/public";
 import { TickArraySequence } from "./tick-array-sequence";
-import { computeSwapStep } from "../../utils/math/swap-math";
+import { SwapStep, computeSwapStep } from "../../utils/math/swap-math";
 
 export type SwapResult = {
   amountA: BN;
@@ -106,6 +106,110 @@ export function computeSwap(
   };
 }
 
+export function computeSwapWithFeeDiscount(
+  whirlpoolData: WhirlpoolData,
+  tickSequence: TickArraySequence,
+  tokenAmount: u64,
+  sqrtPriceLimit: BN,
+  amountSpecifiedIsInput: boolean,
+  aToB: boolean
+): { swapResults: SwapResult; discountFeeAccumulated: BN } {
+  let amountRemaining = tokenAmount;
+  let amountCalculated = ZERO;
+  let currSqrtPrice = whirlpoolData.sqrtPrice;
+  let currLiquidity = whirlpoolData.liquidity;
+  let currTickIndex = whirlpoolData.tickCurrentIndex;
+  let totalFeeAmount = ZERO;
+  let discountFeeAccumulated = ZERO;
+  const feeRate = whirlpoolData.feeRate;
+  const protocolFeeRate = whirlpoolData.protocolFeeRate;
+  let currProtocolFee = new u64(0);
+  let currFeeGrowthGlobalInput = aToB
+    ? whirlpoolData.feeGrowthGlobalA
+    : whirlpoolData.feeGrowthGlobalB;
+
+  while (amountRemaining.gt(ZERO) && !sqrtPriceLimit.eq(currSqrtPrice)) {
+    let { nextIndex: nextTickIndex } = tickSequence.findNextInitializedTickIndex(currTickIndex);
+
+    let { nextTickPrice, nextSqrtPriceLimit: targetSqrtPrice } = getNextSqrtPrices(
+      nextTickIndex,
+      sqrtPriceLimit,
+      aToB
+    );
+
+    let swapComputation = computeSwapStep(
+      amountRemaining,
+      feeRate,
+      currLiquidity,
+      currSqrtPrice,
+      targetSqrtPrice,
+      amountSpecifiedIsInput,
+      aToB
+    );
+
+    // Apply fee discount
+    let { updatedFeeAmount, discountAmount } = applyFeeDiscount(
+      swapComputation,
+      discountFeeAccumulated
+    );
+    swapComputation.feeAmount = updatedFeeAmount;
+    discountFeeAccumulated = discountFeeAccumulated.add(discountAmount);
+
+    totalFeeAmount = totalFeeAmount.add(swapComputation.feeAmount);
+
+    if (amountSpecifiedIsInput) {
+      amountRemaining = amountRemaining.sub(swapComputation.amountIn);
+      amountRemaining = amountRemaining.sub(swapComputation.feeAmount);
+      amountCalculated = amountCalculated.add(swapComputation.amountOut);
+    } else {
+      amountRemaining = amountRemaining.sub(swapComputation.amountOut);
+      amountCalculated = amountCalculated.add(swapComputation.amountIn);
+      amountCalculated = amountCalculated.add(swapComputation.feeAmount);
+    }
+
+    let { nextProtocolFee, nextFeeGrowthGlobalInput } = calculateFees(
+      swapComputation.feeAmount,
+      protocolFeeRate,
+      currLiquidity,
+      currProtocolFee,
+      currFeeGrowthGlobalInput
+    );
+    currProtocolFee = nextProtocolFee;
+    currFeeGrowthGlobalInput = nextFeeGrowthGlobalInput;
+
+    if (swapComputation.nextPrice.eq(nextTickPrice)) {
+      const nextTick = tickSequence.getTick(nextTickIndex);
+      if (nextTick.initialized) {
+        currLiquidity = calculateNextLiquidity(nextTick.liquidityNet, currLiquidity, aToB);
+      }
+      currTickIndex = aToB ? nextTickIndex - 1 : nextTickIndex;
+    } else {
+      currTickIndex = PriceMath.sqrtPriceX64ToTickIndex(swapComputation.nextPrice);
+    }
+
+    currSqrtPrice = swapComputation.nextPrice;
+  }
+
+  let { amountA, amountB } = calculateEstTokens(
+    tokenAmount,
+    amountRemaining,
+    amountCalculated,
+    aToB,
+    amountSpecifiedIsInput
+  );
+
+  return {
+    swapResults: {
+      amountA,
+      amountB,
+      nextTickIndex: currTickIndex,
+      nextSqrtPrice: currSqrtPrice,
+      totalFeeAmount,
+    },
+    discountFeeAccumulated,
+  };
+}
+
 function getNextSqrtPrices(nextTick: number, sqrtPriceLimit: BN, aToB: boolean) {
   const nextTickPrice = PriceMath.tickIndexToSqrtPriceX64(nextTick);
   const nextSqrtPriceLimit = aToB
@@ -166,4 +270,23 @@ function calculateEstTokens(
 
 function calculateNextLiquidity(tickNetLiquidity: BN, currLiquidity: BN, aToB: boolean) {
   return aToB ? currLiquidity.sub(tickNetLiquidity) : currLiquidity.add(tickNetLiquidity);
+}
+
+function applyFeeDiscount(
+  swapComputation: SwapStep,
+  discountFeeAccumulated: BN
+): { updatedFeeAmount: BN; discountAmount: BN } {
+  if (swapComputation.feeAmount.eq(new BN(0))) {
+    return {
+      updatedFeeAmount: swapComputation.feeAmount,
+      discountAmount: discountFeeAccumulated,
+    };
+  }
+  let discountAmount = swapComputation.feeAmount.sub(new BN(1));
+  let updatedFeeAmount = swapComputation.feeAmount.sub(discountAmount);
+
+  return {
+    updatedFeeAmount: updatedFeeAmount,
+    discountAmount,
+  };
 }
