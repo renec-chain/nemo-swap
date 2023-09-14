@@ -278,6 +278,8 @@ export interface Whirlpool {
    */
   swap: (input: SwapInput, wallet?: PublicKey) => Promise<TransactionBuilder>;
 
+  swapWithFeeDiscount: (input: SwapInput, wallet?: PublicKey) => Promise<TransactionBuilder>;
+
   /**
    * Collect a developer fee and perform a swap between tokenA and tokenB on this pool.
    *
