@@ -26,9 +26,6 @@ export type SwapWithFeeDiscountParams = SwapInput & {
   tokenVaultB: PublicKey;
   oracle: PublicKey;
   tokenAuthority: PublicKey;
-  whirlpoolDiscountInfo: PublicKey;
-  discountToken: PublicKey;
-  discountTokenOwnerAccount: PublicKey;
 };
 
 /**
@@ -81,9 +78,6 @@ export function swapWithFeeDiscountIx(
     tickArray1,
     tickArray2,
     oracle,
-    whirlpoolDiscountInfo,
-    discountToken,
-    discountTokenOwnerAccount,
   } = params;
 
   const ix = program.instruction.swapWithFeeDiscount(
@@ -105,9 +99,6 @@ export function swapWithFeeDiscountIx(
         tickArray1,
         tickArray2,
         oracle,
-        whirlpoolDiscountInfo,
-        discountToken,
-        discountTokenOwnerAccount,
       },
     }
   );

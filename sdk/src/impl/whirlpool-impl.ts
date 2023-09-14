@@ -198,11 +198,7 @@ export class WhirlpoolImpl implements Whirlpool {
     );
   }
 
-  async swapWithFeeDiscount(
-    quote: SwapInput,
-    discountTokenMint: PublicKey,
-    sourceWallet?: Address
-  ): Promise<TransactionBuilder> {
+  async swapWithFeeDiscount(quote: SwapInput, sourceWallet?: Address): Promise<TransactionBuilder> {
     const sourceWalletKey = sourceWallet
       ? AddressUtil.toPubKey(sourceWallet)
       : this.ctx.wallet.publicKey;
@@ -213,7 +209,6 @@ export class WhirlpoolImpl implements Whirlpool {
         whirlpool: this,
         wallet: sourceWalletKey,
       },
-      discountTokenMint,
       true
     );
   }

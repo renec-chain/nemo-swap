@@ -71,7 +71,6 @@ export async function swapAsync(
 export async function swapWithFeeDiscountAsync(
   ctx: WhirlpoolContext,
   params: SwapAsyncParams,
-  discountTokenMint: PublicKey,
   refresh: boolean
 ): Promise<TransactionBuilder> {
   const { wallet, whirlpool, swapInput } = params;
@@ -89,20 +88,17 @@ export async function swapWithFeeDiscountAsync(
   }
 
   const data = whirlpool.getData();
-  const [resolvedAtaA, resolvedAtaB, resolveDiscountTokenAta] = await resolveOrCreateATAs(
+  const [resolvedAtaA, resolvedAtaB] = await resolveOrCreateATAs(
     ctx.connection,
     wallet,
     [
       { tokenMint: data.tokenMintA, wrappedSolAmountIn: aToB ? amount : ZERO },
       { tokenMint: data.tokenMintB, wrappedSolAmountIn: !aToB ? amount : ZERO },
-      { tokenMint: discountTokenMint, wrappedSolAmountIn: ZERO },
     ],
     () => ctx.fetcher.getAccountRentExempt()
   );
   const { address: ataAKey, ...tokenOwnerAccountAIx } = resolvedAtaA;
   const { address: ataBKey, ...tokenOwnerAccountBIx } = resolvedAtaB;
-  const { address: ataDiscountTokenKey } = resolveDiscountTokenAta;
-
   txBuilder.addInstructions([tokenOwnerAccountAIx, tokenOwnerAccountBIx]);
   const inputTokenAccount = aToB ? ataAKey : ataBKey;
   const outputTokenAccount = aToB ? ataBKey : ataAKey;
@@ -116,8 +112,6 @@ export async function swapWithFeeDiscountAsync(
         whirlpool,
         inputTokenAccount,
         outputTokenAccount,
-        discountTokenMint,
-        ataDiscountTokenKey,
         wallet
       )
     )
