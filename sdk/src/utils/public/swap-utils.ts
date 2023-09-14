@@ -26,10 +26,8 @@ import { adjustForSlippage } from "../math/token-math";
 import { PDAUtil } from "./pda-utils";
 import { PoolUtil } from "./pool-utils";
 import { TickUtil } from "./tick-utils";
-import { SwapDirection, TokenType, TwoHopSwapPoolParams } from "./types";
+import { SwapDirection, TokenType } from "./types";
 import { SwapWithFeeDiscountParams } from "../../instructions";
-import { Wallet } from "@project-serum/anchor/dist/cjs/provider";
-import { NATIVE_MINT } from "@solana/spl-token";
 
 /**
  * @category Whirlpool Utils

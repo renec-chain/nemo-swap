@@ -3,7 +3,6 @@ import { PublicKey } from "@solana/web3.js";
 import { SwapUtils, TickArrayUtil, Whirlpool, WhirlpoolContext } from "../..";
 import { SwapInput, swapIx } from "../swap-ix";
 import { swapWithFeeDiscountIx } from "../swap_with_fee_discount";
-import { NATIVE_MINT } from "@solana/spl-token";
 
 export type SwapAsyncParams = {
   swapInput: SwapInput;
