@@ -91,10 +91,9 @@ export async function assertDevTokenAmount(
   devWallet: PublicKey,
   preDevWalletLamport = 0
 ) {
-
   if (swapToken.equals(NATIVE_MINT)) {
     const walletAmount = await ctx.provider.connection.getBalance(devWallet);
-    assert.equal(expectationQuote.devFeeAmount.toNumber() + preDevWalletLamport, walletAmount)
+    assert.equal(expectationQuote.devFeeAmount.toNumber() + preDevWalletLamport, walletAmount);
     return;
   }
 
