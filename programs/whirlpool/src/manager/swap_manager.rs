@@ -1,3 +1,5 @@
+use solana_program::msg;
+
 use crate::{
     errors::ErrorCode,
     manager::{
@@ -271,6 +273,7 @@ pub fn swap_with_fee_discount(
         /*
          * if exact input ->
          * if exact output -> amount_remaining == amount out
+         * TODO: check error here, why fee should be 1
          */
         if amount_specified_is_input {
             amount_remaining = amount_remaining
@@ -405,9 +408,11 @@ fn apply_fee_discount(
     swap_computation: &mut SwapStepComputation,
     discount_fee_accumulated: u64,
 ) -> Result<u64, ErrorCode> {
-    let discount_amount = swap_computation.fee_amount * 99 / 100; // discount 99%
+    let discount_amount = swap_computation.fee_amount.saturating_sub(1); // NOTE: discount 100%: Find out why 0 value not works
     swap_computation.fee_amount = swap_computation.fee_amount - discount_amount;
-    let updated_discount_fee_amount = discount_fee_accumulated + discount_amount;
+    let updated_discount_fee_amount = discount_fee_accumulated
+        .checked_add(discount_amount)
+        .ok_or(ErrorCode::AmountCalcOverflow)?;
 
     Ok(updated_discount_fee_amount)
 }

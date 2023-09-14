@@ -8,7 +8,7 @@ import { TickArray, WhirlpoolData } from "../../types/public";
 import { PoolUtil, SwapDirection, TokenType } from "../../utils/public";
 import { SwapUtils } from "../../utils/public/swap-utils";
 import { Whirlpool } from "../../whirlpool-client";
-import { simulateSwap } from "../swap/swap-quote-impl";
+import { simulateSwap, simulateSwapWithFeeDiscount } from "../swap/swap-quote-impl";
 import { DevFeeSwapQuote } from "./dev-fee-swap-quote";
 
 /**
@@ -55,7 +55,7 @@ export type SwapEstimates = {
   estimatedEndTickIndex: number;
   estimatedEndSqrtPrice: BN;
   estimatedFeeAmount: u64;
-}
+};
 
 export type NormalSwapQuote = SwapInput & SwapEstimates;
 
@@ -91,6 +91,39 @@ export async function swapQuoteByInputToken(
     refresh
   );
   return swapQuoteWithParams(params, slippageTolerance);
+}
+
+/**
+ * @category Quotes
+ * @TODO additional function
+ * @param whirlpool
+ * @param inputTokenMint
+ * @param tokenAmount
+ * @param slippageTolerance
+ * @param programId
+ * @param fetcher
+ * @param refresh
+ * @returns
+ */
+export async function swapWithFeeDiscountQuoteByInputToken(
+  whirlpool: Whirlpool,
+  inputTokenMint: Address,
+  tokenAmount: u64,
+  slippageTolerance: Percentage,
+  programId: Address,
+  fetcher: AccountFetcher,
+  refresh: boolean
+): Promise<SwapQuote> {
+  const params = await swapQuoteByToken(
+    whirlpool,
+    inputTokenMint,
+    tokenAmount,
+    true,
+    programId,
+    fetcher,
+    refresh
+  );
+  return swapWithFeeDiscountQuoteWithParams(params, slippageTolerance);
 }
 
 /**
@@ -158,6 +191,33 @@ export function swapQuoteWithParams(
   return slippageAdjustedQuote;
 }
 
+/**
+ * Get the token type of the input token for this swap quote.
+ *
+ * @category Quotes
+ * @param quote - SwapQuote object
+ * @returns the TokenType of the input token
+ */
+export function swapWithFeeDiscountQuoteWithParams(
+  params: SwapQuoteParam,
+  slippageTolerance: Percentage
+): SwapQuote {
+  const quote = simulateSwapWithFeeDiscount(params);
+
+  const slippageAdjustedQuote: SwapQuote = {
+    ...quote,
+    ...SwapUtils.calculateSwapAmountsFromQuote(
+      quote.amount,
+      quote.estimatedAmountIn,
+      quote.estimatedAmountOut,
+      slippageTolerance,
+      quote.amountSpecifiedIsInput
+    ),
+  };
+
+  return slippageAdjustedQuote;
+}
+
 async function swapQuoteByToken(
   whirlpool: Whirlpool,
   inputTokenMint: Address,
@@ -172,7 +232,9 @@ async function swapQuoteByToken(
   const swapTokenType = PoolUtil.getTokenType(whirlpoolData, swapMintKey);
   invariant(!!swapTokenType, "swapTokenMint does not match any tokens on this pool");
 
-  const aToB = SwapUtils.getSwapDirection(whirlpoolData, swapMintKey, amountSpecifiedIsInput) === SwapDirection.AtoB;
+  const aToB =
+    SwapUtils.getSwapDirection(whirlpoolData, swapMintKey, amountSpecifiedIsInput) ===
+    SwapDirection.AtoB;
 
   const tickArrays = await SwapUtils.getTickArrays(
     whirlpoolData.tickCurrentIndex,
