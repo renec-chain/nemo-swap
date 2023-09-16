@@ -77,6 +77,20 @@ pub mod whirlpool {
         );
     }
 
+    pub fn initialize_pool_discount_info(
+        ctx: Context<InitializeWhirlpoolDiscountInfo>,
+        token_conversion_fee_rate: u16,
+        discount_fee_rate: u16,
+        token_rate_over_whirlpool_token_a: u64,
+    ) -> ProgramResult {
+        return instructions::initialize_whirlpool_discount_info::handler(
+            ctx,
+            token_conversion_fee_rate,
+            discount_fee_rate,
+            token_rate_over_whirlpool_token_a,
+        );
+    }
+
     /// Initializes a tick_array account to represent a tick-range in a Whirlpool.
     ///
     /// ### Parameters

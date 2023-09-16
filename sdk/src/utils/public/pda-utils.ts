@@ -6,6 +6,7 @@ import { PriceMath } from "./price-math";
 import { TickUtil } from "./tick-utils";
 
 const PDA_WHIRLPOOL_SEED = "whirlpool";
+const PDA_WHIRLPOOL_DISCOUNT_INFO_SEED = "whirlpool_discount_info";
 const PDA_POSITION_SEED = "position";
 const PDA_METADATA_SEED = "metadata";
 const PDA_TICK_ARRAY_SEED = "tick_array";
@@ -39,6 +40,21 @@ export class PDAUtil {
         tokenMintAKey.toBuffer(),
         tokenMintBKey.toBuffer(),
         new BN(tickSpacing).toArrayLike(Buffer, "le", 2),
+      ],
+      programId
+    );
+  }
+
+  public static getWhirlpoolDiscountInfo(
+    programId: PublicKey,
+    whirlpool: PublicKey,
+    discountToken: PublicKey
+  ) {
+    return AddressUtil.findProgramAddress(
+      [
+        Buffer.from(PDA_WHIRLPOOL_DISCOUNT_INFO_SEED),
+        whirlpool.toBuffer(),
+        discountToken.toBuffer(),
       ],
       programId
     );
