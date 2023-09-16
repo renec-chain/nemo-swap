@@ -1,5 +1,3 @@
-use solana_program::msg;
-
 use crate::{
     errors::ErrorCode,
     manager::{
@@ -266,15 +264,14 @@ pub fn swap_with_fee_discount(
             a_to_b,
         )?;
 
-        //Apply discount
+        // Apply discount
+        // fee =  10 RENEC ->
+        // 4 RENEC fee as NSF - user pay 2 to burn only -> discount 20% fee
+        // 6 RENEC go to pool
+        // Whitelist support pairs only
         discount_fee_accumulated =
             apply_fee_discount(&mut swap_computation, discount_fee_accumulated)?;
 
-        /*
-         * if exact input ->
-         * if exact output -> amount_remaining == amount out
-         * TODO: check error here, why fee should be 1
-         */
         if amount_specified_is_input {
             amount_remaining = amount_remaining
                 .checked_sub(swap_computation.amount_in)
