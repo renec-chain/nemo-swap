@@ -121,6 +121,55 @@ export type Whirlpool = {
       ]
     },
     {
+      "name": "initializePoolDiscountInfo",
+      "accounts": [
+        {
+          "name": "config",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpool",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "discountToken",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpoolDiscountInfo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolCreatorAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "tokenConversionFeeRate",
+          "type": "u16"
+        },
+        {
+          "name": "discountFeeRate",
+          "type": "u16"
+        },
+        {
+          "name": "tokenRateOverWhirlpoolTokenA",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "initializeTickArray",
       "accounts": [
         {
@@ -1585,6 +1634,26 @@ export type Whirlpool = {
                 3
               ]
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "whirlpoolDiscountInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tokenCoversionFeeRate",
+            "type": "u16"
+          },
+          {
+            "name": "discountFeeRate",
+            "type": "u16"
+          },
+          {
+            "name": "tokenRateOverWhirlpoolTokenA",
+            "type": "u64"
           }
         ]
       }
@@ -2105,6 +2174,55 @@ export const IDL: Whirlpool = {
       ]
     },
     {
+      "name": "initializePoolDiscountInfo",
+      "accounts": [
+        {
+          "name": "config",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpool",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "discountToken",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpoolDiscountInfo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolCreatorAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "tokenConversionFeeRate",
+          "type": "u16"
+        },
+        {
+          "name": "discountFeeRate",
+          "type": "u16"
+        },
+        {
+          "name": "tokenRateOverWhirlpoolTokenA",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "initializeTickArray",
       "accounts": [
         {
@@ -3569,6 +3687,26 @@ export const IDL: Whirlpool = {
                 3
               ]
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "whirlpoolDiscountInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tokenCoversionFeeRate",
+            "type": "u16"
+          },
+          {
+            "name": "discountFeeRate",
+            "type": "u16"
+          },
+          {
+            "name": "tokenRateOverWhirlpoolTokenA",
+            "type": "u64"
           }
         ]
       }
