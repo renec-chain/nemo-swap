@@ -220,6 +220,7 @@ export class SwapUtils {
     inputTokenAssociatedAddress: Address,
     outputTokenAssociatedAddress: Address,
     discountTokenMint: PublicKey,
+    ataDiscountTokenKey: PublicKey,
     wallet: PublicKey
   ) {
     const addr = whirlpool.getAddress();
@@ -246,6 +247,7 @@ export class SwapUtils {
       tokenAuthority: wallet,
       whirlpoolDiscountInfo: whirlpoolDiscountInfoPDA.publicKey,
       discountToken: discountTokenMint,
+      tokenDiscountOwnerAccount: ataDiscountTokenKey,
       ...quote,
     };
     return params;
