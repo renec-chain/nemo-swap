@@ -88,10 +88,9 @@ describe("swap_with_fee_discount", () => {
 
     // Setup whirlpool discount info
     const discountTokenMint = await createMint(provider);
-    a;
     const whirlpoolData = await whirlpool.refreshData();
 
-    await initializePoolDiscountInfo(
+    const whirlpoolDiscountInfoPubkey = await initializePoolDiscountInfo(
       ctx,
       whirlpool,
       discountTokenMint,
@@ -114,6 +113,12 @@ describe("swap_with_fee_discount", () => {
       provider,
       await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintB)
     );
+
+    const whirlpooDiscountInfoData = await ctx.fetcher.getPoolDiscountInfo(
+      whirlpoolDiscountInfoPubkey
+    );
+    console.log("whirlpooDiscountInfoData", whirlpooDiscountInfoData);
+    process.exit(0);
 
     const quoteWithDiscount = await swapWithFeeDiscountQuoteByInputToken(
       whirlpool,
@@ -289,19 +294,20 @@ const initializePoolDiscountInfo = async (
   discountFeeRate: number,
   discountTokenRateOverTokenA: anchor.BN,
   wallet?: Signer
-) => {
+): Promise<PublicKey> => {
   let poolCreatorAuthority = wallet?.publicKey || ctx.wallet.publicKey;
+  const whirlpoolDiscountInfoPDA = PDAUtil.getWhirlpoolDiscountInfo(
+    ctx.program.programId,
+    whirlpool.getAddress(),
+    discountTokenMint
+  );
 
   const whirlpoolData = await whirlpool.refreshData();
   const ix = WhirlpoolIx.initializePoolDiscountInfoIx(ctx.program, {
     whirlpoolsConfig: whirlpoolData.whirlpoolsConfig,
     whirlpool: whirlpool.getAddress(),
     discountToken: discountTokenMint,
-    whirlpoolDiscountInfoPDA: PDAUtil.getWhirlpoolDiscountInfo(
-      ctx.program.programId,
-      whirlpool.getAddress(),
-      discountTokenMint
-    ),
+    whirlpoolDiscountInfoPDA,
     poolCreatorAuthority,
     tokenConversionRate: tokenConversionRate,
     discountFeeRate: discountFeeRate,
@@ -313,4 +319,6 @@ const initializePoolDiscountInfo = async (
     tx = tx.addSigner(wallet);
   }
   await tx.buildAndExecute();
+
+  return whirlpoolDiscountInfoPDA.publicKey;
 };
