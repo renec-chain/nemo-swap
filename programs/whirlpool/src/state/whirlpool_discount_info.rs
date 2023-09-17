@@ -6,7 +6,7 @@ pub const DISCOUNT_FEE_RATE_MUL_VALUE: u128 = 10_000;
 
 #[account]
 pub struct WhirlpoolDiscountInfo {
-    pub token_coversion_fee_rate: u16, // amount of fee that will be converted into token
+    pub token_conversion_fee_rate: u16, // amount of fee that will be converted into token
     pub discount_fee_rate: u16,
 
     pub discount_token_rate_over_token_a: u64,
@@ -30,7 +30,7 @@ impl WhirlpoolDiscountInfo {
             discount_fee_rate as u128 <= DISCOUNT_FEE_RATE_MUL_VALUE,
             ErrorCode::FeeRateMaxExceeded
         );
-        self.token_coversion_fee_rate = token_coversion_fee_rate;
+        self.token_conversion_fee_rate = token_coversion_fee_rate;
         self.discount_fee_rate = discount_fee_rate;
         self.discount_token_rate_over_token_a = discount_token_rate_over_token_a;
 
