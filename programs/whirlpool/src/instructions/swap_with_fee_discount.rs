@@ -78,7 +78,7 @@ pub fn handler(
         ctx.accounts.tick_array_2.load_mut().ok(),
     );
 
-    let (swap_update, _, burn_fee_accumulated) = swap_with_fee_discount(
+    let (swap_update, discount_amount_accumulated, burn_fee_accumulated) = swap_with_fee_discount(
         &whirlpool,
         &whirlpool_discount_info,
         &mut swap_tick_sequence,
@@ -89,11 +89,20 @@ pub fn handler(
         timestamp,
     )?;
 
-    let burn_amount_in_discount_token = calculate_burn_fee_amount(
+    let burn_amount_in_discount_token = calculate_equivalent_discount_token_amount(
         whirlpool_discount_info,
         discount_token,
         &swap_update,
         burn_fee_accumulated,
+        amount_specified_is_input,
+        a_to_b,
+    )?;
+
+    let discount_token_amount_in_discount_token = calculate_equivalent_discount_token_amount(
+        whirlpool_discount_info,
+        discount_token,
+        &swap_update,
+        discount_amount_accumulated,
         amount_specified_is_input,
         a_to_b,
     )?;
@@ -111,6 +120,11 @@ pub fn handler(
     // Execute anchor's helper function to burn tokens
     token::burn(cpi_ctx, burn_amount_in_discount_token)?;
 
+    msg!(
+        "SAVE: token: {:?} - amount: {}",
+        discount_token.key(),
+        discount_token_amount_in_discount_token
+    );
     msg!(
         "BURN: token: {:?} - amount: {}",
         discount_token.key(),
@@ -145,7 +159,7 @@ pub fn handler(
     )
 }
 
-fn calculate_burn_fee_amount(
+fn calculate_equivalent_discount_token_amount(
     whirlpool_discount_info: &WhirlpoolDiscountInfo,
     discount_token: &Mint,
     post_swap_update: &PostSwapUpdate,

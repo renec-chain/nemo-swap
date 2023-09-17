@@ -942,7 +942,7 @@
         },
         {
           "name": "discountToken",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
