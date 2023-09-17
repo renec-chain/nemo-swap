@@ -1662,7 +1662,7 @@ export type Whirlpool = {
             "type": "u16"
           },
           {
-            "name": "tokenRateOverWhirlpoolTokenA",
+            "name": "discountTokenRateOverTokenA",
             "type": "u64"
           }
         ]
@@ -3725,7 +3725,7 @@ export const IDL: Whirlpool = {
             "type": "u16"
           },
           {
-            "name": "tokenRateOverWhirlpoolTokenA",
+            "name": "discountTokenRateOverTokenA",
             "type": "u64"
           }
         ]

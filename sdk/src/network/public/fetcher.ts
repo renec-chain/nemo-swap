@@ -11,8 +11,9 @@ import {
   WhirlpoolsConfigData,
   WHIRLPOOL_ACCOUNT_SIZE,
   WHIRLPOOL_CODER,
+  ParsableWhirlpoolDiscountInfo,
 } from "../..";
-import { FeeTierData } from "../../types/public";
+import { FeeTierData, WhirlpoolDiscountInfoData } from "../../types/public";
 import {
   ParsableEntity,
   ParsableFeeTier,
@@ -34,7 +35,8 @@ type CachedValue =
   | TickArrayData
   | FeeTierData
   | AccountInfo
-  | MintInfo;
+  | MintInfo
+  | WhirlpoolDiscountInfoData;
 
 /**
  * Include both the entity (i.e. type) of the stored value, and the value itself
@@ -113,6 +115,13 @@ export class AccountFetcher {
    */
   public async getPool(address: Address, refresh = false): Promise<WhirlpoolData | null> {
     return this.get(AddressUtil.toPubKey(address), ParsableWhirlpool, refresh);
+  }
+
+  public async getPoolDiscountInfo(
+    address: Address,
+    refresh = false
+  ): Promise<WhirlpoolDiscountInfoData | null> {
+    return this.get(AddressUtil.toPubKey(address), ParsableWhirlpoolDiscountInfo, refresh);
   }
 
   /**

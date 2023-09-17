@@ -1662,7 +1662,7 @@
             "type": "u16"
           },
           {
-            "name": "tokenRateOverWhirlpoolTokenA",
+            "name": "discountTokenRateOverTokenA",
             "type": "u64"
           }
         ]
