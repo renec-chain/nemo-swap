@@ -7,6 +7,7 @@ import {
   TickArrayData,
   AccountName,
   FeeTierData,
+  WhirlpoolDiscountInfoData,
 } from "../../types/public";
 import { BorshAccountsCoder, Idl } from "@project-serum/anchor";
 import * as WhirlpoolIDL from "../../artifacts/whirlpool.json";
@@ -63,6 +64,27 @@ export class ParsableWhirlpool {
       return parseAnchorAccount(AccountName.Whirlpool, data);
     } catch (e) {
       console.error(`error while parsing Whirlpool: ${e}`);
+      return null;
+    }
+  }
+}
+
+/**
+ * @category Parsables
+ */
+@staticImplements<ParsableEntity<WhirlpoolDiscountInfoData>>()
+export class ParsableWhirlpoolDiscountInfo {
+  private constructor() {}
+
+  public static parse(data: Buffer | undefined | null): WhirlpoolDiscountInfoData | null {
+    if (!data) {
+      return null;
+    }
+
+    try {
+      return parseAnchorAccount(AccountName.WhirlpoolDiscountInfo, data);
+    } catch (e) {
+      console.error(`error while parsing WhirlpoolDiscountInfo: ${e}`);
       return null;
     }
   }

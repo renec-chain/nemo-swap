@@ -4,7 +4,7 @@ use anchor_spl::token::{self, Mint, Token, TokenAccount};
 use crate::{
     errors::ErrorCode,
     manager::swap_manager::*,
-    state::{whirlpool_discount_info, TickArray, Whirlpool, WhirlpoolDiscountInfo},
+    state::{TickArray, Whirlpool, WhirlpoolDiscountInfo},
     util::{to_timestamp_u64, update_and_swap_whirlpool, SwapTickSequence},
 };
 
