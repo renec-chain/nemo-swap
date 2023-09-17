@@ -4,33 +4,21 @@ import {
   PDAUtil,
   buildWhirlpoolClient,
   swapQuoteByInputToken,
+  swapWithFeeDiscountQuoteByInputToken,
 } from "@renec/redex-sdk";
-import {
-  loadProvider,
-  getTokenMintInfo,
-  loadWallets,
-  ROLES,
-} from "../create_pool/utils";
-import deployed from "../create_pool/deployed.json";
-import { getPoolInfo } from "../create_pool/utils/pool";
+import { loadProvider, getTokenMintInfo, loadWallets } from "./utils";
+import deployed from "./deployed.json";
+import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";
 import { u64 } from "@solana/spl-token";
-import { GaslessDapp, GaslessTransaction } from "@renec-foundation/gasless-sdk";
-import { Wallet } from "@project-serum/anchor";
-import { executeGaslessTx } from "./utils";
 
 async function main() {
-  const poolIndex = parseInt(process.argv[2]);
-
-  if (isNaN(poolIndex)) {
-    console.error("Please provide a valid pool index.");
-    return;
-  }
-
-  let poolInfo = getPoolInfo(poolIndex);
-
   const wallets = loadWallets();
 
-  const { ctx } = loadProvider(userKeypair);
+  if (!wallets.userKeypair) {
+    throw new Error("Please provide pool_creator_authority_wallet wallet");
+  }
+
+  const { ctx } = loadProvider(wallets.userKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(
@@ -41,6 +29,7 @@ async function main() {
   const REDEX_CONFIG_PUB = new PublicKey(deployed.REDEX_CONFIG_PUB);
   const client = buildWhirlpoolClient(ctx);
 
+  let poolInfo = getPoolInfo(0);
   await askToConfirmPoolInfo(poolInfo);
   const mintAPub = new PublicKey(poolInfo.tokenMintA);
   const mintBPub = new PublicKey(poolInfo.tokenMintB);
@@ -61,31 +50,36 @@ async function main() {
     console.log("Token mint a: ", whirlpoolData.tokenMintA.toString());
     console.log("Token mint b: ", whirlpoolData.tokenMintB.toString());
 
-    const quote = await swapQuoteByInputToken(
+    const discountToken = new PublicKey(
+      "4VH7LAZr9RCj5CWofpnykM6f3URa2KuhdcCjbitmLViE"
+    );
+    const whirlpooDiscountInfoData = await ctx.fetcher.getPoolDiscountInfo(
+      PDAUtil.getWhirlpoolDiscountInfo(
+        ctx.program.programId,
+        whirlpoolPda.publicKey,
+        discountToken
+      ).publicKey
+    );
+
+    const quote = await swapWithFeeDiscountQuoteByInputToken(
       whirlpool,
-      whirlpoolData.tokenMintA,
-      new u64(100),
+      whirlpooDiscountInfoData,
+      whirlpoolData.tokenMintB,
+      new u64(100000000000),
       Percentage.fromFraction(1, 100),
       ctx.program.programId,
       ctx.fetcher,
       true
     );
-    const tx = await whirlpool.swap(quote, userKeypair.publicKey);
-    tx.addSigner(userKeypair);
-    // const sig = await tx.buildAndExecute();
-    // console.log(sig);
-
-    // Construct gasless txn
-    const dappUtil = await GaslessDapp.new(client.getContext().connection);
-
-    const gaslessTxn = GaslessTransaction.fromTransactionBuilder(
-      client.getContext().connection,
-      new Wallet(userKeypair),
-      tx.compressIx(true),
-      dappUtil
+    console.log(quote);
+    const tx = await whirlpool.swapWithFeeDiscount(
+      quote,
+      discountToken,
+      wallets.userKeypair.publicKey
     );
-
-    await executeGaslessTx(gaslessTxn, true);
+    tx.addSigner(wallets.userKeypair);
+    const sig = await tx.buildAndExecute();
+    console.log(sig);
   }
 }
 

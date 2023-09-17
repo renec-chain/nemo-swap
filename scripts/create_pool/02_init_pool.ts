@@ -57,19 +57,22 @@ async function main() {
       poolInfo.tickSpacing
     );
 
-    try {
-      const whirlpool = await client.getPool(whirlpoolPda.publicKey);
-      if (whirlpool) {
-        const price = PriceMath.sqrtPriceX64ToPrice(
-          whirlpool.getData().sqrtPrice,
-          tokenMintA.decimals,
-          tokenMintB.decimals
-        );
-        console.log("price_b_per_a:", price.toFixed(6));
-        console.log("pool_pub:", whirlpoolPda.publicKey.toBase58());
-        console.log("fee_rate: ", whirlpool.getData().feeRate);
+      try {
+        const whirlpool = await client.getPool(whirlpoolPda.publicKey);
+        if (whirlpool) {
+          const price = PriceMath.sqrtPriceX64ToPrice(
+            whirlpool.getData().sqrtPrice,
+            tokenMintA.decimals,
+            tokenMintB.decimals
+          );
+          console.log("price_b_per_a:", price.toFixed(6));
+          console.log("pool_pub:", whirlpoolPda.publicKey.toBase58());
+          console.log("fee_rate: ", whirlpool.getData().feeRate);
 
-        return;
+          return;
+        }
+      } catch (e) {
+        // This pool not existed
       }
     } catch (e) {
       // This pool not existed
