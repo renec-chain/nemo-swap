@@ -70,6 +70,7 @@ export async function swapAsync(
 export async function swapWithFeeDiscountAsync(
   ctx: WhirlpoolContext,
   params: SwapAsyncParams,
+  discountTokenMint: PublicKey,
   refresh: boolean
 ): Promise<TransactionBuilder> {
   const { wallet, whirlpool, swapInput } = params;
@@ -111,6 +112,7 @@ export async function swapWithFeeDiscountAsync(
         whirlpool,
         inputTokenAccount,
         outputTokenAccount,
+        discountTokenMint,
         wallet
       )
     )
