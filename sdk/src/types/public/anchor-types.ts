@@ -20,6 +20,7 @@ export enum AccountName {
   TickArray = "TickArray",
   Whirlpool = "Whirlpool",
   FeeTier = "FeeTier",
+  WhirlpoolDiscountInfo = "WhirlpoolDiscountInfo",
 }
 
 const IDL = WhirlpoolIDL as Idl;
@@ -158,4 +159,10 @@ export type FeeTierData = {
   whirlpoolsConfig: PublicKey;
   tickSpacing: number;
   defaultFeeRate: number;
+};
+
+export type WhirlpoolDiscountInfoData = {
+  tokenConversionFeeRate: number;
+  discountFeeRate: number;
+  discountTokenRateOverTokenA: BN;
 };
