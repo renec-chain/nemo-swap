@@ -4,6 +4,7 @@ import {
   PDAUtil,
   buildWhirlpoolClient,
   swapQuoteByInputToken,
+  swapWithFeeDiscountQuoteByInputToken,
 } from "@renec/redex-sdk";
 import { loadProvider, getTokenMintInfo, loadWallets } from "./utils";
 import deployed from "./deployed.json";
@@ -13,11 +14,11 @@ import { u64 } from "@solana/spl-token";
 async function main() {
   const wallets = loadWallets();
 
-  if (!wallets.poolCreatorAuthKeypair) {
+  if (!wallets.userKeypair) {
     throw new Error("Please provide pool_creator_authority_wallet wallet");
   }
 
-  const { ctx } = loadProvider(wallets.poolCreatorAuthKeypair);
+  const { ctx } = loadProvider(wallets.userKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(
@@ -26,9 +27,6 @@ async function main() {
     return;
   }
   const REDEX_CONFIG_PUB = new PublicKey(deployed.REDEX_CONFIG_PUB);
-  const whirlpoolKey = new PublicKey(
-    "HmruH4dvo1FdsLNDpFFnurtm6ih3YhwcbiDNnHu8bec2"
-  );
   const client = buildWhirlpoolClient(ctx);
 
   let poolInfo = getPoolInfo(0);
@@ -52,17 +50,33 @@ async function main() {
     console.log("Token mint a: ", whirlpoolData.tokenMintA.toString());
     console.log("Token mint b: ", whirlpoolData.tokenMintB.toString());
 
-    const quote = await swapQuoteByInputToken(
+    const discountToken = new PublicKey(
+      "4VH7LAZr9RCj5CWofpnykM6f3URa2KuhdcCjbitmLViE"
+    );
+    const whirlpooDiscountInfoData = await ctx.fetcher.getPoolDiscountInfo(
+      PDAUtil.getWhirlpoolDiscountInfo(
+        ctx.program.programId,
+        whirlpoolPda.publicKey,
+        discountToken
+      ).publicKey
+    );
+
+    const quote = await swapWithFeeDiscountQuoteByInputToken(
       whirlpool,
-      whirlpoolData.tokenMintA,
-      new u64(100),
+      whirlpooDiscountInfoData,
+      whirlpoolData.tokenMintB,
+      new u64(100000000000),
       Percentage.fromFraction(1, 100),
       ctx.program.programId,
       ctx.fetcher,
       true
     );
     console.log(quote);
-    const tx = await whirlpool.swap(quote, wallets.userKeypair.publicKey);
+    const tx = await whirlpool.swapWithFeeDiscount(
+      quote,
+      discountToken,
+      wallets.userKeypair.publicKey
+    );
     tx.addSigner(wallets.userKeypair);
     const sig = await tx.buildAndExecute();
     console.log(sig);
