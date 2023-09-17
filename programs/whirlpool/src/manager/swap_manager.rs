@@ -374,22 +374,11 @@ pub fn swap_with_fee_discount(
         curr_sqrt_price = swap_computation.next_price;
     }
 
-    let (amount_a, amount_b, discount_fee_a, discount_fee_b) =
-        if a_to_b == amount_specified_is_input {
-            (
-                amount - amount_remaining,
-                amount_calculated,
-                discount_fee_accumulated,
-                0,
-            )
-        } else {
-            (
-                amount_calculated,
-                amount - amount_remaining,
-                0,
-                discount_fee_accumulated,
-            )
-        };
+    let (amount_a, amount_b) = if a_to_b == amount_specified_is_input {
+        (amount - amount_remaining, amount_calculated)
+    } else {
+        (amount_calculated, amount - amount_remaining)
+    };
 
     Ok((
         PostSwapUpdate {
@@ -402,8 +391,8 @@ pub fn swap_with_fee_discount(
             next_reward_infos,
             next_protocol_fee: curr_protocol_fee,
         },
-        discount_fee_a,
-        discount_fee_b,
+        discount_fee_accumulated,
+        burn_fee_accumulated,
     ))
 }
 

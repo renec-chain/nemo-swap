@@ -944,6 +944,11 @@ export type Whirlpool = {
           "name": "discountToken",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "tokenDiscountOwnerAccount",
+          "isMut": true,
+          "isSigner": false
         }
       ],
       "args": [
@@ -3006,6 +3011,11 @@ export const IDL: Whirlpool = {
         {
           "name": "discountToken",
           "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenDiscountOwnerAccount",
+          "isMut": true,
           "isSigner": false
         }
       ],
