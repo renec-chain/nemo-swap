@@ -1,10 +1,17 @@
 import { PublicKey } from "@solana/web3.js";
-import { PDAUtil, buildWhirlpoolClient, PriceMath } from "@renec/redex-sdk";
+import {
+  PDAUtil,
+  buildWhirlpoolClient,
+  PriceMath,
+  WhirlpoolIx,
+  toTx,
+} from "@renec/redex-sdk";
 import { loadProvider, getTokenMintInfo, loadWallets } from "./utils";
 import Decimal from "decimal.js";
 import config from "./config.json";
 import deployed from "./deployed.json";
 import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";
+import { BN } from "@project-serum/anchor";
 
 async function main() {
   const wallets = loadWallets();
@@ -12,17 +19,12 @@ async function main() {
   if (!wallets.poolCreatorAuthKeypair) {
     throw new Error("Please provide pool_creator_authority_wallet wallet");
   }
-
-  if (!wallets.userKeypair) {
-    throw new Error("Please provide user_wallet wallet");
-  }
-
   console.log(
     "pool creator: ",
     wallets.poolCreatorAuthKeypair.publicKey.toString()
   );
 
-  const { ctx } = loadProvider(wallets.userKeypair);
+  const { ctx } = loadProvider(wallets.poolCreatorAuthKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(
@@ -30,6 +32,15 @@ async function main() {
     );
     return;
   }
+
+  // fixed input
+  const discountTokenMint = new PublicKey(
+    "4VH7LAZr9RCj5CWofpnykM6f3URa2KuhdcCjbitmLViE"
+  );
+  const tokenConversionRate = 4000;
+  const discountFeeRate = 5000;
+  const discountTokenRateOverTokenA = new BN(2000000000); // 1 NSF = 2 token A
+
   const REDEX_CONFIG_PUB = new PublicKey(deployed.REDEX_CONFIG_PUB);
   const client = buildWhirlpoolClient(ctx);
 
@@ -46,8 +57,6 @@ async function main() {
       console.log("===================================================");
       console.log("token_a:", mintAPub.toBase58());
       console.log("token_b:", mintBPub.toBase58());
-      console.log("tick_spacing:", poolInfo.tickSpacing);
-      console.log("tick_spacing:", poolInfo.tokenMintB);
 
       const whirlpoolPda = PDAUtil.getWhirlpool(
         ctx.program.programId,
@@ -60,42 +69,33 @@ async function main() {
       try {
         const whirlpool = await client.getPool(whirlpoolPda.publicKey);
         if (whirlpool) {
-          const price = PriceMath.sqrtPriceX64ToPrice(
-            whirlpool.getData().sqrtPrice,
-            tokenMintA.decimals,
-            tokenMintB.decimals
+          const whirlpoolDiscountInfoPDA = PDAUtil.getWhirlpoolDiscountInfo(
+            ctx.program.programId,
+            whirlpool.getAddress(),
+            discountTokenMint
           );
-          console.log("price_b_per_a:", price.toFixed(6));
-          console.log("pool_pub:", whirlpoolPda.publicKey.toBase58());
-          console.log("fee_rate: ", whirlpool.getData().feeRate);
 
+          const whirlpoolData = await whirlpool.refreshData();
+          const ix = WhirlpoolIx.initializePoolDiscountInfoIx(ctx.program, {
+            whirlpoolsConfig: whirlpoolData.whirlpoolsConfig,
+            whirlpool: whirlpool.getAddress(),
+            discountToken: discountTokenMint,
+            whirlpoolDiscountInfoPDA,
+            poolCreatorAuthority: wallets.poolCreatorAuthKeypair.publicKey,
+            tokenConversionRate: tokenConversionRate,
+            discountFeeRate: discountFeeRate,
+            discountTokenRateOverTokenA: discountTokenRateOverTokenA,
+          });
+
+          let tx = toTx(ctx, ix);
+          const txHash = await tx.buildAndExecute();
+
+          console.log("Tx hash: ", txHash);
           return;
         }
       } catch (e) {
-        // This pool not existed
+        throw new Error("failed to get pool info");
       }
-      console.log("deploying new pool...");
-
-      const currentA2BPrice = new Decimal(poolInfo.initialAmountBPerA);
-      const tickIndex = PriceMath.priceToInitializableTickIndex(
-        currentA2BPrice,
-        tokenMintA.decimals,
-        tokenMintB.decimals,
-        poolInfo.tickSpacing
-      );
-      const { poolKey, tx } = await client.createPool(
-        REDEX_CONFIG_PUB,
-        poolInfo.tokenMintA,
-        poolInfo.tokenMintB,
-        poolInfo.tickSpacing,
-        tickIndex,
-        ctx.wallet.publicKey
-      );
-      const txid = await tx.buildAndExecute();
-      console.log(
-        `new pool account ${poolKey.toString()} deployed at txid:`,
-        txid
-      );
     }
   }
 }
