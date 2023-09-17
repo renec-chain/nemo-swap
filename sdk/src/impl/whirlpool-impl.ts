@@ -42,6 +42,7 @@ import {
 import { Whirlpool } from "../whirlpool-client";
 import { PositionImpl } from "./position-impl";
 import { getRewardInfos, getTokenVaultAccountInfos } from "./util";
+import { publicKey } from "@project-serum/anchor/dist/cjs/utils";
 
 export class WhirlpoolImpl implements Whirlpool {
   private data: WhirlpoolData;
@@ -197,7 +198,11 @@ export class WhirlpoolImpl implements Whirlpool {
     );
   }
 
-  async swapWithFeeDiscount(quote: SwapInput, sourceWallet?: Address): Promise<TransactionBuilder> {
+  async swapWithFeeDiscount(
+    quote: SwapInput,
+    discountTokenMint: PublicKey,
+    sourceWallet?: Address
+  ): Promise<TransactionBuilder> {
     const sourceWalletKey = sourceWallet
       ? AddressUtil.toPubKey(sourceWallet)
       : this.ctx.wallet.publicKey;
@@ -208,6 +213,7 @@ export class WhirlpoolImpl implements Whirlpool {
         whirlpool: this,
         wallet: sourceWalletKey,
       },
+      discountTokenMint,
       true
     );
   }

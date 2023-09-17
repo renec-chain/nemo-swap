@@ -1,10 +1,10 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount};
+use anchor_spl::token::{self, Mint, Token, TokenAccount};
 
 use crate::{
     errors::ErrorCode,
     manager::swap_manager::*,
-    state::{TickArray, Whirlpool},
+    state::{whirlpool_discount_info, TickArray, Whirlpool, WhirlpoolDiscountInfo},
     util::{to_timestamp_u64, update_and_swap_whirlpool, SwapTickSequence},
 };
 
@@ -40,6 +40,15 @@ pub struct SwapWithFeeDiscount<'info> {
     #[account(seeds = [b"oracle", whirlpool.key().as_ref()],bump)]
     /// Oracle is currently unused and will be enabled on subsequent updates
     pub oracle: UncheckedAccount<'info>,
+
+    /// handle fee discount
+    #[account(
+        seeds = [b"whirlpool_discount_info", whirlpool.key().as_ref(), discount_token.key().as_ref()],
+        bump,
+    )]
+    pub whirlpool_discount_info: Box<Account<'info, WhirlpoolDiscountInfo>>,
+
+    pub discount_token: Account<'info, Mint>,
 }
 
 pub fn handler(
@@ -51,6 +60,8 @@ pub fn handler(
     a_to_b: bool, // Zero for one
 ) -> ProgramResult {
     let whirlpool = &mut ctx.accounts.whirlpool;
+    let whirlpool_discount_info = &mut ctx.accounts.whirlpool_discount_info;
+
     whirlpool.require_enabled()?;
     let clock = Clock::get()?;
     // Update the global reward growth which increases as a function of time.
@@ -63,6 +74,7 @@ pub fn handler(
 
     let (swap_update, _, _) = swap_with_fee_discount(
         &whirlpool,
+        &whirlpool_discount_info,
         &mut swap_tick_sequence,
         amount,
         sqrt_price_limit,

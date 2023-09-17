@@ -27,6 +27,7 @@ import {
   assertDevFeeQuotes,
   assertDevTokenAmount,
   assertQuoteAndResults,
+  createMint,
   getTokenBalance,
   MAX_U64,
   TickSpacing,
@@ -47,6 +48,7 @@ import {
   buildPosition,
   setupSwapTest,
 } from "../../../utils/swap-test-utils";
+import { PublicKey, Signer } from "@solana/web3.js";
 
 describe("swap_with_fee_discount", () => {
   const provider = anchor.AnchorProvider.local();
@@ -59,6 +61,10 @@ describe("swap_with_fee_discount", () => {
   const tickSpacing = TickSpacing.SixtyFour;
   const DEFAULT_FEE_RATE = new anchor.BN(3000);
   const DENOMINATOR = new anchor.BN(1000000);
+
+  const TOKEN_CONVERSION_FEE_RATE = 4000; // 40%
+  const DISCOUNT_FEE_RATE = 5000; // 50% of token conversion rate
+  const DISCOUNT_FEE_RATE_MUL_VALUE = 10000;
 
   it("swap with token A as input - exact in", async () => {
     const currIndex = arrayTickIndexToTickIndex({ arrayIndex: -1, offsetIndex: 22 }, tickSpacing);
@@ -80,9 +86,22 @@ describe("swap_with_fee_discount", () => {
       ],
     });
 
-    const inputTokenAmount = new u64(1195000);
-
+    // Setup whirlpool discount info
+    const discountTokenMint = await createMint(provider);
+    a;
     const whirlpoolData = await whirlpool.refreshData();
+
+    await initializePoolDiscountInfo(
+      ctx,
+      whirlpool,
+      discountTokenMint,
+      TOKEN_CONVERSION_FEE_RATE,
+      DISCOUNT_FEE_RATE,
+      new anchor.BN(1)
+    );
+
+    // compute swap ix
+    const inputTokenAmount = new u64(1195000);
     const swapToken = aToB ? whirlpoolData.tokenMintA : whirlpoolData.tokenMintB;
 
     const beforeVaultAmounts = await getVaultAmounts(ctx, whirlpoolData);
@@ -115,7 +134,11 @@ describe("swap_with_fee_discount", () => {
       ctx.fetcher,
       true
     );
-    await (await whirlpool.swapWithFeeDiscount(quoteWithDiscount)).buildAndExecute();
+
+    // swap with fee discount
+    await (
+      await whirlpool.swapWithFeeDiscount(quoteWithDiscount, discountTokenMint)
+    ).buildAndExecute();
     const afterVaultAmounts = await getVaultAmounts(ctx, whirlpoolData);
     const newData = await whirlpool.refreshData();
 
@@ -149,24 +172,6 @@ describe("swap_with_fee_discount", () => {
         quoteWithDiscount.estimatedAmountOut.mul(DEFAULT_FEE_RATE).div(DENOMINATOR)
       )
     );
-
-    // Setup whirlpool discount info
-    const ix = WhirlpoolIx.initializePoolDiscountInfoIx(ctx.program, {
-      whirlpoolsConfig: whirlpoolData.whirlpoolsConfig,
-      whirlpool: whirlpool.getAddress(),
-      discountToken: whirlpoolData.tokenMintA,
-      whirlpoolDiscountInfoPDA: PDAUtil.getWhirlpoolDiscountInfo(
-        ctx.program.programId,
-        whirlpool.getAddress(),
-        whirlpoolData.tokenMintA
-      ),
-      poolCreatorAuthority: provider.wallet.publicKey,
-      tokenConversionRate: 1,
-      discountFeeRate: 3000,
-      discountTokenRateOverTokenA: new BN(1),
-    });
-
-    let result = await toTx(ctx, ix).buildAndExecute();
   });
 
   // it("swap with token B as input - exact in", async () => {
@@ -274,4 +279,38 @@ const isRoundupEqual = (a: anchor.BN, b: anchor.BN, diff: anchor.BN): boolean =>
     return true;
   }
   return false;
+};
+
+const initializePoolDiscountInfo = async (
+  ctx: WhirlpoolContext,
+  whirlpool: Whirlpool,
+  discountTokenMint: PublicKey,
+  tokenConversionRate: number,
+  discountFeeRate: number,
+  discountTokenRateOverTokenA: anchor.BN,
+  wallet?: Signer
+) => {
+  let poolCreatorAuthority = wallet?.publicKey || ctx.wallet.publicKey;
+
+  const whirlpoolData = await whirlpool.refreshData();
+  const ix = WhirlpoolIx.initializePoolDiscountInfoIx(ctx.program, {
+    whirlpoolsConfig: whirlpoolData.whirlpoolsConfig,
+    whirlpool: whirlpool.getAddress(),
+    discountToken: discountTokenMint,
+    whirlpoolDiscountInfoPDA: PDAUtil.getWhirlpoolDiscountInfo(
+      ctx.program.programId,
+      whirlpool.getAddress(),
+      discountTokenMint
+    ),
+    poolCreatorAuthority,
+    tokenConversionRate: tokenConversionRate,
+    discountFeeRate: discountFeeRate,
+    discountTokenRateOverTokenA: discountTokenRateOverTokenA,
+  });
+
+  let tx = toTx(ctx, ix);
+  if (wallet) {
+    tx = tx.addSigner(wallet);
+  }
+  await tx.buildAndExecute();
 };
