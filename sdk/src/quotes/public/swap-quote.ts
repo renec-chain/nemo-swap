@@ -4,7 +4,7 @@ import { u64 } from "@solana/spl-token";
 import invariant from "tiny-invariant";
 import { SwapInput } from "../../instructions";
 import { AccountFetcher } from "../../network/public";
-import { TickArray, WhirlpoolData } from "../../types/public";
+import { TickArray, WhirlpoolData, WhirlpoolDiscountInfoData } from "../../types/public";
 import { PoolUtil, SwapDirection, TokenType } from "../../utils/public";
 import { SwapUtils } from "../../utils/public/swap-utils";
 import { Whirlpool } from "../../whirlpool-client";
@@ -107,6 +107,7 @@ export async function swapQuoteByInputToken(
  */
 export async function swapWithFeeDiscountQuoteByInputToken(
   whirlpool: Whirlpool,
+  whirlpoolDiscountInfoData: WhirlpoolDiscountInfoData,
   inputTokenMint: Address,
   tokenAmount: u64,
   slippageTolerance: Percentage,
@@ -123,7 +124,7 @@ export async function swapWithFeeDiscountQuoteByInputToken(
     fetcher,
     refresh
   );
-  return swapWithFeeDiscountQuoteWithParams(params, slippageTolerance);
+  return swapWithFeeDiscountQuoteWithParams(params, whirlpoolDiscountInfoData, slippageTolerance);
 }
 
 /**
@@ -200,9 +201,10 @@ export function swapQuoteWithParams(
  */
 export function swapWithFeeDiscountQuoteWithParams(
   params: SwapQuoteParam,
+  whirlpoolDiscountInfoData: WhirlpoolDiscountInfoData,
   slippageTolerance: Percentage
 ): SwapQuote {
-  const quote = simulateSwapWithFeeDiscount(params);
+  const quote = simulateSwapWithFeeDiscount(params, whirlpoolDiscountInfoData);
 
   const slippageAdjustedQuote: SwapQuote = {
     ...quote,

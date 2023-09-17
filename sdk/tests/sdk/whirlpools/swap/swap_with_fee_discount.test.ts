@@ -22,6 +22,7 @@ import {
   swapWithFeeDiscountQuoteByInputToken,
   Whirlpool,
   swapQuoteByInputTokenWithDevFees,
+  FEE_RATE_MUL_VALUE,
 } from "../../../../src";
 import {
   assertDevFeeQuotes,
@@ -117,11 +118,12 @@ describe("swap_with_fee_discount", () => {
     const whirlpooDiscountInfoData = await ctx.fetcher.getPoolDiscountInfo(
       whirlpoolDiscountInfoPubkey
     );
-    console.log("whirlpooDiscountInfoData", whirlpooDiscountInfoData);
-    process.exit(0);
+
+    assert.ok(whirlpooDiscountInfoData != null);
 
     const quoteWithDiscount = await swapWithFeeDiscountQuoteByInputToken(
       whirlpool,
+      whirlpooDiscountInfoData,
       swapToken,
       inputTokenAmount,
       slippageTolerance,
@@ -147,8 +149,10 @@ describe("swap_with_fee_discount", () => {
     const afterVaultAmounts = await getVaultAmounts(ctx, whirlpoolData);
     const newData = await whirlpool.refreshData();
 
+    // Assert sdk simulate function run correctly
     assertQuoteAndResults(aToB, quoteWithDiscount, newData, beforeVaultAmounts, afterVaultAmounts);
 
+    // Assert user token balance
     const afterUserTokenAAmount = await getTokenBalance(
       provider,
       await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintA)
@@ -158,7 +162,6 @@ describe("swap_with_fee_discount", () => {
       await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintB)
     );
 
-    // Assert user token balance
     assert.equal(
       new BN(beforeUserTokenAAmount).sub(new BN(afterUserTokenAAmount)).toNumber(),
       quoteWithDiscount.estimatedAmountIn
@@ -169,104 +172,137 @@ describe("swap_with_fee_discount", () => {
       quoteWithDiscount.estimatedAmountOut
     );
 
+    // Assert that an tokenConversionFeeRate amount of fee is converted
+    assert.ok(
+      isRoundupEqual(
+        quoteWithDiscount.estimatedAmountOut,
+        normalQuote.estimatedAmountOut,
+        quoteWithDiscount.estimatedAmountOut
+          .mul(DEFAULT_FEE_RATE)
+          .div(DENOMINATOR)
+          .mul(new BN(whirlpooDiscountInfoData.tokenConversionFeeRate))
+          .div(new BN(DISCOUNT_FEE_RATE_MUL_VALUE))
+      )
+    );
+  });
+
+  it("swap with token B as input - exact in", async () => {
+    const currIndex = arrayTickIndexToTickIndex({ arrayIndex: -1, offsetIndex: 22 }, tickSpacing);
+    const aToB = false;
+    const whirlpool = await setupSwapTest({
+      ctx,
+      client,
+      tickSpacing,
+      initSqrtPrice: PriceMath.tickIndexToSqrtPriceX64(currIndex),
+      initArrayStartTicks: [-5632, 0, 5632],
+      fundedPositions: [
+        buildPosition(
+          // a
+          { arrayIndex: -1, offsetIndex: 10 },
+          { arrayIndex: 1, offsetIndex: 23 },
+          tickSpacing,
+          new anchor.BN(250_000_000)
+        ),
+      ],
+    });
+
+    // Setup whirlpool discount info
+    const discountTokenMint = await createMint(provider);
+    const whirlpoolData = await whirlpool.refreshData();
+
+    const whirlpoolDiscountInfoPubkey = await initializePoolDiscountInfo(
+      ctx,
+      whirlpool,
+      discountTokenMint,
+      TOKEN_CONVERSION_FEE_RATE,
+      DISCOUNT_FEE_RATE,
+      new anchor.BN(1)
+    );
+
+    // Compute swap ix
+    const inputTokenAmount = new u64(1195000);
+    const swapToken = aToB ? whirlpoolData.tokenMintA : whirlpoolData.tokenMintB;
+    const beforeVaultAmounts = await getVaultAmounts(ctx, whirlpoolData);
+    const beforeUserTokenAAmount = await getTokenBalance(
+      provider,
+      await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintA)
+    );
+    const beforeUserTokenBAmount = await getTokenBalance(
+      provider,
+      await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintB)
+    );
+
+    const whirlpooDiscountInfoData = await ctx.fetcher.getPoolDiscountInfo(
+      whirlpoolDiscountInfoPubkey
+    );
+
+    assert.ok(whirlpooDiscountInfoData != null);
+
+    const quoteWithDiscount = await swapWithFeeDiscountQuoteByInputToken(
+      whirlpool,
+      whirlpooDiscountInfoData,
+      swapToken,
+      inputTokenAmount,
+      slippageTolerance,
+      ctx.program.programId,
+      ctx.fetcher,
+      true
+    );
+
+    const normalQuote = await swapQuoteByInputToken(
+      whirlpool,
+      swapToken,
+      inputTokenAmount,
+      slippageTolerance,
+      ctx.program.programId,
+      ctx.fetcher,
+      true
+    );
+
+    // Swap with fee discount
+    await (
+      await whirlpool.swapWithFeeDiscount(quoteWithDiscount, discountTokenMint)
+    ).buildAndExecute();
+
+    const afterVaultAmounts = await getVaultAmounts(ctx, whirlpoolData);
+    const newData = await whirlpool.refreshData();
+
+    // Assert sdk simulate function run correctly
+    assertQuoteAndResults(aToB, quoteWithDiscount, newData, beforeVaultAmounts, afterVaultAmounts);
+
+    // Assert user token balance
+    const afterUserTokenAAmount = await getTokenBalance(
+      provider,
+      await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintA)
+    );
+    const afterUserTokenBAmount = await getTokenBalance(
+      provider,
+      await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintB)
+    );
+
+    assert.equal(
+      new BN(afterUserTokenAAmount).sub(new BN(beforeUserTokenAAmount)).toNumber(),
+      quoteWithDiscount.estimatedAmountOut
+    );
+
+    assert.equal(
+      new BN(beforeUserTokenBAmount).sub(new BN(afterUserTokenBAmount)).toNumber(),
+      quoteWithDiscount.estimatedAmountIn
+    );
+
     // Assert that user get a discount
     assert.ok(
       isRoundupEqual(
         quoteWithDiscount.estimatedAmountOut,
         normalQuote.estimatedAmountOut,
-        quoteWithDiscount.estimatedAmountOut.mul(DEFAULT_FEE_RATE).div(DENOMINATOR)
+        quoteWithDiscount.estimatedAmountOut
+          .mul(DEFAULT_FEE_RATE)
+          .div(DENOMINATOR)
+          .mul(new BN(whirlpooDiscountInfoData.tokenConversionFeeRate))
+          .div(new BN(DISCOUNT_FEE_RATE_MUL_VALUE))
       )
     );
   });
-
-  // it("swap with token B as input - exact in", async () => {
-  //   const currIndex = arrayTickIndexToTickIndex({ arrayIndex: -1, offsetIndex: 22 }, tickSpacing);
-  //   const aToB = false;
-  //   const whirlpool = await setupSwapTest({
-  //     ctx,
-  //     client,
-  //     tickSpacing,
-  //     initSqrtPrice: PriceMath.tickIndexToSqrtPriceX64(currIndex),
-  //     initArrayStartTicks: [-5632, 0, 5632],
-  //     fundedPositions: [
-  //       buildPosition(
-  //         // a
-  //         { arrayIndex: -1, offsetIndex: 10 },
-  //         { arrayIndex: 1, offsetIndex: 23 },
-  //         tickSpacing,
-  //         new anchor.BN(250_000_000)
-  //       ),
-  //     ],
-  //   });
-
-  //   const inputTokenAmount = new u64(1195000);
-
-  //   const whirlpoolData = await whirlpool.refreshData();
-  //   const swapToken = aToB ? whirlpoolData.tokenMintA : whirlpoolData.tokenMintB;
-  //   const beforeVaultAmounts = await getVaultAmounts(ctx, whirlpoolData);
-  //   const beforeUserTokenAAmount = await getTokenBalance(
-  //     provider,
-  //     await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintA)
-  //   );
-  //   const beforeUserTokenBAmount = await getTokenBalance(
-  //     provider,
-  //     await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintB)
-  //   );
-
-  //   const quoteWithDiscount = await swapWithFeeDiscountQuoteByInputToken(
-  //     whirlpool,
-  //     swapToken,
-  //     inputTokenAmount,
-  //     slippageTolerance,
-  //     ctx.program.programId,
-  //     ctx.fetcher,
-  //     true
-  //   );
-
-  //   const normalQuote = await swapQuoteByInputToken(
-  //     whirlpool,
-  //     swapToken,
-  //     inputTokenAmount,
-  //     slippageTolerance,
-  //     ctx.program.programId,
-  //     ctx.fetcher,
-  //     true
-  //   );
-  //   await (await whirlpool.swapWithFeeDiscount(quoteWithDiscount)).buildAndExecute();
-  //   const afterVaultAmounts = await getVaultAmounts(ctx, whirlpoolData);
-  //   const newData = await whirlpool.refreshData();
-
-  //   assertQuoteAndResults(aToB, quoteWithDiscount, newData, beforeVaultAmounts, afterVaultAmounts);
-
-  //   const afterUserTokenAAmount = await getTokenBalance(
-  //     provider,
-  //     await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintA)
-  //   );
-  //   const afterUserTokenBAmount = await getTokenBalance(
-  //     provider,
-  //     await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintB)
-  //   );
-
-  //   // Assert user token balance
-  //   assert.equal(
-  //     new BN(afterUserTokenAAmount).sub(new BN(beforeUserTokenAAmount)).toNumber(),
-  //     quoteWithDiscount.estimatedAmountOut
-  //   );
-
-  //   assert.equal(
-  //     new BN(beforeUserTokenBAmount).sub(new BN(afterUserTokenBAmount)).toNumber(),
-  //     quoteWithDiscount.estimatedAmountIn
-  //   );
-
-  //   // Assert that user get a discount
-  //   assert.ok(
-  //     isRoundupEqual(
-  //       quoteWithDiscount.estimatedAmountOut,
-  //       normalQuote.estimatedAmountOut,
-  //       quoteWithDiscount.estimatedAmountOut.mul(DEFAULT_FEE_RATE).div(DENOMINATOR)
-  //     )
-  //   );
-  // });
 });
 
 const isRoundupEqual = (a: anchor.BN, b: anchor.BN, diff: anchor.BN): boolean => {
