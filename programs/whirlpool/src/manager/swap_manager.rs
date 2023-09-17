@@ -413,7 +413,7 @@ fn apply_fee_discount(
     discount_fee_accumulated: u64,
     burn_fee_accoumulated: u64,
 ) -> Result<(u64, u64), ErrorCode> {
-    if whirlpool_discount_info.token_coversion_fee_rate as u128 >= DISCOUNT_FEE_RATE_MUL_VALUE {
+    if whirlpool_discount_info.token_conversion_fee_rate as u128 >= DISCOUNT_FEE_RATE_MUL_VALUE {
         return Err(ErrorCode::FeeRateMaxExceeded.into());
     }
 
@@ -423,7 +423,7 @@ fn apply_fee_discount(
 
     // this never fail, u64 x u16
     let token_conversion_amount = (swap_computation.fee_amount as u128
-        * whirlpool_discount_info.token_coversion_fee_rate as u128
+        * whirlpool_discount_info.token_conversion_fee_rate as u128
         / DISCOUNT_FEE_RATE_MUL_VALUE) as u64;
 
     swap_computation.fee_amount = swap_computation.fee_amount - token_conversion_amount;

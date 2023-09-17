@@ -3,7 +3,12 @@ import { SwapQuoteParam, SwapQuote } from "../public";
 import { BN } from "@project-serum/anchor";
 import { TickArraySequence } from "./tick-array-sequence";
 import { SwapResult, computeSwap, computeSwapWithFeeDiscount } from "./swap-manager";
-import { MAX_SQRT_PRICE, MAX_SWAP_TICK_ARRAYS, MIN_SQRT_PRICE } from "../../types/public";
+import {
+  MAX_SQRT_PRICE,
+  MAX_SWAP_TICK_ARRAYS,
+  MIN_SQRT_PRICE,
+  WhirlpoolDiscountInfoData,
+} from "../../types/public";
 import { SwapErrorCode, WhirlpoolsError } from "../../errors/errors";
 
 /**
@@ -124,7 +129,10 @@ export function simulateSwap(params: SwapQuoteParam): SwapQuote {
  * @returns
  * @exceptions
  */
-export function simulateSwapWithFeeDiscount(params: SwapQuoteParam): SwapQuote {
+export function simulateSwapWithFeeDiscount(
+  params: SwapQuoteParam,
+  whirlpoolDiscountInfoData: WhirlpoolDiscountInfoData
+): SwapQuote {
   const {
     aToB,
     whirlpoolData,
@@ -168,6 +176,7 @@ export function simulateSwapWithFeeDiscount(params: SwapQuoteParam): SwapQuote {
 
   let { swapResults, discountFeeAccumulated } = computeSwapWithFeeDiscount(
     whirlpoolData,
+    whirlpoolDiscountInfoData,
     tickSequence,
     tokenAmount,
     sqrtPriceLimit,

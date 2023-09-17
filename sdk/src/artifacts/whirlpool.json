@@ -1654,7 +1654,7 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "tokenCoversionFeeRate",
+            "name": "tokenConversionFeeRate",
             "type": "u16"
           },
           {
