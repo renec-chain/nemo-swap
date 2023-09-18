@@ -162,6 +162,7 @@ export type FeeTierData = {
 };
 
 export type WhirlpoolDiscountInfoData = {
+  tokenDecimals: number;
   tokenConversionFeeRate: number;
   discountFeeRate: number;
   discountTokenRateOverTokenA: BN;

@@ -1,5 +1,5 @@
 import { ZERO } from "@orca-so/common-sdk";
-import { SwapQuoteParam, SwapQuote } from "../public";
+import { SwapQuoteParam, SwapQuote, FeeDiscountSwapQuote } from "../public";
 import { BN } from "@project-serum/anchor";
 import { TickArraySequence } from "./tick-array-sequence";
 import { SwapResult, computeSwap, computeSwapWithFeeDiscount } from "./swap-manager";
@@ -132,7 +132,7 @@ export function simulateSwap(params: SwapQuoteParam): SwapQuote {
 export function simulateSwapWithFeeDiscount(
   params: SwapQuoteParam,
   whirlpoolDiscountInfoData: WhirlpoolDiscountInfoData
-): SwapQuote {
+): FeeDiscountSwapQuote {
   const {
     aToB,
     whirlpoolData,
@@ -174,12 +174,28 @@ export function simulateSwapWithFeeDiscount(
     );
   }
 
-  let { swapResults, discountFeeAccumulated } = computeSwapWithFeeDiscount(
+  let { swapResults, discountFeeAccumulated, burnFeeAccumulated } = computeSwapWithFeeDiscount(
     whirlpoolData,
     whirlpoolDiscountInfoData,
     tickSequence,
     tokenAmount,
     sqrtPriceLimit,
+    amountSpecifiedIsInput,
+    aToB
+  );
+
+  const burnAmount = calculateEquivalentDiscountTokenAmount(
+    whirlpoolDiscountInfoData,
+    swapResults,
+    burnFeeAccumulated,
+    amountSpecifiedIsInput,
+    aToB
+  );
+
+  const discountAmount = calculateEquivalentDiscountTokenAmount(
+    whirlpoolDiscountInfoData,
+    swapResults,
+    discountFeeAccumulated,
     amountSpecifiedIsInput,
     aToB
   );
@@ -236,6 +252,8 @@ export function simulateSwapWithFeeDiscount(
     tickArray0: touchedArrays[0],
     tickArray1: touchedArrays[1],
     tickArray2: touchedArrays[2],
+    discountAmount,
+    burnAmount,
   };
 }
 
@@ -246,4 +264,25 @@ function remapAndAdjustTokens(amountA: BN, amountB: BN, aToB: boolean) {
     estimatedAmountIn,
     estimatedAmountOut,
   };
+}
+
+function calculateEquivalentDiscountTokenAmount(
+  whirlpoolDiscountInfo: WhirlpoolDiscountInfoData,
+  postSwapUpdate: SwapResult,
+  amount: BN,
+  amountSpecifiedIsInput: boolean,
+  aToB: boolean
+) {
+  let burnAmountInTokenA = amount;
+
+  if (aToB !== amountSpecifiedIsInput) {
+    burnAmountInTokenA = amount.mul(postSwapUpdate.amountA).div(postSwapUpdate.amountB);
+  }
+
+  const tenPowerDecimals = new BN(10).pow(new BN(whirlpoolDiscountInfo.tokenDecimals));
+  const amountInDiscountToken = burnAmountInTokenA
+    .mul(tenPowerDecimals)
+    .div(whirlpoolDiscountInfo.discountTokenRateOverTokenA);
+
+  return amountInDiscountToken;
 }

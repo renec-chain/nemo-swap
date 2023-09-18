@@ -10,6 +10,7 @@ import { SwapUtils } from "../../utils/public/swap-utils";
 import { Whirlpool } from "../../whirlpool-client";
 import { simulateSwap, simulateSwapWithFeeDiscount } from "../swap/swap-quote-impl";
 import { DevFeeSwapQuote } from "./dev-fee-swap-quote";
+import { FeeDiscountSwapQuote } from "./swap-with-fee-discount-quote";
 
 /**
  * @category Quotes
@@ -38,7 +39,7 @@ export type SwapQuoteParam = {
  * @link {BaseSwapQuote}
  * @link {DevFeeSwapQuote}
  */
-export type SwapQuote = NormalSwapQuote | DevFeeSwapQuote;
+export type SwapQuote = NormalSwapQuote | DevFeeSwapQuote | FeeDiscountSwapQuote;
 
 /**
  * A collection of estimated values from quoting a swap.
@@ -94,40 +95,6 @@ export async function swapQuoteByInputToken(
 }
 
 /**
- * @category Quotes
- * @TODO additional function
- * @param whirlpool
- * @param inputTokenMint
- * @param tokenAmount
- * @param slippageTolerance
- * @param programId
- * @param fetcher
- * @param refresh
- * @returns
- */
-export async function swapWithFeeDiscountQuoteByInputToken(
-  whirlpool: Whirlpool,
-  whirlpoolDiscountInfoData: WhirlpoolDiscountInfoData,
-  inputTokenMint: Address,
-  tokenAmount: u64,
-  slippageTolerance: Percentage,
-  programId: Address,
-  fetcher: AccountFetcher,
-  refresh: boolean
-): Promise<SwapQuote> {
-  const params = await swapQuoteByToken(
-    whirlpool,
-    inputTokenMint,
-    tokenAmount,
-    true,
-    programId,
-    fetcher,
-    refresh
-  );
-  return swapWithFeeDiscountQuoteWithParams(params, whirlpoolDiscountInfoData, slippageTolerance);
-}
-
-/**
  * Get an estimated swap quote using an output token amount.
  *
  * Use this quote to get an estimated amount of input token needed to receive
@@ -164,28 +131,6 @@ export async function swapQuoteByOutputToken(
   return swapQuoteWithParams(params, slippageTolerance);
 }
 
-export async function swapWithFeeDiscountQuoteByOutputToken(
-  whirlpool: Whirlpool,
-  whirlpoolDiscountInfoData: WhirlpoolDiscountInfoData,
-  outputTokenMint: Address,
-  tokenAmount: u64,
-  slippageTolerance: Percentage,
-  programId: Address,
-  fetcher: AccountFetcher,
-  refresh: boolean
-): Promise<SwapQuote> {
-  const params = await swapQuoteByToken(
-    whirlpool,
-    outputTokenMint,
-    tokenAmount,
-    false,
-    programId,
-    fetcher,
-    refresh
-  );
-  return swapWithFeeDiscountQuoteWithParams(params, whirlpoolDiscountInfoData, slippageTolerance);
-}
-
 /**
  * Perform a sync swap quote based on the basic swap instruction parameters.
  *
@@ -199,34 +144,6 @@ export function swapQuoteWithParams(
   slippageTolerance: Percentage
 ): SwapQuote {
   const quote = simulateSwap(params);
-
-  const slippageAdjustedQuote: SwapQuote = {
-    ...quote,
-    ...SwapUtils.calculateSwapAmountsFromQuote(
-      quote.amount,
-      quote.estimatedAmountIn,
-      quote.estimatedAmountOut,
-      slippageTolerance,
-      quote.amountSpecifiedIsInput
-    ),
-  };
-
-  return slippageAdjustedQuote;
-}
-
-/**
- * Get the token type of the input token for this swap quote.
- *
- * @category Quotes
- * @param quote - SwapQuote object
- * @returns the TokenType of the input token
- */
-export function swapWithFeeDiscountQuoteWithParams(
-  params: SwapQuoteParam,
-  whirlpoolDiscountInfoData: WhirlpoolDiscountInfoData,
-  slippageTolerance: Percentage
-): SwapQuote {
-  const quote = simulateSwapWithFeeDiscount(params, whirlpoolDiscountInfoData);
 
   const slippageAdjustedQuote: SwapQuote = {
     ...quote,
