@@ -1659,6 +1659,10 @@ export type Whirlpool = {
         "kind": "struct",
         "fields": [
           {
+            "name": "tokenDecimals",
+            "type": "u8"
+          },
+          {
             "name": "tokenConversionFeeRate",
             "type": "u16"
           },
@@ -3726,6 +3730,10 @@ export const IDL: Whirlpool = {
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "tokenDecimals",
+            "type": "u8"
+          },
           {
             "name": "tokenConversionFeeRate",
             "type": "u16"
