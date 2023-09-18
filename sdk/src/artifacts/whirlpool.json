@@ -1659,6 +1659,10 @@
         "kind": "struct",
         "fields": [
           {
+            "name": "tokenDecimals",
+            "type": "u8"
+          },
+          {
             "name": "tokenConversionFeeRate",
             "type": "u16"
           },
