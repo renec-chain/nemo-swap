@@ -30,8 +30,10 @@ pub fn handler(
     discount_token_rate_over_token_a: u64,
 ) -> ProgramResult {
     let whirlpool_discount_info = &mut ctx.accounts.whirlpool_discount_info;
+    let discount_token = &ctx.accounts.discount_token;
 
     whirlpool_discount_info.initialize(
+        discount_token.decimals,
         token_conversion_fee_rate,
         discount_fee_rate,
         discount_token_rate_over_token_a,

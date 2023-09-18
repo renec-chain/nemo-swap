@@ -119,7 +119,7 @@ export function computeSwapWithFeeDiscount(
   sqrtPriceLimit: BN,
   amountSpecifiedIsInput: boolean,
   aToB: boolean
-): { swapResults: SwapResult; discountFeeAccumulated: BN } {
+): { swapResults: SwapResult; discountFeeAccumulated: BN; burnFeeAccumulated: BN } {
   let amountRemaining = tokenAmount;
   let amountCalculated = ZERO;
   let currSqrtPrice = whirlpoolData.sqrtPrice;
@@ -217,6 +217,7 @@ export function computeSwapWithFeeDiscount(
       totalFeeAmount,
     },
     discountFeeAccumulated,
+    burnFeeAccumulated,
   };
 }
 
