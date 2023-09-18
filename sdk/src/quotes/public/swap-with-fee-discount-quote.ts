@@ -12,8 +12,8 @@ import { simulateSwap, simulateSwapWithFeeDiscount } from "../swap/swap-quote-im
 import { NormalSwapQuote, SwapQuote, SwapQuoteParam } from "./swap-quote";
 
 export type FeeDiscountSwapQuote = NormalSwapQuote & {
-  discountAmount: u64;
-  burnAmount: u64;
+  expectedDiscountAmount: u64;
+  expectedBurnAmount: u64;
 };
 
 /**
