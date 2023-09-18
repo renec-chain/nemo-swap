@@ -35,9 +35,9 @@ async function main() {
 
   // fixed input
   const discountTokenMint = new PublicKey(
-    "4VH7LAZr9RCj5CWofpnykM6f3URa2KuhdcCjbitmLViE"
+    "BDsWJbVkjtxUESArcCSrqDfq7HmQZ1m9Zem11VQmz1hB"
   );
-  const tokenConversionRate = 4000;
+  const tokenConversionRate = 4000; // 10 Renec -> 6
   const discountFeeRate = 5000;
   const discountTokenRateOverTokenA = new BN(2000000000); // 1 NSF = 2 token A
 

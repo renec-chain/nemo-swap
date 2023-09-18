@@ -164,6 +164,28 @@ export async function swapQuoteByOutputToken(
   return swapQuoteWithParams(params, slippageTolerance);
 }
 
+export async function swapWithFeeDiscountQuoteByOutputToken(
+  whirlpool: Whirlpool,
+  whirlpoolDiscountInfoData: WhirlpoolDiscountInfoData,
+  outputTokenMint: Address,
+  tokenAmount: u64,
+  slippageTolerance: Percentage,
+  programId: Address,
+  fetcher: AccountFetcher,
+  refresh: boolean
+): Promise<SwapQuote> {
+  const params = await swapQuoteByToken(
+    whirlpool,
+    outputTokenMint,
+    tokenAmount,
+    false,
+    programId,
+    fetcher,
+    refresh
+  );
+  return swapWithFeeDiscountQuoteWithParams(params, whirlpoolDiscountInfoData, slippageTolerance);
+}
+
 /**
  * Perform a sync swap quote based on the basic swap instruction parameters.
  *
