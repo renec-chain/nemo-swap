@@ -51,8 +51,8 @@ pub struct SwapWithFeeDiscount<'info> {
     #[account(mut)]
     pub discount_token: Account<'info, Mint>,
 
-    #[account(mut, constraint= token_discount_owner_account.mint == discount_token.key())]
-    pub token_discount_owner_account: Box<Account<'info, TokenAccount>>,
+    #[account(mut, constraint= discount_token_owner_account.mint == discount_token.key())]
+    pub discount_token_owner_account: Box<Account<'info, TokenAccount>>,
 }
 
 pub fn handler(
@@ -66,7 +66,7 @@ pub fn handler(
     let whirlpool = &mut ctx.accounts.whirlpool;
     let whirlpool_discount_info = &mut ctx.accounts.whirlpool_discount_info;
     let discount_token = &ctx.accounts.discount_token;
-    let discount_token_owner_account = &ctx.accounts.token_discount_owner_account;
+    let discount_token_owner_account = &ctx.accounts.discount_token_owner_account;
 
     whirlpool.require_enabled()?;
     let clock = Clock::get()?;
