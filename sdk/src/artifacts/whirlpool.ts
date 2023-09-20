@@ -946,7 +946,7 @@ export type Whirlpool = {
           "isSigner": false
         },
         {
-          "name": "tokenDiscountOwnerAccount",
+          "name": "discountTokenOwnerAccount",
           "isMut": true,
           "isSigner": false
         }
@@ -1038,6 +1038,55 @@ export type Whirlpool = {
         {
           "name": "defaultFeeRate",
           "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "setPoolDiscountInfo",
+      "accounts": [
+        {
+          "name": "config",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpool",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "discountToken",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpoolDiscountInfo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolCreatorAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "tokenConversionFeeRate",
+          "type": "u16"
+        },
+        {
+          "name": "discountFeeRate",
+          "type": "u16"
+        },
+        {
+          "name": "tokenRateOverWhirlpoolTokenA",
+          "type": "u64"
         }
       ]
     },
@@ -1382,6 +1431,161 @@ export type Whirlpool = {
         {
           "name": "oracleTwo",
           "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "otherAmountThreshold",
+          "type": "u64"
+        },
+        {
+          "name": "amountSpecifiedIsInput",
+          "type": "bool"
+        },
+        {
+          "name": "aToBOne",
+          "type": "bool"
+        },
+        {
+          "name": "aToBTwo",
+          "type": "bool"
+        },
+        {
+          "name": "sqrtPriceLimitOne",
+          "type": "u128"
+        },
+        {
+          "name": "sqrtPriceLimitTwo",
+          "type": "u128"
+        }
+      ]
+    },
+    {
+      "name": "twoHopSwapWithFeeDiscount",
+      "accounts": [
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "whirlpoolOne",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpoolTwo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenOwnerAccountOneA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenVaultOneA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenOwnerAccountOneB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenVaultOneB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenOwnerAccountTwoA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenVaultTwoA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenOwnerAccountTwoB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenVaultTwoB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayOne0",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayOne1",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayOne2",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayTwo0",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayTwo1",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayTwo2",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "oracleOne",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "oracleTwo",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "discountToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpoolDiscountInfoOne",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpoolDiscountInfoTwo",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "discountTokenOwnerAccount",
+          "isMut": true,
           "isSigner": false
         }
       ],
@@ -3018,7 +3222,7 @@ export const IDL: Whirlpool = {
           "isSigner": false
         },
         {
-          "name": "tokenDiscountOwnerAccount",
+          "name": "discountTokenOwnerAccount",
           "isMut": true,
           "isSigner": false
         }
@@ -3110,6 +3314,55 @@ export const IDL: Whirlpool = {
         {
           "name": "defaultFeeRate",
           "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "setPoolDiscountInfo",
+      "accounts": [
+        {
+          "name": "config",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpool",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "discountToken",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpoolDiscountInfo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolCreatorAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "tokenConversionFeeRate",
+          "type": "u16"
+        },
+        {
+          "name": "discountFeeRate",
+          "type": "u16"
+        },
+        {
+          "name": "tokenRateOverWhirlpoolTokenA",
+          "type": "u64"
         }
       ]
     },
@@ -3454,6 +3707,161 @@ export const IDL: Whirlpool = {
         {
           "name": "oracleTwo",
           "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "otherAmountThreshold",
+          "type": "u64"
+        },
+        {
+          "name": "amountSpecifiedIsInput",
+          "type": "bool"
+        },
+        {
+          "name": "aToBOne",
+          "type": "bool"
+        },
+        {
+          "name": "aToBTwo",
+          "type": "bool"
+        },
+        {
+          "name": "sqrtPriceLimitOne",
+          "type": "u128"
+        },
+        {
+          "name": "sqrtPriceLimitTwo",
+          "type": "u128"
+        }
+      ]
+    },
+    {
+      "name": "twoHopSwapWithFeeDiscount",
+      "accounts": [
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "whirlpoolOne",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpoolTwo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenOwnerAccountOneA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenVaultOneA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenOwnerAccountOneB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenVaultOneB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenOwnerAccountTwoA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenVaultTwoA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenOwnerAccountTwoB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenVaultTwoB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayOne0",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayOne1",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayOne2",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayTwo0",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayTwo1",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayTwo2",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "oracleOne",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "oracleTwo",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "discountToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpoolDiscountInfoOne",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpoolDiscountInfoTwo",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "discountTokenOwnerAccount",
+          "isMut": true,
           "isSigner": false
         }
       ],
