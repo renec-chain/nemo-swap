@@ -28,3 +28,5 @@ export * from "./update-fees-and-rewards-ix";
 export * from "./set-enable-flag-ix";
 export * from "./swap_with_fee_discount";
 export * from "./initialize-discount-info-ix";
+export * from "./set-pool-discount-info-ix";
+export * from "./two-hop-swap-with-fee-discount-ix";

@@ -247,7 +247,7 @@ export class SwapUtils {
       tokenAuthority: wallet,
       whirlpoolDiscountInfo: whirlpoolDiscountInfoPDA.publicKey,
       discountToken: discountTokenMint,
-      tokenDiscountOwnerAccount: ataDiscountTokenKey,
+      discountTokenOwnerAccount: ataDiscountTokenKey,
       ...quote,
     };
     return params;

@@ -24,6 +24,7 @@ use instructions::*;
 
 #[program]
 pub mod whirlpool {
+
     use super::*;
 
     /// Initializes a WhirlpoolsConfig account that hosts info & authorities
@@ -398,6 +399,20 @@ pub mod whirlpool {
         return instructions::set_default_fee_rate::handler(ctx, default_fee_rate);
     }
 
+    pub fn set_pool_discount_info(
+        ctx: Context<SetPoolDiscountInfo>,
+        token_conversion_fee_rate: u16,
+        discount_fee_rate: u16,
+        token_rate_over_whirlpool_token_a: u64,
+    ) -> ProgramResult {
+        return instructions::set_whirlpool_discount_info::handler(
+            ctx,
+            token_conversion_fee_rate,
+            discount_fee_rate,
+            token_rate_over_whirlpool_token_a,
+        );
+    }
+
     /// Sets the default protocol fee rate for a WhirlpoolConfig
     /// Protocol fee rate is represented as a basis point.
     /// Only the current fee authority has permission to invoke this instruction.
@@ -574,6 +589,28 @@ pub mod whirlpool {
         sqrt_price_limit_two: u128,
     ) -> ProgramResult {
         return instructions::two_hop_swap::handler(
+            ctx,
+            amount,
+            other_amount_threshold,
+            amount_specified_is_input,
+            a_to_b_one,
+            a_to_b_two,
+            sqrt_price_limit_one,
+            sqrt_price_limit_two,
+        );
+    }
+
+    pub fn two_hop_swap_with_fee_discount(
+        ctx: Context<TwoHopSwapWithFeeDiscount>,
+        amount: u64,
+        other_amount_threshold: u64,
+        amount_specified_is_input: bool,
+        a_to_b_one: bool,
+        a_to_b_two: bool,
+        sqrt_price_limit_one: u128,
+        sqrt_price_limit_two: u128,
+    ) -> ProgramResult {
+        return instructions::two_hop_swap_with_fee_discount::handler(
             ctx,
             amount,
             other_amount_threshold,

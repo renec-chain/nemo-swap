@@ -51,7 +51,7 @@ async function main() {
     console.log("Token mint b: ", whirlpoolData.tokenMintB.toString());
 
     const discountToken = new PublicKey(
-      "4VH7LAZr9RCj5CWofpnykM6f3URa2KuhdcCjbitmLViE"
+      "CWSVAfEa5hRDaSjb9YVccxZDtogBchTWFmRoqrKa7qC7"
     );
     const whirlpooDiscountInfoData = await ctx.fetcher.getPoolDiscountInfo(
       PDAUtil.getWhirlpoolDiscountInfo(
@@ -60,6 +60,8 @@ async function main() {
         discountToken
       ).publicKey
     );
+
+    console.log("Discount token: ", whirlpooDiscountInfoData);
 
     const quote = await swapWithFeeDiscountQuoteByInputToken(
       whirlpool,
