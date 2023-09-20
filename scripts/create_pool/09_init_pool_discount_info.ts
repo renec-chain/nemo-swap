@@ -35,7 +35,7 @@ async function main() {
 
   // fixed input
   const discountTokenMint = new PublicKey(
-    "BDsWJbVkjtxUESArcCSrqDfq7HmQZ1m9Zem11VQmz1hB"
+    "CWSVAfEa5hRDaSjb9YVccxZDtogBchTWFmRoqrKa7qC7"
   );
   const tokenConversionRate = 4000; // 10 Renec -> 6
   const discountFeeRate = 5000;
@@ -94,7 +94,7 @@ async function main() {
           return;
         }
       } catch (e) {
-        throw new Error("failed to get pool info");
+        throw new Error("failed to get pool info: " + e);
       }
     }
   }

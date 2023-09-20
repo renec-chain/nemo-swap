@@ -58,6 +58,13 @@ export class WhirlpoolIx {
     return ix.initPoolDiscountInfoIx(program, params);
   }
 
+  public static setPoolDiscountInfoIx(
+    program: Program<Whirlpool>,
+    params: ix.SetPoolDiscountInfoParam
+  ) {
+    return ix.setPoolDiscountInfoIx(program, params);
+  }
+
   /**
    * Initialize reward for a Whirlpool. A pool can only support up to a set number of rewards.
    * The initial emissionsPerSecond is set to 0.
