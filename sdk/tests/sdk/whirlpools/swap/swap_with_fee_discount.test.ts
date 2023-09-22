@@ -23,6 +23,7 @@ import {
   createAndMintToAssociatedTokenAccount,
   createMint,
   getTokenBalance,
+  initializePoolDiscountInfo,
   TickSpacing,
 } from "../../../utils";
 
@@ -568,41 +569,4 @@ const isApproxEqual = (a: anchor.BN, b: anchor.BN, diff: anchor.BN): boolean => 
     return true;
   }
   return false;
-};
-
-const initializePoolDiscountInfo = async (
-  ctx: WhirlpoolContext,
-  whirlpool: Whirlpool,
-  discountTokenMint: PublicKey,
-  tokenConversionRate: number,
-  discountFeeRate: number,
-  discountTokenRateOverTokenA: anchor.BN,
-  wallet?: Signer
-): Promise<PublicKey> => {
-  let poolCreatorAuthority = wallet?.publicKey || ctx.wallet.publicKey;
-  const whirlpoolDiscountInfoPDA = PDAUtil.getWhirlpoolDiscountInfo(
-    ctx.program.programId,
-    whirlpool.getAddress(),
-    discountTokenMint
-  );
-
-  const whirlpoolData = await whirlpool.refreshData();
-  const ix = WhirlpoolIx.initializePoolDiscountInfoIx(ctx.program, {
-    whirlpoolsConfig: whirlpoolData.whirlpoolsConfig,
-    whirlpool: whirlpool.getAddress(),
-    discountToken: discountTokenMint,
-    whirlpoolDiscountInfoPDA,
-    poolCreatorAuthority,
-    tokenConversionRate: tokenConversionRate,
-    discountFeeRate: discountFeeRate,
-    discountTokenRateOverTokenA: discountTokenRateOverTokenA,
-  });
-
-  let tx = toTx(ctx, ix);
-  if (wallet) {
-    tx = tx.addSigner(wallet);
-  }
-  await tx.buildAndExecute();
-
-  return whirlpoolDiscountInfoPDA.publicKey;
 };
