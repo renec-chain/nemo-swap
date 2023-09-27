@@ -5,7 +5,10 @@ use crate::{
     errors::ErrorCode,
     manager::swap_manager::*,
     state::{TickArray, Whirlpool, WhirlpoolDiscountInfo},
-    util::{to_timestamp_u64, update_and_swap_whirlpool, SwapTickSequence},
+    util::{
+        burn_token, calculate_equivalent_discount_token_amount, to_timestamp_u64,
+        update_and_swap_whirlpool, SwapTickSequence,
+    },
 };
 
 #[derive(Accounts)]
@@ -104,6 +107,10 @@ pub fn handler(
     let whirlpool_one = &mut ctx.accounts.whirlpool_one;
     let whirlpool_two = &mut ctx.accounts.whirlpool_two;
 
+    let discount_token = &mut ctx.accounts.discount_token;
+    let whirlpool_one_discount_info = &mut ctx.accounts.whirlpool_discount_info_one;
+    let whirlpool_two_discount_info = &mut ctx.accounts.whirlpool_discount_info_two;
+
     // Don't allow swaps on the same whirlpool
     if whirlpool_one.key() == whirlpool_two.key() {
         return Err(ErrorCode::DuplicateTwoHopPool.into());
@@ -136,14 +143,17 @@ pub fn handler(
         ctx.accounts.tick_array_two_2.load_mut().ok(),
     );
 
+    let burn_fee_one_in_discount_token: u64;
+    let burn_fee_two_in_discount_token: u64;
     // TODO: WLOG, we could extend this to N-swaps, but the account inputs to the instruction would
     // need to be jankier and we may need to programatically map/verify rather than using anchor constraints
     let (swap_update_one, swap_update_two) = if amount_specified_is_input {
         // If the amount specified is input, this means we are doing exact-in
         // and the swap calculations occur from Swap 1 => Swap 2
         // and the swaps occur from Swap 1 => Swap 2
-        let swap_calc_one = swap(
+        let (swap_calc_one, _, burn_fee_one_accumulated) = swap_with_fee_discount(
             &whirlpool_one,
+            &whirlpool_one_discount_info,
             &mut swap_tick_sequence_one,
             amount,
             sqrt_price_limit_one,
@@ -159,8 +169,18 @@ pub fn handler(
             swap_calc_one.amount_a
         };
 
-        let swap_calc_two = swap(
+        burn_fee_one_in_discount_token = calculate_equivalent_discount_token_amount(
+            &whirlpool_one_discount_info,
+            discount_token,
+            &swap_calc_one,
+            burn_fee_one_accumulated,
+            amount_specified_is_input,
+            a_to_b_one,
+        )?;
+
+        let (swap_calc_two, _, burn_fee_two_accumulated) = swap_with_fee_discount(
             &whirlpool_two,
+            &whirlpool_two_discount_info,
             &mut swap_tick_sequence_two,
             swap_two_input_amount,
             sqrt_price_limit_two,
@@ -168,19 +188,39 @@ pub fn handler(
             a_to_b_two,
             timestamp,
         )?;
+
+        burn_fee_two_in_discount_token = calculate_equivalent_discount_token_amount(
+            &whirlpool_two_discount_info,
+            discount_token,
+            &swap_calc_two,
+            burn_fee_two_accumulated,
+            amount_specified_is_input,
+            a_to_b_two,
+        )?;
+
         (swap_calc_one, swap_calc_two)
     } else {
         // If the amount specified is output, this means we need to invert the ordering of the calculations
         // and the swap calculations occur from Swap 2 => Swap 1
         // but the actual swaps occur from Swap 1 => Swap 2 (to ensure that the intermediate token exists in the account)
-        let swap_calc_two = swap(
+        let (swap_calc_two, _, burn_fee_two_accumulated) = swap_with_fee_discount(
             &whirlpool_two,
+            &whirlpool_two_discount_info,
             &mut swap_tick_sequence_two,
             amount,
             sqrt_price_limit_two,
             amount_specified_is_input, // false
             a_to_b_two,
             timestamp,
+        )?;
+
+        burn_fee_two_in_discount_token = calculate_equivalent_discount_token_amount(
+            &whirlpool_two_discount_info,
+            discount_token,
+            &swap_calc_two,
+            burn_fee_two_accumulated,
+            amount_specified_is_input,
+            a_to_b_two,
         )?;
 
         // The output of swap 1 is input of swap_calc_two
@@ -190,8 +230,9 @@ pub fn handler(
             swap_calc_two.amount_b
         };
 
-        let swap_calc_one = swap(
+        let (swap_calc_one, _, burn_fee_one_accumulated) = swap_with_fee_discount(
             &whirlpool_one,
+            &whirlpool_one_discount_info,
             &mut swap_tick_sequence_one,
             swap_one_output_amount,
             sqrt_price_limit_one,
@@ -199,8 +240,29 @@ pub fn handler(
             a_to_b_one,
             timestamp,
         )?;
+
+        burn_fee_one_in_discount_token = calculate_equivalent_discount_token_amount(
+            &whirlpool_one_discount_info,
+            discount_token,
+            &swap_calc_one,
+            burn_fee_one_accumulated,
+            amount_specified_is_input,
+            a_to_b_one,
+        )?;
+
         (swap_calc_one, swap_calc_two)
     };
+
+    // burn fee
+    burn_token(
+        discount_token.to_account_info(),
+        ctx.accounts.discount_token_owner_account.to_account_info(),
+        ctx.accounts.token_authority.to_account_info(),
+        ctx.accounts.token_program.to_account_info(),
+        burn_fee_one_in_discount_token
+            .checked_add(burn_fee_two_in_discount_token)
+            .ok_or(ErrorCode::AmountCalcOverflow)?,
+    )?;
 
     if amount_specified_is_input {
         // If amount_specified_is_input == true, then we have a variable amount of output

@@ -13,7 +13,7 @@ pub fn calculate_equivalent_discount_token_amount(
     amount_specified_is_input: bool,
     a_to_b: bool,
 ) -> Result<u64, ErrorCode> {
-    // fee in token B
+    // fee in token A
     let amount_u128 = amount as u128;
     let mut amount_in_token_a = amount_u128;
 
