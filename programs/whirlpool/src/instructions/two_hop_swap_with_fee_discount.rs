@@ -205,7 +205,7 @@ pub fn handler(
     if amount_specified_is_input {
         // If amount_specified_is_input == true, then we have a variable amount of output
         // The slippage we care about is the output of the second swap.
-        let output_amount = if a_to_b_two {
+        let output_amount: u64 = if a_to_b_two {
             swap_update_two.amount_b
         } else {
             swap_update_two.amount_a
