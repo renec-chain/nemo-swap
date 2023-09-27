@@ -24,6 +24,7 @@ import {
   createMint,
   getTokenBalance,
   initializePoolDiscountInfo,
+  isApproxEqual,
   TickSpacing,
 } from "../../../utils";
 
@@ -50,7 +51,9 @@ describe("swap_with_fee_discount", () => {
   const TOKEN_CONVERSION_FEE_RATE = 4000; // 40%
   const DISCOUNT_FEE_RATE = 5000; // 50% of token conversion rate
   const DISCOUNT_FEE_RATE_MUL_VALUE = 10000;
+  const TOKEN_A_RATE = 2;
 
+  // Note: tokens created from setupSwapTest have decimals = 0
   it("swap aToB && exact in", async () => {
     const currIndex = arrayTickIndexToTickIndex({ arrayIndex: -1, offsetIndex: 22 }, tickSpacing);
     const aToB = true;
@@ -88,7 +91,7 @@ describe("swap_with_fee_discount", () => {
       discountTokenMint,
       TOKEN_CONVERSION_FEE_RATE,
       DISCOUNT_FEE_RATE,
-      new anchor.BN(2)
+      new anchor.BN(TOKEN_A_RATE)
     );
 
     // compute swap ix
@@ -97,13 +100,9 @@ describe("swap_with_fee_discount", () => {
 
     const beforeVaultAmounts = await getVaultAmounts(ctx, whirlpoolData);
 
-    const beforeUserTokenAAmount = await getTokenBalance(
-      provider,
-      await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintA)
-    );
-    const beforeUserTokenBAmount = await getTokenBalance(
-      provider,
-      await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintB)
+    const beforeUserTokenAmounts = await getUserTokenBalancesByTokenMints(
+      provider.wallet.publicKey,
+      [whirlpoolData.tokenMintA, whirlpoolData.tokenMintB, discountTokenMint]
     );
 
     const whirlpooDiscountInfoData = await ctx.fetcher.getPoolDiscountInfo(
@@ -144,24 +143,16 @@ describe("swap_with_fee_discount", () => {
     assertQuoteAndResults(aToB, quoteWithDiscount, newData, beforeVaultAmounts, afterVaultAmounts);
 
     // Assert user token balance
-    const afterUserTokenAAmount = await getTokenBalance(
-      provider,
-      await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintA)
-    );
-    const afterUserTokenBAmount = await getTokenBalance(
-      provider,
-      await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintB)
+    const afterUserTokenAmounts = await getUserTokenBalancesByTokenMints(
+      provider.wallet.publicKey,
+      [whirlpoolData.tokenMintA, whirlpoolData.tokenMintB, discountTokenMint]
     );
 
-    assert.equal(
-      new BN(beforeUserTokenAAmount).sub(new BN(afterUserTokenAAmount)).toNumber(),
-      quoteWithDiscount.estimatedAmountIn
-    );
-
-    assert.equal(
-      new BN(afterUserTokenBAmount).sub(new BN(beforeUserTokenBAmount)).toNumber(),
-      quoteWithDiscount.estimatedAmountOut
-    );
+    assert.deepEqual(beforeUserTokenAmounts, [
+      afterUserTokenAmounts[0].add(new BN(quoteWithDiscount.estimatedAmountIn)),
+      afterUserTokenAmounts[1].sub(new BN(quoteWithDiscount.estimatedAmountOut)),
+      afterUserTokenAmounts[2].add(quoteWithDiscount.estimatedBurnAmount),
+    ]);
 
     // Assert that an tokenConversionFeeRate amount of fee is converted
     assert.ok(
@@ -175,6 +166,18 @@ describe("swap_with_fee_discount", () => {
           .div(new BN(DISCOUNT_FEE_RATE_MUL_VALUE))
       )
     );
+
+    // a_to_b && exact in -> fee in token A
+    const burnAmountInTokenA = normalQuote.estimatedFeeAmount
+      .mul(new BN(TOKEN_CONVERSION_FEE_RATE))
+      .mul(new BN(DISCOUNT_FEE_RATE))
+      .div(new BN(DISCOUNT_FEE_RATE_MUL_VALUE))
+      .div(new BN(DISCOUNT_FEE_RATE_MUL_VALUE));
+
+    // 1 x 10^(decimal_d) * vD = TOKEN_A_RATE * vA and qD2 * vD = qA2 * vA  -> qD2 = qA2 / TOKEN_A_RATE * 10^(decimal_d)
+    const expectedBurnAmount = burnAmountInTokenA.div(new BN(TOKEN_A_RATE)); // 1 discount Token = TOKEN_A_RATE * token A
+
+    assert.ok(isApproxEqual(quoteWithDiscount.estimatedBurnAmount, new BN(0), expectedBurnAmount));
   });
 
   it("swap bToA && exact in", async () => {
@@ -213,20 +216,17 @@ describe("swap_with_fee_discount", () => {
       discountTokenMint,
       TOKEN_CONVERSION_FEE_RATE,
       DISCOUNT_FEE_RATE,
-      new anchor.BN(1)
+      new anchor.BN(TOKEN_A_RATE)
     );
 
     // Compute swap ix
     const inputTokenAmount = new u64(1195000);
     const swapToken = aToB ? whirlpoolData.tokenMintA : whirlpoolData.tokenMintB;
     const beforeVaultAmounts = await getVaultAmounts(ctx, whirlpoolData);
-    const beforeUserTokenAAmount = await getTokenBalance(
-      provider,
-      await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintA)
-    );
-    const beforeUserTokenBAmount = await getTokenBalance(
-      provider,
-      await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintB)
+
+    const beforeUserTokenAmounts = await getUserTokenBalancesByTokenMints(
+      provider.wallet.publicKey,
+      [whirlpoolData.tokenMintA, whirlpoolData.tokenMintB, discountTokenMint]
     );
 
     const whirlpooDiscountInfoData = await ctx.fetcher.getPoolDiscountInfo(
@@ -268,24 +268,17 @@ describe("swap_with_fee_discount", () => {
     assertQuoteAndResults(aToB, quoteWithDiscount, newData, beforeVaultAmounts, afterVaultAmounts);
 
     // Assert user token balance
-    const afterUserTokenAAmount = await getTokenBalance(
-      provider,
-      await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintA)
-    );
-    const afterUserTokenBAmount = await getTokenBalance(
-      provider,
-      await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintB)
+    const afterUserTokenAmounts = await getUserTokenBalancesByTokenMints(
+      provider.wallet.publicKey,
+      [whirlpoolData.tokenMintA, whirlpoolData.tokenMintB, discountTokenMint]
     );
 
-    assert.equal(
-      new BN(afterUserTokenAAmount).sub(new BN(beforeUserTokenAAmount)).toNumber(),
-      quoteWithDiscount.estimatedAmountOut
-    );
-
-    assert.equal(
-      new BN(beforeUserTokenBAmount).sub(new BN(afterUserTokenBAmount)).toNumber(),
-      quoteWithDiscount.estimatedAmountIn
-    );
+    // b_to_a && exact in
+    assert.deepEqual(beforeUserTokenAmounts, [
+      afterUserTokenAmounts[0].sub(new BN(quoteWithDiscount.estimatedAmountOut)),
+      afterUserTokenAmounts[1].add(new BN(quoteWithDiscount.estimatedAmountIn)),
+      afterUserTokenAmounts[2].add(quoteWithDiscount.estimatedBurnAmount),
+    ]);
 
     // Assert that user the amount user receive
     assert.ok(
@@ -299,6 +292,23 @@ describe("swap_with_fee_discount", () => {
           .div(new BN(DISCOUNT_FEE_RATE_MUL_VALUE))
       )
     );
+
+    //  b_to_a && exact in -> fee in token B
+    const burnAmountInTokenB = normalQuote.estimatedFeeAmount
+      .mul(new BN(TOKEN_CONVERSION_FEE_RATE))
+      .mul(new BN(DISCOUNT_FEE_RATE))
+      .div(new BN(DISCOUNT_FEE_RATE_MUL_VALUE))
+      .div(new BN(DISCOUNT_FEE_RATE_MUL_VALUE));
+
+    // convert A to B.
+    // out = qA, in = qB
+    // qA * vA = qB * vB and q2A * vA = q2B * vB -> q2A = q2B / qB * qA
+    const burnAmountInTokenA = burnAmountInTokenB
+      .mul(new BN(quoteWithDiscount.estimatedAmountOut))
+      .div(new BN(quoteWithDiscount.estimatedAmountIn));
+
+    const expectedBurnAmount = burnAmountInTokenA.div(new BN(TOKEN_A_RATE));
+    assert.ok(isApproxEqual(quoteWithDiscount.estimatedBurnAmount, new BN(0), expectedBurnAmount));
   });
 
   it("swap bToA && exact out", async () => {
@@ -347,13 +357,9 @@ describe("swap_with_fee_discount", () => {
 
     const beforeVaultAmounts = await getVaultAmounts(ctx, whirlpoolData);
 
-    const beforeUserTokenAAmount = await getTokenBalance(
-      provider,
-      await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintA)
-    );
-    const beforeUserTokenBAmount = await getTokenBalance(
-      provider,
-      await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintB)
+    const beforeUserTokenAmounts = await getUserTokenBalancesByTokenMints(
+      provider.wallet.publicKey,
+      [whirlpoolData.tokenMintA, whirlpoolData.tokenMintB, discountTokenMint]
     );
 
     const whirlpooDiscountInfoData = await ctx.fetcher.getPoolDiscountInfo(
@@ -394,24 +400,17 @@ describe("swap_with_fee_discount", () => {
     assertQuoteAndResults(aToB, quoteWithDiscount, newData, beforeVaultAmounts, afterVaultAmounts);
 
     // Assert user token balance | exact out - aToB == false
-    const afterUserTokenAAmount = await getTokenBalance(
-      provider,
-      await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintA)
-    );
-    const afterUserTokenBAmount = await getTokenBalance(
-      provider,
-      await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintB)
+    const afterUserTokenAmounts = await getUserTokenBalancesByTokenMints(
+      provider.wallet.publicKey,
+      [whirlpoolData.tokenMintA, whirlpoolData.tokenMintB, discountTokenMint]
     );
 
-    assert.equal(
-      new BN(afterUserTokenAAmount).sub(new BN(beforeUserTokenAAmount)).toNumber(),
-      quoteWithDiscount.estimatedAmountOut.toNumber()
-    );
-
-    assert.equal(
-      new BN(beforeUserTokenBAmount).sub(new BN(afterUserTokenBAmount)).toNumber(),
-      quoteWithDiscount.estimatedAmountIn.toNumber()
-    );
+    // b_to_a && exact out
+    assert.deepEqual(beforeUserTokenAmounts, [
+      afterUserTokenAmounts[0].sub(new BN(quoteWithDiscount.estimatedAmountOut)),
+      afterUserTokenAmounts[1].add(new BN(quoteWithDiscount.estimatedAmountIn)),
+      afterUserTokenAmounts[2].add(quoteWithDiscount.estimatedBurnAmount),
+    ]);
 
     // Amount take in is lesser than normal quote
     assert.ok(
@@ -425,6 +424,18 @@ describe("swap_with_fee_discount", () => {
           .div(new BN(DISCOUNT_FEE_RATE_MUL_VALUE))
       )
     );
+
+    // b_to_a && exact out -> fee in token A
+    const burnAmountInTokenA = normalQuote.estimatedFeeAmount
+      .mul(new BN(TOKEN_CONVERSION_FEE_RATE))
+      .mul(new BN(DISCOUNT_FEE_RATE))
+      .div(new BN(DISCOUNT_FEE_RATE_MUL_VALUE))
+      .div(new BN(DISCOUNT_FEE_RATE_MUL_VALUE));
+
+    // 1 x 10^(decimal_d) * vD = TOKEN_A_RATE * vA and qD2 * vD = qA2 * vA  -> qD2 = qA2 / TOKEN_A_RATE * 10^(decimal_d)
+    const expectedBurnAmount = burnAmountInTokenA.div(new BN(TOKEN_A_RATE)); // 1 discount Token = TOKEN_A_RATE * token A
+
+    assert.ok(isApproxEqual(quoteWithDiscount.estimatedBurnAmount, new BN(0), expectedBurnAmount));
   });
 
   it("swap a_to_b && exact out", async () => {
@@ -473,13 +484,9 @@ describe("swap_with_fee_discount", () => {
 
     const beforeVaultAmounts = await getVaultAmounts(ctx, whirlpoolData);
 
-    const beforeUserTokenAAmount = await getTokenBalance(
-      provider,
-      await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintA)
-    );
-    const beforeUserTokenBAmount = await getTokenBalance(
-      provider,
-      await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintB)
+    const beforeUserTokenAccounts = await getUserTokenBalancesByTokenMints(
+      provider.wallet.publicKey,
+      [whirlpoolData.tokenMintA, whirlpoolData.tokenMintB, discountTokenMint]
     );
 
     const whirlpooDiscountInfoData = await ctx.fetcher.getPoolDiscountInfo(
@@ -520,24 +527,16 @@ describe("swap_with_fee_discount", () => {
     assertQuoteAndResults(aToB, quoteWithDiscount, newData, beforeVaultAmounts, afterVaultAmounts);
 
     // Assert user token balance | exact out - aToB == false
-    const afterUserTokenAAmount = await getTokenBalance(
-      provider,
-      await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintA)
-    );
-    const afterUserTokenBAmount = await getTokenBalance(
-      provider,
-      await deriveATA(provider.wallet.publicKey, whirlpoolData.tokenMintB)
+    const afterUserTokenAccounts = await getUserTokenBalancesByTokenMints(
+      provider.wallet.publicKey,
+      [whirlpoolData.tokenMintA, whirlpoolData.tokenMintB, discountTokenMint]
     );
 
-    assert.equal(
-      new BN(afterUserTokenBAmount).sub(new BN(beforeUserTokenBAmount)).toNumber(),
-      quoteWithDiscount.estimatedAmountOut.toNumber()
-    );
-
-    assert.equal(
-      new BN(beforeUserTokenAAmount).sub(new BN(afterUserTokenAAmount)).toNumber(),
-      quoteWithDiscount.estimatedAmountIn.toNumber()
-    );
+    // b_to_a && exact out
+    assert.deepEqual(beforeUserTokenAccounts.slice(0, 2), [
+      afterUserTokenAccounts[0].add(new BN(quoteWithDiscount.estimatedAmountIn)),
+      afterUserTokenAccounts[1].sub(new BN(quoteWithDiscount.estimatedAmountOut)),
+    ]);
 
     // Amount take in is lesser than normal quote
     assert.ok(
@@ -551,22 +550,46 @@ describe("swap_with_fee_discount", () => {
           .div(new BN(DISCOUNT_FEE_RATE_MUL_VALUE))
       )
     );
+
+    assert.ok(
+      isApproxEqual(
+        beforeUserTokenAccounts[2],
+        afterUserTokenAccounts[2],
+        quoteWithDiscount.estimatedBurnAmount
+      )
+    );
+
+    //  a_to_b && exact out -> fee in token B
+    const burnAmountInTokenB = normalQuote.estimatedFeeAmount
+      .mul(new BN(TOKEN_CONVERSION_FEE_RATE))
+      .mul(new BN(DISCOUNT_FEE_RATE))
+      .div(new BN(DISCOUNT_FEE_RATE_MUL_VALUE))
+      .div(new BN(DISCOUNT_FEE_RATE_MUL_VALUE));
+
+    // convert A to B.
+    // out = qB, in = qA
+    // qA * vA = qB * vB and q2A * vA = q2B * vB -> q2A = q2B / qB * qA
+    const burnAmountInTokenA = burnAmountInTokenB
+      .mul(new BN(quoteWithDiscount.estimatedAmountIn))
+      .div(new BN(quoteWithDiscount.estimatedAmountOut));
+
+    const expectedBurnAmount = burnAmountInTokenA.div(new BN(TOKEN_A_RATE));
+    assert.ok(isApproxEqual(quoteWithDiscount.estimatedBurnAmount, new BN(0), expectedBurnAmount));
   });
-});
 
-const isApproxEqual = (a: anchor.BN, b: anchor.BN, diff: anchor.BN): boolean => {
-  // Get 2% of diff
-  const twoPercentOfDiff = diff.mul(new BN(2)).div(new BN(100));
+  // utils function
+  async function getUserTokenBalancesByTokenMints(user: PublicKey, tokenMint: PublicKey[]) {
+    const accs = [];
+    for (const mint of tokenMint) {
+      accs.push(await deriveATA(user, mint));
+    }
 
-  // Get the upper bound of b + c
-  const upperBound = b.add(diff).add(twoPercentOfDiff);
-
-  // Get the lower bound of b - c
-  const lowerBound = b.add(diff).sub(twoPercentOfDiff);
-
-  // if a between lower and upper, return true
-  if (a.gte(lowerBound) && a.lte(upperBound)) {
-    return true;
+    return getTokenBalances(accs);
   }
-  return false;
-};
+
+  async function getTokenBalances(keys: PublicKey[]) {
+    return Promise.all(
+      keys.map(async (key) => new anchor.BN(await getTokenBalance(provider, key)))
+    );
+  }
+});

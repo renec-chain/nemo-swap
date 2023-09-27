@@ -1,4 +1,4 @@
-import { Percentage } from "@orca-so/common-sdk";
+import { deriveATA, Percentage } from "@orca-so/common-sdk";
 import * as anchor from "@project-serum/anchor";
 import { u64 } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
@@ -21,6 +21,7 @@ import {
   createMint,
   getTokenBalance,
   initializePoolDiscountInfo,
+  isApproxEqual,
   TickSpacing,
 } from "../utils";
 import {
@@ -68,7 +69,7 @@ describe("two-hop swap", () => {
     });
     const fundParams: FundedPositionParams[] = [
       {
-        liquidityAmount: new anchor.BN(10_000_000),
+        liquidityAmount: new anchor.BN(10_000_0000),
         tickLowerIndex: 29440,
         tickUpperIndex: 33536,
       },
@@ -278,11 +279,13 @@ describe("two-hop swap", () => {
     assert.ok(whirlpoolOneDiscountInfoData);
     assert.ok(whirlpoolTwoDiscountInfoData);
 
+    // Get swap quotes
+    const inputAmount = new u64(100000);
     const quote = await swapWithFeeDiscountQuoteByInputToken(
       whirlpoolOne,
       whirlpoolOneDiscountInfoData,
       inputToken,
-      new u64(1000),
+      inputAmount,
       Percentage.fromFraction(1, 100),
       ctx.program.programId,
       fetcher,
@@ -300,8 +303,35 @@ describe("two-hop swap", () => {
       true
     );
 
-    const twoHopQuote = twoHopSwapQuoteFromSwapQuotes(quote, quote2);
+    // Get normal quotes: quote with no discount
+    const normalQuote1 = await swapQuoteByInputToken(
+      whirlpoolOne,
+      inputToken,
+      inputAmount,
+      Percentage.fromFraction(1, 100),
+      ctx.program.programId,
+      fetcher,
+      true
+    );
 
+    const normalQuote2 = await swapQuoteByInputToken(
+      whirlpoolTwo,
+      intermediaryToken,
+      normalQuote1.estimatedAmountOut,
+      Percentage.fromFraction(1, 100),
+      ctx.program.programId,
+      fetcher,
+      true
+    );
+
+    let preUserTokenBalances = await getUserTokenBalancesByTokenMints(ctx.wallet.publicKey, [
+      inputToken,
+      intermediaryToken,
+      _outputToken,
+    ]);
+
+    // Do swap
+    const twoHopQuote = twoHopSwapQuoteFromSwapQuotes(quote, quote2);
     await toTx(
       ctx,
       WhirlpoolIx.twoHopSwapWithFeeDiscountIx(ctx.program, {
@@ -314,6 +344,12 @@ describe("two-hop swap", () => {
         discountTokenOwnerAccount: discountTokenOwnerAccount,
       })
     ).buildAndExecute();
+
+    let postUserTokenBalance = await getUserTokenBalancesByTokenMints(ctx.wallet.publicKey, [
+      inputToken,
+      intermediaryToken,
+      _outputToken,
+    ]);
 
     assert.deepEqual(await getTokenBalancesForVaults(pools), [
       tokenVaultBalances[0].add(quote.estimatedAmountIn),
@@ -331,8 +367,13 @@ describe("two-hop swap", () => {
       prevTbs[2].add(quote2.estimatedAmountOut),
     ]);
 
-    whirlpoolOne = await client.getPool(whirlpoolOneKey, true);
-    whirlpoolTwo = await client.getPool(whirlpoolTwoKey, true);
+    assert.deepEqual(postUserTokenBalance, [
+      preUserTokenBalances[0].sub(quote.estimatedAmountIn),
+      preUserTokenBalances[1],
+      preUserTokenBalances[2].add(quote2.estimatedAmountOut),
+    ]);
+
+    // make sure user get discount
   });
 
   // it("swaps [2] with two-hop swap, amountSpecifiedIsInput=true, A->B->A", async () => {
@@ -882,6 +923,15 @@ describe("two-hop swap", () => {
       accs.push(pool.tokenVaultAKeypair.publicKey);
       accs.push(pool.tokenVaultBKeypair.publicKey);
     }
+    return getTokenBalances(accs);
+  }
+
+  async function getUserTokenBalancesByTokenMints(user: PublicKey, tokenMint: PublicKey[]) {
+    const accs = [];
+    for (const mint of tokenMint) {
+      accs.push(await deriveATA(user, mint));
+    }
+
     return getTokenBalances(accs);
   }
 
