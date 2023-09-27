@@ -162,13 +162,6 @@ pub fn handler(
             timestamp,
         )?;
 
-        // Swap two input is the output of swap one
-        let swap_two_input_amount = if a_to_b_one {
-            swap_calc_one.amount_b
-        } else {
-            swap_calc_one.amount_a
-        };
-
         burn_fee_one_in_discount_token = calculate_equivalent_discount_token_amount(
             &whirlpool_one_discount_info,
             discount_token,
@@ -177,6 +170,13 @@ pub fn handler(
             amount_specified_is_input,
             a_to_b_one,
         )?;
+
+        // Swap two input is the output of swap one
+        let swap_two_input_amount = if a_to_b_one {
+            swap_calc_one.amount_b
+        } else {
+            swap_calc_one.amount_a
+        };
 
         let (swap_calc_two, _, burn_fee_two_accumulated) = swap_with_fee_discount(
             &whirlpool_two,

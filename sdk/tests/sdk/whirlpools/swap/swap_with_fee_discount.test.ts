@@ -577,6 +577,173 @@ describe("swap_with_fee_discount", () => {
     assert.ok(isApproxEqual(quoteWithDiscount.estimatedBurnAmount, new BN(0), expectedBurnAmount));
   });
 
+  it("fail: use not whitelist pool discount info", async () => {
+    const currIndex = arrayTickIndexToTickIndex({ arrayIndex: -1, offsetIndex: 22 }, tickSpacing);
+    const aToB = true;
+    const whirlpool = await setupSwapTest({
+      ctx,
+      client,
+      tickSpacing,
+      initSqrtPrice: PriceMath.tickIndexToSqrtPriceX64(currIndex),
+      initArrayStartTicks: [-5632, 0, 5632],
+      fundedPositions: [
+        buildPosition(
+          // a
+          { arrayIndex: -1, offsetIndex: 10 },
+          { arrayIndex: 1, offsetIndex: 23 },
+          tickSpacing,
+          new anchor.BN(250_000_000)
+        ),
+      ],
+    });
+
+    // Setup whirlpool discount info
+    const discountTokenMintA = await createMint(provider);
+    const discountTokenMintB = await createMint(provider);
+
+    await createAndMintToAssociatedTokenAccount(
+      ctx.provider,
+      discountTokenMintB,
+      new anchor.BN(10000000)
+    );
+
+    const whirlpoolDiscountInfoPubkey = await initializePoolDiscountInfo(
+      ctx,
+      whirlpool,
+      discountTokenMintB,
+      TOKEN_CONVERSION_FEE_RATE,
+      DISCOUNT_FEE_RATE,
+      new anchor.BN(TOKEN_A_RATE)
+    );
+
+    // compute swap ix
+    const whirlpoolData = await whirlpool.refreshData();
+    const inputTokenAmount = new u64(1195000);
+    const swapToken = aToB ? whirlpoolData.tokenMintA : whirlpoolData.tokenMintB;
+
+    const whirlpooDiscountInfoData = await ctx.fetcher.getPoolDiscountInfo(
+      whirlpoolDiscountInfoPubkey
+    );
+
+    assert.ok(whirlpooDiscountInfoData != null);
+
+    const quoteWithDiscount = await swapWithFeeDiscountQuoteByInputToken(
+      whirlpool,
+      whirlpooDiscountInfoData,
+      swapToken,
+      inputTokenAmount,
+      slippageTolerance,
+      ctx.program.programId,
+      ctx.fetcher,
+      true
+    );
+
+    // swap with fee discount, but discount token mint A not created
+    await assert.rejects(
+      (await whirlpool.swapWithFeeDiscount(quoteWithDiscount, discountTokenMintA)).buildAndExecute()
+    );
+  });
+
+  it("fail:  use not invalid pool discount info", async () => {
+    const currIndex = arrayTickIndexToTickIndex({ arrayIndex: -1, offsetIndex: 22 }, tickSpacing);
+    const aToB = true;
+    const whirlpool = await setupSwapTest({
+      ctx,
+      client,
+      tickSpacing,
+      initSqrtPrice: PriceMath.tickIndexToSqrtPriceX64(currIndex),
+      initArrayStartTicks: [-5632, 0, 5632],
+      fundedPositions: [
+        buildPosition(
+          // a
+          { arrayIndex: -1, offsetIndex: 10 },
+          { arrayIndex: 1, offsetIndex: 23 },
+          tickSpacing,
+          new anchor.BN(250_000_000)
+        ),
+      ],
+    });
+
+    const whirlpool2 = await setupSwapTest({
+      ctx,
+      client,
+      tickSpacing,
+      initSqrtPrice: PriceMath.tickIndexToSqrtPriceX64(currIndex),
+      initArrayStartTicks: [-5632, 0, 5632],
+      fundedPositions: [
+        buildPosition(
+          // a
+          { arrayIndex: -1, offsetIndex: 10 },
+          { arrayIndex: 1, offsetIndex: 23 },
+          tickSpacing,
+          new anchor.BN(250_000_000)
+        ),
+      ],
+    });
+
+    // Setup whirlpool discount info
+    const discountTokenMint1 = await createMint(provider);
+    const discountTokenMint2 = await createMint(provider);
+
+    await createAndMintToAssociatedTokenAccount(
+      ctx.provider,
+      discountTokenMint1,
+      new anchor.BN(10000000)
+    );
+
+    await createAndMintToAssociatedTokenAccount(
+      ctx.provider,
+      discountTokenMint2,
+      new anchor.BN(10000000)
+    );
+
+    const whirlpoolDiscountInfoPubkey1 = await initializePoolDiscountInfo(
+      ctx,
+      whirlpool,
+      discountTokenMint1,
+      TOKEN_CONVERSION_FEE_RATE,
+      DISCOUNT_FEE_RATE,
+      new anchor.BN(TOKEN_A_RATE)
+    );
+
+    // discount token mint 2 is initialized
+    await initializePoolDiscountInfo(
+      ctx,
+      whirlpool2,
+      discountTokenMint2,
+      TOKEN_CONVERSION_FEE_RATE,
+      DISCOUNT_FEE_RATE,
+      new anchor.BN(TOKEN_A_RATE)
+    );
+
+    // compute swap ix
+    const whirlpoolData = await whirlpool.refreshData();
+    const inputTokenAmount = new u64(1195000);
+    const swapToken = aToB ? whirlpoolData.tokenMintA : whirlpoolData.tokenMintB;
+
+    const whirlpooDiscountInfo1Data = await ctx.fetcher.getPoolDiscountInfo(
+      whirlpoolDiscountInfoPubkey1
+    );
+
+    assert.ok(whirlpooDiscountInfo1Data != null);
+
+    const quoteWithDiscount = await swapWithFeeDiscountQuoteByInputToken(
+      whirlpool,
+      whirlpooDiscountInfo1Data,
+      swapToken,
+      inputTokenAmount,
+      slippageTolerance,
+      ctx.program.programId,
+      ctx.fetcher,
+      true
+    );
+
+    // swap pool 1, but using discount info of pool 2
+    await assert.rejects(
+      (await whirlpool.swapWithFeeDiscount(quoteWithDiscount, discountTokenMint2)).buildAndExecute()
+    );
+  });
+
   // utils function
   async function getUserTokenBalancesByTokenMints(user: PublicKey, tokenMint: PublicKey[]) {
     const accs = [];
