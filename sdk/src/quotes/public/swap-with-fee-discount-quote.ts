@@ -12,8 +12,8 @@ import { simulateSwap, simulateSwapWithFeeDiscount } from "../swap/swap-quote-im
 import { NormalSwapQuote, SwapQuote, SwapQuoteParam } from "./swap-quote";
 
 export type FeeDiscountSwapQuote = NormalSwapQuote & {
-  expectedDiscountAmount: u64;
-  expectedBurnAmount: u64;
+  estimatedDiscountAmount: u64;
+  estimatedBurnAmount: u64;
 };
 
 /**
@@ -59,7 +59,7 @@ export async function swapWithFeeDiscountQuoteByOutputToken(
   programId: Address,
   fetcher: AccountFetcher,
   refresh: boolean
-): Promise<SwapQuote> {
+): Promise<FeeDiscountSwapQuote> {
   const params = await swapQuoteByToken(
     whirlpool,
     outputTokenMint,
