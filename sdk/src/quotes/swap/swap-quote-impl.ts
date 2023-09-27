@@ -184,7 +184,7 @@ export function simulateSwapWithFeeDiscount(
     aToB
   );
 
-  const expectedBurnAmount = calculateEquivalentDiscountTokenAmount(
+  const estimatedBurnAmount = calculateEquivalentDiscountTokenAmount(
     whirlpoolDiscountInfoData,
     swapResults,
     burnFeeAccumulated,
@@ -192,7 +192,7 @@ export function simulateSwapWithFeeDiscount(
     aToB
   );
 
-  const expectedDiscountAmount = calculateEquivalentDiscountTokenAmount(
+  const estimatedDiscountAmount = calculateEquivalentDiscountTokenAmount(
     whirlpoolDiscountInfoData,
     swapResults,
     discountFeeAccumulated,
@@ -252,8 +252,8 @@ export function simulateSwapWithFeeDiscount(
     tickArray0: touchedArrays[0],
     tickArray1: touchedArrays[1],
     tickArray2: touchedArrays[2],
-    expectedDiscountAmount,
-    expectedBurnAmount,
+    estimatedDiscountAmount,
+    estimatedBurnAmount,
   };
 }
 
