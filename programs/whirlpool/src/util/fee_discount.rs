@@ -18,6 +18,7 @@ pub fn calculate_equivalent_discount_token_amount(
     let mut amount_in_token_a = amount_u128;
 
     // if fee discount in token B
+    // qA * vA = qB * vB and qA2 * vA = qB2 * vB -> qA2 = qB2 / qB * qA
     if a_to_b != amount_specified_is_input {
         amount_in_token_a = (amount_u128 * post_swap_update.amount_a as u128)
             .checked_div(post_swap_update.amount_b as u128)
@@ -25,6 +26,7 @@ pub fn calculate_equivalent_discount_token_amount(
     }
 
     // calculate equivalent value in discount token
+    // 10^discount_token.decimals * vD = discount_token_rate_over_token_a * vA and qD2 * vD = qA2 * vA -> qD2 = qA2 / discount_token_rate_over_a * 10^discount_token.decimals
     let amount_in_discount_token = amount_in_token_a
         .checked_mul(10u128.pow(discount_token.decimals as u32))
         .ok_or(ErrorCode::MultiplicationOverflow)?
