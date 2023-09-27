@@ -1,11 +1,14 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount};
+use anchor_spl::token::{self, Mint, Token, TokenAccount};
 
 use crate::{
     errors::ErrorCode,
     manager::swap_manager::*,
     state::{TickArray, Whirlpool, WhirlpoolDiscountInfo},
-    util::{to_timestamp_u64, update_and_swap_whirlpool, SwapTickSequence},
+    util::{
+        burn_token, calculate_equivalent_discount_token_amount, to_timestamp_u64,
+        update_and_swap_whirlpool, SwapTickSequence,
+    },
 };
 
 #[derive(Accounts)]
@@ -107,19 +110,6 @@ pub fn handler(
         a_to_b,
     )?;
 
-    // TODO: wrap this function for two hops
-    let cpi_accounts = Burn {
-        mint: discount_token.to_account_info(),
-        to: discount_token_owner_account.to_account_info(),
-        authority: ctx.accounts.token_authority.to_account_info(),
-    };
-
-    // Create the CpiContext we need for the request
-    let cpi_ctx = CpiContext::new(ctx.accounts.token_program.to_account_info(), cpi_accounts);
-
-    // Execute anchor's helper function to burn tokens
-    token::burn(cpi_ctx, burn_amount_in_discount_token)?;
-
     msg!(
         "SAVE: token: {:?} - amount: {}",
         discount_token.key(),
@@ -130,6 +120,14 @@ pub fn handler(
         discount_token.key(),
         burn_amount_in_discount_token
     );
+
+    burn_token(
+        discount_token.to_account_info(),
+        discount_token_owner_account.to_account_info(),
+        ctx.accounts.token_authority.to_account_info(),
+        ctx.accounts.token_program.to_account_info(),
+        burn_amount_in_discount_token,
+    )?;
 
     if amount_specified_is_input {
         if (a_to_b && other_amount_threshold > swap_update.amount_b)
@@ -157,39 +155,4 @@ pub fn handler(
         a_to_b,
         timestamp,
     )
-}
-
-fn calculate_equivalent_discount_token_amount(
-    whirlpool_discount_info: &WhirlpoolDiscountInfo,
-    discount_token: &Mint,
-    post_swap_update: &PostSwapUpdate,
-    burn_amount: u64,
-    amount_specified_is_input: bool,
-    a_to_b: bool,
-) -> Result<u64, ErrorCode> {
-    // fee in token B
-    let burn_amount_u128 = burn_amount as u128;
-    let mut burn_amount_in_token_a = burn_amount_u128;
-
-    // if fee discount in token B
-    if a_to_b != amount_specified_is_input {
-        burn_amount_in_token_a = (burn_amount_u128 * post_swap_update.amount_a as u128)
-            .checked_div(post_swap_update.amount_b as u128)
-            .ok_or(ErrorCode::DivideByZero)?;
-    }
-
-    // calculate equivalent value in discount token
-    let burn_amount_in_discount_token = burn_amount_in_token_a
-        .checked_mul(10u128.pow(discount_token.decimals as u32))
-        .ok_or(ErrorCode::MultiplicationOverflow)?
-        .checked_div(whirlpool_discount_info.discount_token_rate_over_token_a as u128)
-        .ok_or(ErrorCode::DivideByZero)?;
-
-    // Check if the value fits within u64
-    if burn_amount_in_discount_token > u64::MAX as u128 {
-        return Err(ErrorCode::NumberCastError);
-    }
-
-    // Cast back to u64
-    Ok(burn_amount_in_discount_token as u64)
 }
