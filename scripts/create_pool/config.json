@@ -10,7 +10,7 @@
     ],
     "POOLS": [
         {
-            "TOKEN_MINT_A": "DSodi59U9ZWRnVgP94VNnKamFybYpsqYj2iKL1jQF7Ag",
+            "TOKEN_MINT_A": "So11111111111111111111111111111111111111112",
             "TOKEN_MINT_B": "Afy8qEgeJykFziRwiCk6tnBbd3uzxMoEqn2GTNCyGN7P",
             "TICK_SPACING": 32,
             "OPEN_POSITION": true,

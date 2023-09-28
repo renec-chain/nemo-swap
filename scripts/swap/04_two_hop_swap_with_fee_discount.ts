@@ -12,10 +12,12 @@ import {
   twoHopSwapQuoteFromSwapQuotes,
   WhirlpoolIx,
   PoolUtil,
+  swapWithFeeDiscountQuoteByInputToken,
 } from "@renec/redex-sdk";
 import { loadProvider, loadWallets } from "../create_pool/utils";
 import deployed from "../create_pool/deployed.json";
 import { u64 } from "@solana/spl-token";
+import { Wallet } from "@project-serum/anchor";
 
 const TICK_SPACING = 32;
 
@@ -32,7 +34,7 @@ async function main() {
   );
 
   const discountToken = new PublicKey(
-    "CWSVAfEa5hRDaSjb9YVccxZDtogBchTWFmRoqrKa7qC7"
+    "33TX1A6V23ZAKfnCZvtSyvdKDfUDeLafVvRHCdGBp8xG"
   );
 
   // perform two hop swap
@@ -42,6 +44,7 @@ async function main() {
     throw new Error("Please provide user_wallet wallet");
   }
 
+  const sourceKeypair = wallets.userKeypair;
   const { ctx } = loadProvider(wallets.userKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
@@ -61,7 +64,7 @@ async function main() {
     new PublicKey(deployed.REDEX_CONFIG_PUB),
     new PublicKey(pool1Tokens[0].toString()),
     new PublicKey(pool1Tokens[1].toString()),
-    32
+    TICK_SPACING
   ).publicKey;
 
   // get whirlpool 2: reusd - revnd
@@ -70,7 +73,7 @@ async function main() {
     new PublicKey(deployed.REDEX_CONFIG_PUB),
     new PublicKey(pool2Tokens[0].toString()),
     new PublicKey(pool2Tokens[1].toString()),
-    32
+    TICK_SPACING
   ).publicKey;
 
   // Get quote to swap
@@ -80,8 +83,9 @@ async function main() {
 
   const amount = new u64(100000);
   // renec is the input token
-  const quote1 = await swapQuoteByInputToken(
+  const quote1 = await swapWithFeeDiscountQuoteByInputToken(
     whirlpool1,
+    discountToken,
     renecPubkey,
     amount,
     Percentage.fromFraction(1, 100),
@@ -91,8 +95,9 @@ async function main() {
   );
 
   // reusd is the intermediate token
-  const quote2 = await swapQuoteByInputToken(
+  const quote2 = await swapWithFeeDiscountQuoteByInputToken(
     whirlpool2,
+    discountToken,
     reusdPubkey,
     quote1.estimatedAmountOut,
     Percentage.fromFraction(1, 100),
@@ -102,7 +107,14 @@ async function main() {
   );
 
   // two hop swap
-  const tx = await client.twoHopSwap(quote1, whirlpool1, quote2, whirlpool2);
+  const tx = await client.twoHopSwapWithFeeDiscount(
+    quote1,
+    whirlpool1,
+    quote2,
+    whirlpool2,
+    discountToken,
+    new Wallet(sourceKeypair)
+  );
 
   const txHash = await tx.buildAndExecute();
   console.log("txHash:", txHash);
