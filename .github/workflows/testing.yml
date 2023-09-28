@@ -117,7 +117,7 @@ jobs:
           sh -c "$(curl -sSfL https://release.solana.com/v1.14.6/install)";
           export PATH=/github/home/.local/share/solana/install/active_release/bin:$PATH;
           solana --version;
-          solana-keygen new;
+          solana-keygen new --no-passphrase --outfile /github/home/.config/solana/id.json;
           solana config set --url http://127.0.0.1:8899;
           solana config get;
           echo 'ANCHOR_WALLET=/github/home/.config/solana/id.json' >> $GITHUB_ENV;
