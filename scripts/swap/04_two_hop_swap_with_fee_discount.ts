@@ -13,13 +13,29 @@ import {
   WhirlpoolIx,
   PoolUtil,
 } from "@renec/redex-sdk";
-import { loadProvider, loadWallets } from "./utils";
-import deployed from "./deployed.json";
+import { loadProvider, loadWallets } from "../create_pool/utils";
+import deployed from "../create_pool/deployed.json";
 import { u64 } from "@solana/spl-token";
 
 const TICK_SPACING = 32;
 
 async function main() {
+  // fixed params
+  const renecPubkey = new PublicKey(
+    "So11111111111111111111111111111111111111112"
+  );
+  const reusdPubkey = new PublicKey(
+    "Afy8qEgeJykFziRwiCk6tnBbd3uzxMoEqn2GTNCyGN7P"
+  );
+  const revndPubkey = new PublicKey(
+    "DSodi59U9ZWRnVgP94VNnKamFybYpsqYj2iKL1jQF7Ag"
+  );
+
+  const discountToken = new PublicKey(
+    "CWSVAfEa5hRDaSjb9YVccxZDtogBchTWFmRoqrKa7qC7"
+  );
+
+  // perform two hop swap
   const wallets = loadWallets();
 
   if (!wallets.userKeypair) {
@@ -34,17 +50,6 @@ async function main() {
     );
     return;
   }
-
-  // renec - reusd
-  const renecPubkey = new PublicKey(
-    "So11111111111111111111111111111111111111112"
-  );
-  const reusdPubkey = new PublicKey(
-    "Afy8qEgeJykFziRwiCk6tnBbd3uzxMoEqn2GTNCyGN7P"
-  );
-  const revndPubkey = new PublicKey(
-    "DSodi59U9ZWRnVgP94VNnKamFybYpsqYj2iKL1jQF7Ag"
-  );
 
   // Get pool info
   const pool1Tokens = PoolUtil.orderMints(renecPubkey, reusdPubkey);

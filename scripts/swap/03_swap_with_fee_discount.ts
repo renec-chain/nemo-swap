@@ -6,9 +6,13 @@ import {
   swapQuoteByInputToken,
   swapWithFeeDiscountQuoteByInputToken,
 } from "@renec/redex-sdk";
-import { loadProvider, getTokenMintInfo, loadWallets } from "./utils";
-import deployed from "./deployed.json";
-import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";
+import {
+  loadProvider,
+  getTokenMintInfo,
+  loadWallets,
+} from "../create_pool/utils";
+import deployed from "../create_pool//deployed.json";
+import { askToConfirmPoolInfo, getPoolInfo } from "../create_pool/utils/pool";
 import { u64 } from "@solana/spl-token";
 
 async function main() {
@@ -47,25 +51,13 @@ async function main() {
     const whirlpool = await client.getPool(whirlpoolPda.publicKey);
     const whirlpoolData = whirlpool.getData();
 
-    console.log("Token mint a: ", whirlpoolData.tokenMintA.toString());
-    console.log("Token mint b: ", whirlpoolData.tokenMintB.toString());
-
     const discountToken = new PublicKey(
       "CWSVAfEa5hRDaSjb9YVccxZDtogBchTWFmRoqrKa7qC7"
     );
-    const whirlpooDiscountInfoData = await ctx.fetcher.getPoolDiscountInfo(
-      PDAUtil.getWhirlpoolDiscountInfo(
-        ctx.program.programId,
-        whirlpoolPda.publicKey,
-        discountToken
-      ).publicKey
-    );
-
-    console.log("Discount token: ", whirlpooDiscountInfoData);
 
     const quote = await swapWithFeeDiscountQuoteByInputToken(
       whirlpool,
-      whirlpooDiscountInfoData,
+      discountToken,
       whirlpoolData.tokenMintA,
       new u64(1000000000),
       Percentage.fromFraction(1, 100),
@@ -73,7 +65,7 @@ async function main() {
       ctx.fetcher,
       true
     );
-    console.log(quote);
+
     const tx = await whirlpool.swapWithFeeDiscount(
       quote,
       discountToken,
