@@ -315,7 +315,7 @@ describe("two-hop swap", () => {
     );
 
     const tx = await client.twoHopSwap(quote, whirlpoolOne, quote2, whirlpoolTwo);
-    await tx.tx.buildAndExecute();
+    await tx.buildAndExecute();
 
     assert.deepEqual(await getTokenBalancesForVaults(pools), [
       tokenVaultBalances[0].add(quote.estimatedAmountIn),
