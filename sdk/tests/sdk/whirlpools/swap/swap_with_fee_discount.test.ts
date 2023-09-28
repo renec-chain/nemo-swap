@@ -4,17 +4,12 @@ import { web3 } from "@project-serum/anchor";
 import { u64 } from "@solana/spl-token";
 import * as assert from "assert";
 import { BN } from "bn.js";
-import Decimal from "decimal.js";
 import {
   buildWhirlpoolClient,
-  PDAUtil,
   PriceMath,
   swapQuoteByInputToken,
-  toTx,
   WhirlpoolContext,
-  WhirlpoolIx,
   swapWithFeeDiscountQuoteByInputToken,
-  Whirlpool,
   swapWithFeeDiscountQuoteByOutputToken,
   swapQuoteByOutputToken,
 } from "../../../../src";
@@ -113,7 +108,7 @@ describe("swap_with_fee_discount", () => {
 
     const quoteWithDiscount = await swapWithFeeDiscountQuoteByInputToken(
       whirlpool,
-      whirlpooDiscountInfoData,
+      discountTokenMint,
       swapToken,
       inputTokenAmount,
       slippageTolerance,
@@ -237,7 +232,7 @@ describe("swap_with_fee_discount", () => {
 
     const quoteWithDiscount = await swapWithFeeDiscountQuoteByInputToken(
       whirlpool,
-      whirlpooDiscountInfoData,
+      discountTokenMint,
       swapToken,
       inputTokenAmount,
       slippageTolerance,
@@ -629,7 +624,7 @@ describe("swap_with_fee_discount", () => {
 
     const quoteWithDiscount = await swapWithFeeDiscountQuoteByInputToken(
       whirlpool,
-      whirlpooDiscountInfoData,
+      discountTokenMintB,
       swapToken,
       inputTokenAmount,
       slippageTolerance,
@@ -729,7 +724,7 @@ describe("swap_with_fee_discount", () => {
 
     const quoteWithDiscount = await swapWithFeeDiscountQuoteByInputToken(
       whirlpool,
-      whirlpooDiscountInfo1Data,
+      discountTokenMint1,
       swapToken,
       inputTokenAmount,
       slippageTolerance,

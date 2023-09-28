@@ -4,6 +4,7 @@ import {
   TokenUtil,
   resolveOrCreateATAs,
   ZERO,
+  deriveATA,
 } from "@orca-so/common-sdk";
 import { Address, BN, Wallet } from "@project-serum/anchor";
 import { Keypair, PublicKey } from "@solana/web3.js";
@@ -405,5 +406,109 @@ export class WhirlpoolClientImpl implements WhirlpoolClient {
     });
 
     return toTx(this.ctx, ix).prependInstructions(createATAInstructions);
+  }
+
+  public async twoHopSwapWithFeeDiscount(
+    swapQuote1: SwapQuote,
+    whirlpool1: Whirlpool,
+    swapQuote2: SwapQuote,
+    whirlpool2: Whirlpool,
+    discountToken: PublicKey,
+    wallet?: Wallet | undefined
+  ): Promise<TransactionBuilder> {
+    const twoHopSwapQuote = twoHopSwapQuoteFromSwapQuotes(swapQuote1, swapQuote2);
+    const sourceWallet = wallet ?? this.ctx.provider.wallet;
+
+    const oracleOne = PDAUtil.getOracle(
+      this.ctx.program.programId,
+      whirlpool1.getAddress()
+    ).publicKey;
+
+    const oracleTwo = PDAUtil.getOracle(
+      this.ctx.program.programId,
+      whirlpool2.getAddress()
+    ).publicKey;
+
+    const whirlpoolData1 = whirlpool1.getData();
+    const whirlpoolData2 = whirlpool2.getData();
+
+    const resolveAllAtas = await resolveOrCreateATAs(
+      this.ctx.connection,
+      sourceWallet.publicKey,
+      [
+        {
+          tokenMint: whirlpoolData1.tokenMintA,
+          wrappedSolAmountIn: swapQuote1.aToB ? swapQuote1.amount : ZERO,
+        },
+        {
+          tokenMint: whirlpoolData1.tokenMintB,
+          wrappedSolAmountIn: !swapQuote1.aToB ? swapQuote1.amount : ZERO,
+        },
+        {
+          tokenMint: whirlpoolData2.tokenMintA,
+          wrappedSolAmountIn: swapQuote2.aToB ? swapQuote2.amount : ZERO,
+        },
+        {
+          tokenMint: whirlpoolData2.tokenMintB,
+          wrappedSolAmountIn: !swapQuote2.aToB ? swapQuote2.amount : ZERO,
+        },
+      ],
+      () => this.ctx.fetcher.getAccountRentExempt()
+    );
+
+    const createATAInstructions = [];
+    // make a set of unique address
+    const uniqueAddresses = new Set<string>();
+    for (const resolveAta of resolveAllAtas) {
+      const { address: ataAddress, ...instructions } = resolveAta;
+
+      if (!uniqueAddresses.has(ataAddress.toBase58())) {
+        createATAInstructions.push(instructions);
+        uniqueAddresses.add(ataAddress.toBase58());
+      }
+    }
+
+    // Get whirlpool discount info
+    const whirlpoolOneDiscountInfoPubkey = PDAUtil.getWhirlpoolDiscountInfo(
+      this.ctx.program.programId,
+      whirlpool1.getAddress(),
+      discountToken
+    ).publicKey;
+
+    const whirlpoolTwoDiscountInfoPubkey = PDAUtil.getWhirlpoolDiscountInfo(
+      this.ctx.program.programId,
+      whirlpool2.getAddress(),
+      discountToken
+    ).publicKey;
+
+    // Get source owner token account | if user doesnot have the discount token -> error
+    const discountTokenOwnerAccount = await deriveATA(sourceWallet.publicKey, discountToken);
+
+    const poolParams = {
+      whirlpoolOne: whirlpool1.getAddress(),
+      whirlpoolTwo: whirlpool2.getAddress(),
+      tokenOwnerAccountOneA: resolveAllAtas[0].address,
+      tokenVaultOneA: whirlpoolData1.tokenVaultA,
+      tokenOwnerAccountOneB: resolveAllAtas[1].address,
+      tokenVaultOneB: whirlpoolData1.tokenVaultB,
+      tokenOwnerAccountTwoA: resolveAllAtas[2].address,
+      tokenVaultTwoA: whirlpoolData2.tokenVaultA,
+      tokenOwnerAccountTwoB: resolveAllAtas[3].address,
+      tokenVaultTwoB: whirlpoolData2.tokenVaultB,
+      oracleOne,
+      oracleTwo,
+    };
+
+    const twoHopIx = WhirlpoolIx.twoHopSwapWithFeeDiscountIx(this.ctx.program, {
+      ...twoHopSwapQuote,
+      ...poolParams,
+      tokenAuthority: sourceWallet.publicKey,
+      discountToken,
+      whirlpoolDiscountInfoOne: whirlpoolOneDiscountInfoPubkey,
+      whirlpoolDiscountInfoTwo: whirlpoolTwoDiscountInfoPubkey,
+      discountTokenOwnerAccount,
+    });
+
+    return toTx(this.ctx, twoHopIx).prependInstructions(createATAInstructions);
   }
 }
