@@ -2,12 +2,10 @@ import { PublicKey } from "@solana/web3.js";
 import {
   PDAUtil,
   buildWhirlpoolClient,
-  PriceMath,
   WhirlpoolIx,
   toTx,
 } from "@renec/redex-sdk";
 import { loadProvider, getTokenMintInfo, loadWallets } from "./utils";
-import Decimal from "decimal.js";
 import config from "./config.json";
 import deployed from "./deployed.json";
 import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";

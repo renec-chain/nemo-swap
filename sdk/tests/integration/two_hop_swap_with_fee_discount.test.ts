@@ -78,7 +78,7 @@ describe("two-hop swap with fee discounts", () => {
     aqConfig.initPositionParams.push({ poolIndex: 1, fundParams });
   });
 
-  it("a_to_b && exact_in", async () => {
+  it("succeed: two hop swap with fee discount", async () => {
     const aquarium = (await buildTestAquariums(ctx, [aqConfig]))[0];
     const { tokenAccounts, mintKeys, pools } = aquarium;
 
@@ -136,7 +136,7 @@ describe("two-hop swap with fee discounts", () => {
     const inputAmount = new u64(100000);
     const quote = await swapWithFeeDiscountQuoteByInputToken(
       whirlpoolOne,
-      whirlpoolOneDiscountInfoData,
+      discountTokenMint,
       inputToken,
       inputAmount,
       Percentage.fromFraction(1, 100),
@@ -147,7 +147,7 @@ describe("two-hop swap with fee discounts", () => {
 
     const quote2 = await swapWithFeeDiscountQuoteByInputToken(
       whirlpoolTwo,
-      whirlpoolTwoDiscountInfoData,
+      discountTokenMint,
       intermediaryToken,
       quote.estimatedAmountOut,
       Percentage.fromFraction(1, 100),
@@ -177,6 +177,135 @@ describe("two-hop swap with fee discounts", () => {
         discountTokenOwnerAccount: discountTokenOwnerAccount,
       })
     ).buildAndExecute();
+
+    let postUserTokenBalance = await getUserTokenBalancesByTokenMints(ctx.wallet.publicKey, [
+      inputToken,
+      intermediaryToken,
+      _outputToken,
+      discountTokenMint,
+    ]);
+
+    assert.deepEqual(await getTokenBalancesForVaults(pools), [
+      tokenVaultBalances[0].add(quote.estimatedAmountIn),
+      tokenVaultBalances[1].sub(quote.estimatedAmountOut),
+      tokenVaultBalances[2].add(quote2.estimatedAmountIn),
+      tokenVaultBalances[3].sub(quote2.estimatedAmountOut),
+    ]);
+
+    const prevTbs = [...tokenBalances];
+    tokenBalances = await getTokenBalances(tokenAccounts.map((acc) => acc.account));
+
+    assert.deepEqual(tokenBalances, [
+      prevTbs[0].sub(quote.estimatedAmountIn),
+      prevTbs[1],
+      prevTbs[2].add(quote2.estimatedAmountOut),
+    ]);
+
+    // assert burn amount
+    assert.ok(
+      isApproxEqual(
+        preUserTokenBalances[3],
+        postUserTokenBalance[3],
+        quote.estimatedBurnAmount.add(quote2.estimatedBurnAmount)
+      )
+    );
+  });
+
+  it("succeed-sdk: two hop swap with fee discount", async () => {
+    const aquarium = (await buildTestAquariums(ctx, [aqConfig]))[0];
+    const { tokenAccounts, mintKeys, pools } = aquarium;
+
+    let tokenBalances = await getTokenBalances(tokenAccounts.map((acc) => acc.account));
+
+    const tokenVaultBalances = await getTokenBalancesForVaults(pools);
+
+    const whirlpoolOneKey = pools[0].whirlpoolPda.publicKey;
+    const whirlpoolTwoKey = pools[1].whirlpoolPda.publicKey;
+    let whirlpoolOne = await client.getPool(whirlpoolOneKey, true);
+    let whirlpoolTwo = await client.getPool(whirlpoolTwoKey, true);
+
+    const [inputToken, intermediaryToken, _outputToken] = mintKeys;
+
+    // Setup whirlpool discount info
+    const discountTokenMint = await createMint(provider);
+
+    let discountTokenOwnerAccount = await createAndMintToAssociatedTokenAccount(
+      ctx.provider,
+      discountTokenMint,
+      new anchor.BN(10000000)
+    );
+
+    // Get whirlool discount info
+    const whirlpoolOneDiscountInfoPubkey = await initializePoolDiscountInfo(
+      ctx,
+      whirlpoolOne,
+      discountTokenMint,
+      TOKEN_CONVERSION_FEE_RATE,
+      DISCOUNT_FEE_RATE,
+      new anchor.BN(2)
+    );
+
+    const whirlpoolTwoDiscountInfoPubkey = await initializePoolDiscountInfo(
+      ctx,
+      whirlpoolTwo,
+      discountTokenMint,
+      TOKEN_CONVERSION_FEE_RATE,
+      DISCOUNT_FEE_RATE,
+      new anchor.BN(2)
+    );
+
+    const whirlpoolOneDiscountInfoData = await ctx.fetcher.getPoolDiscountInfo(
+      whirlpoolOneDiscountInfoPubkey
+    );
+
+    const whirlpoolTwoDiscountInfoData = await ctx.fetcher.getPoolDiscountInfo(
+      whirlpoolTwoDiscountInfoPubkey
+    );
+
+    assert.ok(whirlpoolOneDiscountInfoData);
+    assert.ok(whirlpoolTwoDiscountInfoData);
+
+    // Get swap quotes
+    const inputAmount = new u64(100000);
+    const quote = await swapWithFeeDiscountQuoteByInputToken(
+      whirlpoolOne,
+      discountTokenMint,
+      inputToken,
+      inputAmount,
+      Percentage.fromFraction(1, 100),
+      ctx.program.programId,
+      fetcher,
+      true
+    );
+
+    const quote2 = await swapWithFeeDiscountQuoteByInputToken(
+      whirlpoolTwo,
+      discountTokenMint,
+      intermediaryToken,
+      quote.estimatedAmountOut,
+      Percentage.fromFraction(1, 100),
+      ctx.program.programId,
+      fetcher,
+      true
+    );
+
+    let preUserTokenBalances = await getUserTokenBalancesByTokenMints(ctx.wallet.publicKey, [
+      inputToken,
+      intermediaryToken,
+      _outputToken,
+      discountTokenMint,
+    ]);
+
+    // Do swap
+    const tx = await client.twoHopSwapWithFeeDiscount(
+      quote,
+      whirlpoolOne,
+      quote2,
+      whirlpoolTwo,
+      discountTokenMint
+    );
+
+    await tx.buildAndExecute();
 
     let postUserTokenBalance = await getUserTokenBalancesByTokenMints(ctx.wallet.publicKey, [
       inputToken,
