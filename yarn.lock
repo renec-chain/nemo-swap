@@ -640,7 +640,7 @@
     buffer-layout "^1.2.0"
 
 "@renec/redex-sdk@file:sdk":
-  version "0.7.2"
+  version "0.8.1"
   dependencies:
     "@metaplex-foundation/mpl-token-metadata" "1.2.5"
     "@orca-so/common-sdk" "^0.1.10"

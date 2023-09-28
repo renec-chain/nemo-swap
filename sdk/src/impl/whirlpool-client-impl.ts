@@ -24,7 +24,7 @@ import { Position, Whirlpool, WhirlpoolClient } from "../whirlpool-client";
 import { PositionImpl } from "./position-impl";
 import { getRewardInfos, getTokenMintInfos, getTokenVaultAccountInfos } from "./util";
 import { WhirlpoolImpl } from "./whirlpool-impl";
-import { twoHopSwapQuoteFromSwapQuotes } from "../quotes/public";
+import { SwapQuote, twoHopSwapQuoteFromSwapQuotes } from "../quotes/public";
 
 export class WhirlpoolClientImpl implements WhirlpoolClient {
   constructor(readonly ctx: WhirlpoolContext) {}
@@ -324,13 +324,13 @@ export class WhirlpoolClientImpl implements WhirlpoolClient {
   }
 
   public async twoHopSwap(
-    swapInput1: SwapInput,
+    swapQuote1: SwapQuote,
     whirlpool1: Whirlpool,
-    swapInput2: SwapInput,
+    swapQuote2: SwapQuote,
     whirlpool2: Whirlpool,
     wallet?: Wallet | undefined
   ): Promise<TransactionBuilder> {
-    const twoHopSwapQuote = twoHopSwapQuoteFromSwapQuotes(swapInput1, swapInput2);
+    const twoHopSwapQuote = twoHopSwapQuoteFromSwapQuotes(swapQuote1, swapQuote2);
 
     const sourceWallet = wallet ?? this.ctx.provider.wallet;
 
@@ -353,19 +353,19 @@ export class WhirlpoolClientImpl implements WhirlpoolClient {
       [
         {
           tokenMint: whirlpoolData1.tokenMintA,
-          wrappedSolAmountIn: swapInput1.aToB ? swapInput1.amount : ZERO,
+          wrappedSolAmountIn: swapQuote1.aToB ? swapQuote1.amount : ZERO,
         },
         {
           tokenMint: whirlpoolData1.tokenMintB,
-          wrappedSolAmountIn: !swapInput1.aToB ? swapInput1.amount : ZERO,
+          wrappedSolAmountIn: !swapQuote1.aToB ? swapQuote1.amount : ZERO,
         },
         {
           tokenMint: whirlpoolData2.tokenMintA,
-          wrappedSolAmountIn: swapInput2.aToB ? swapInput2.amount : ZERO,
+          wrappedSolAmountIn: swapQuote2.aToB ? swapQuote2.amount : ZERO,
         },
         {
           tokenMint: whirlpoolData2.tokenMintB,
-          wrappedSolAmountIn: !swapInput2.aToB ? swapInput2.amount : ZERO,
+          wrappedSolAmountIn: !swapQuote2.aToB ? swapQuote2.amount : ZERO,
         },
       ],
       () => this.ctx.fetcher.getAccountRentExempt()
@@ -375,10 +375,10 @@ export class WhirlpoolClientImpl implements WhirlpoolClient {
     // make a set of unique address
     const uniqueAddresses = new Set<string>();
     for (const resolveAta of resolveAllAtas) {
-      const { address: ataAddress, instructions } = resolveAta;
+      const { address: ataAddress, ...instructions } = resolveAta;
 
       if (!uniqueAddresses.has(ataAddress.toBase58())) {
-        createATAInstructions.push(...instructions);
+        createATAInstructions.push(instructions);
         uniqueAddresses.add(ataAddress.toBase58());
       }
     }
@@ -404,6 +404,6 @@ export class WhirlpoolClientImpl implements WhirlpoolClient {
       tokenAuthority: sourceWallet.publicKey,
     });
 
-    return toTx(this.ctx, ix);
+    return toTx(this.ctx, ix).prependInstructions(createATAInstructions);
   }
 }

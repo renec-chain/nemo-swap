@@ -13,6 +13,7 @@ import {
   WhirlpoolData,
 } from "./types/public";
 import { TokenAccountInfo, TokenInfo, WhirlpoolRewardInfo } from "./types/public/client-types";
+import { SwapQuote } from "./quotes/public";
 
 /**
  * Helper class to help interact with Whirlpool Accounts with a simpler interface.
@@ -115,9 +116,9 @@ export interface WhirlpoolClient {
   collectProtocolFeesForPools: (poolAddresses: Address[]) => Promise<TransactionBuilder>;
 
   twoHopSwap(
-    swapInput1: SwapInput,
+    swapInput1: SwapQuote,
     whirlpool1: Whirlpool,
-    swapInput2: SwapInput,
+    swapInput2: SwapQuote,
     whirlpool2: Whirlpool,
     wallet?: Wallet
   ): Promise<TransactionBuilder>;
