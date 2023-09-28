@@ -1,12 +1,13 @@
-import { AddressUtil, Percentage, U64_MAX, ZERO } from "@orca-so/common-sdk";
+import { AddressUtil, Instruction, Percentage, U64_MAX, ZERO } from "@orca-so/common-sdk";
 import { Address } from "@project-serum/anchor";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import BN from "bn.js";
 import { WhirlpoolContext } from "../..";
 import { AccountFetcher } from "../../network/public";
 import {
   MAX_SQRT_PRICE,
   MAX_SWAP_TICK_ARRAYS,
+  MEMO_V2_PROGRAM_ID,
   MIN_SQRT_PRICE,
   SwapInput,
   SwapParams,
@@ -251,5 +252,21 @@ export class SwapUtils {
       ...quote,
     };
     return params;
+  }
+
+  public static getLogMemoIx(from: PublicKey, message: string): Instruction {
+    const transactionInstruction = new TransactionInstruction({
+      keys: [{ pubkey: from, isSigner: true, isWritable: false }],
+      data: Buffer.from(message),
+      programId: new PublicKey(MEMO_V2_PROGRAM_ID),
+    });
+
+    let ix = {
+      instructions: [transactionInstruction],
+      cleanupInstructions: [],
+      signers: [],
+    };
+
+    return ix;
   }
 }

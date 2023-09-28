@@ -2,6 +2,7 @@ import { PublicKey } from "@solana/web3.js";
 import { MathUtil, Percentage } from "@orca-so/common-sdk";
 import {
   PDAUtil,
+  SwapUtils,
   buildWhirlpoolClient,
   swapQuoteByInputToken,
   swapWithFeeDiscountQuoteByInputToken,
@@ -25,6 +26,8 @@ async function main() {
   if (!wallets.userKeypair) {
     throw new Error("Please provide pool_creator_authority_wallet wallet");
   }
+
+  const sourceKeypair = wallets.userKeypair;
 
   const { ctx } = loadProvider(wallets.userKeypair);
 
@@ -69,8 +72,9 @@ async function main() {
     const tx = await whirlpool.swapWithFeeDiscount(
       quote,
       discountToken,
-      wallets.userKeypair.publicKey
+      sourceKeypair.publicKey
     );
+
     tx.addSigner(wallets.userKeypair);
     const sig = await tx.buildAndExecute();
     console.log(sig);

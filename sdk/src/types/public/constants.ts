@@ -75,3 +75,5 @@ export const PROTOCOL_FEE_RATE_MUL_VALUE = new BN(10_000);
  * @category Constants
  */
 export const FEE_RATE_MUL_VALUE = new BN(1_000_000);
+
+export const MEMO_V2_PROGRAM_ID = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr";

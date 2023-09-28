@@ -1,4 +1,5 @@
 import { MathUtil } from "@orca-so/common-sdk";
+import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import BN from "bn.js";
 
 export function getLowerSqrtPriceFromTokenA(amount: BN, liquidity: BN, sqrtPriceX64: BN): BN {

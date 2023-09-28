@@ -1,16 +1,8 @@
 import { PublicKey } from "@solana/web3.js";
-import {
-  Percentage,
-  resolveOrCreateATAs,
-  ZERO,
-  TransactionBuilder,
-} from "@orca-so/common-sdk";
+import { Percentage } from "@orca-so/common-sdk";
 import {
   PDAUtil,
   buildWhirlpoolClient,
-  swapQuoteByInputToken,
-  twoHopSwapQuoteFromSwapQuotes,
-  WhirlpoolIx,
   PoolUtil,
   swapWithFeeDiscountQuoteByInputToken,
   SwapUtils,
@@ -108,7 +100,7 @@ async function main() {
   );
 
   // two hop swap
-  const tx = await client.twoHopSwapWithFeeDiscount(
+  let tx = await client.twoHopSwapWithFeeDiscount(
     quote1,
     whirlpool1,
     quote2,
@@ -116,6 +108,14 @@ async function main() {
     discountToken,
     new Wallet(sourceKeypair)
   );
+
+  // Add memo ix
+  let memoIx = SwapUtils.getLogMemoIx(
+    sourceKeypair.publicKey,
+    "Referral Code Here"
+  );
+
+  tx.addInstruction(memoIx);
 
   const txHash = await tx.buildAndExecute();
   console.log("txHash:", txHash);
