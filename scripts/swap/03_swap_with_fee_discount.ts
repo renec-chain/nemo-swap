@@ -16,6 +16,10 @@ import { askToConfirmPoolInfo, getPoolInfo } from "../create_pool/utils/pool";
 import { u64 } from "@solana/spl-token";
 
 async function main() {
+  const discountToken = new PublicKey(
+    "33TX1A6V23ZAKfnCZvtSyvdKDfUDeLafVvRHCdGBp8xG"
+  );
+
   const wallets = loadWallets();
 
   if (!wallets.userKeypair) {
@@ -50,10 +54,6 @@ async function main() {
     );
     const whirlpool = await client.getPool(whirlpoolPda.publicKey);
     const whirlpoolData = whirlpool.getData();
-
-    const discountToken = new PublicKey(
-      "CWSVAfEa5hRDaSjb9YVccxZDtogBchTWFmRoqrKa7qC7"
-    );
 
     const quote = await swapWithFeeDiscountQuoteByInputToken(
       whirlpool,
