@@ -12,6 +12,14 @@ import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";
 import { BN } from "@project-serum/anchor";
 
 async function main() {
+  // fixed input
+  const discountTokenMint = new PublicKey(
+    "33TX1A6V23ZAKfnCZvtSyvdKDfUDeLafVvRHCdGBp8xG"
+  );
+  const tokenConversionRate = 4000; // 10 Renec -> 6
+  const discountFeeRate = 5000;
+  const discountTokenRateOverTokenA = new BN(2000000000); // 1 NSF = 2 token A
+
   const wallets = loadWallets();
 
   if (!wallets.poolCreatorAuthKeypair) {
@@ -30,14 +38,6 @@ async function main() {
     );
     return;
   }
-
-  // fixed input
-  const discountTokenMint = new PublicKey(
-    "CWSVAfEa5hRDaSjb9YVccxZDtogBchTWFmRoqrKa7qC7"
-  );
-  const tokenConversionRate = 4000; // 10 Renec -> 6
-  const discountFeeRate = 5000;
-  const discountTokenRateOverTokenA = new BN(2000000000); // 1 NSF = 2 token A
 
   const REDEX_CONFIG_PUB = new PublicKey(deployed.REDEX_CONFIG_PUB);
   const client = buildWhirlpoolClient(ctx);
