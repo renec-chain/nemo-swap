@@ -1,5 +1,5 @@
 import { Percentage, TransactionBuilder } from "@orca-so/common-sdk";
-import { Address, BN } from "@project-serum/anchor";
+import { Address, Wallet } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { WhirlpoolContext } from "./context";
 import { WhirlpoolClientImpl } from "./impl/whirlpool-client-impl";
@@ -117,26 +117,12 @@ export interface WhirlpoolClient {
   collectProtocolFeesForPools: (poolAddresses: Address[]) => Promise<TransactionBuilder>;
 
   twoHopSwap(
-    swapQuote1: SwapQuote,
+    swapInput1: SwapInput,
     whirlpool1: Whirlpool,
-    swapQuote2: SwapQuote,
+    swapInput2: SwapInput,
     whirlpool2: Whirlpool,
-    wRenecAta?: PublicKey
-  ): Promise<{ tx: TransactionBuilder; createdWRenecAta: PublicKey | undefined }>;
-
-  twoHopSwapWithFeeDiscount(
-    swapQuote1: FeeDiscountSwapQuote,
-    whirlpool1: Whirlpool,
-    swapQuote2: FeeDiscountSwapQuote,
-    whirlpool2: Whirlpool,
-    discountToken: PublicKey,
-    wRenecAta?: PublicKey
-  ): Promise<{
-    tx: TransactionBuilder;
-    createdWRenecAta: PublicKey | undefined;
-    estimatedBurnAmount: BN;
-    estimatedDiscountAmount: BN;
-  }>;
+    wallet?: Wallet
+  ): Promise<TransactionBuilder>;
 }
 
 /**
