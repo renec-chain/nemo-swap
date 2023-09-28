@@ -5,9 +5,13 @@ import {
   buildWhirlpoolClient,
   swapQuoteByInputToken,
 } from "@renec/redex-sdk";
-import { loadProvider, getTokenMintInfo, loadWallets } from "./utils";
-import deployed from "./deployed.json";
-import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";
+import {
+  loadProvider,
+  getTokenMintInfo,
+  loadWallets,
+} from "../create_pool/utils";
+import deployed from "../create_pool/deployed.json";
+import { askToConfirmPoolInfo, getPoolInfo } from "../create_pool/utils/pool";
 import { u64 } from "@solana/spl-token";
 
 async function main() {

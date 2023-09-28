@@ -5,11 +5,12 @@ import invariant from "tiny-invariant";
 import { SwapInput } from "../../instructions";
 import { AccountFetcher } from "../../network/public";
 import { TickArray, WhirlpoolData, WhirlpoolDiscountInfoData } from "../../types/public";
-import { PoolUtil, SwapDirection, TokenType } from "../../utils/public";
+import { PDAUtil, PoolUtil, SwapDirection, TokenType } from "../../utils/public";
 import { SwapUtils } from "../../utils/public/swap-utils";
 import { Whirlpool } from "../../whirlpool-client";
 import { simulateSwap, simulateSwapWithFeeDiscount } from "../swap/swap-quote-impl";
 import { NormalSwapQuote, SwapQuote, SwapQuoteParam } from "./swap-quote";
+import { PublicKey } from "@solana/web3.js";
 
 export type FeeDiscountSwapQuote = NormalSwapQuote & {
   estimatedDiscountAmount: u64;
@@ -30,7 +31,7 @@ export type FeeDiscountSwapQuote = NormalSwapQuote & {
  */
 export async function swapWithFeeDiscountQuoteByInputToken(
   whirlpool: Whirlpool,
-  whirlpoolDiscountInfoData: WhirlpoolDiscountInfoData,
+  discountToken: PublicKey,
   inputTokenMint: Address,
   tokenAmount: u64,
   slippageTolerance: Percentage,
@@ -38,6 +39,17 @@ export async function swapWithFeeDiscountQuoteByInputToken(
   fetcher: AccountFetcher,
   refresh: boolean
 ): Promise<FeeDiscountSwapQuote> {
+  const whirlpoolDiscountInfoPubkey = PDAUtil.getWhirlpoolDiscountInfo(
+    new PublicKey(programId),
+    whirlpool.getAddress(),
+    discountToken
+  ).publicKey;
+
+  const whirlpoolDiscountInfoData = await fetcher.getPoolDiscountInfo(whirlpoolDiscountInfoPubkey);
+  if (!whirlpoolDiscountInfoData) {
+    throw new Error("Whirlpool discount info does not exist");
+  }
+
   const params = await swapQuoteByToken(
     whirlpool,
     inputTokenMint,

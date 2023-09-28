@@ -116,10 +116,19 @@ export interface WhirlpoolClient {
   collectProtocolFeesForPools: (poolAddresses: Address[]) => Promise<TransactionBuilder>;
 
   twoHopSwap(
-    swapInput1: SwapQuote,
+    swapQuote1: SwapQuote,
     whirlpool1: Whirlpool,
-    swapInput2: SwapQuote,
+    swapQuote2: SwapQuote,
     whirlpool2: Whirlpool,
+    wallet?: Wallet
+  ): Promise<TransactionBuilder>;
+
+  twoHopSwapWithFeeDiscount(
+    swapQuote1: SwapQuote,
+    whirlpool1: Whirlpool,
+    swapQuote2: SwapQuote,
+    whirlpool2: Whirlpool,
+    discountToken: PublicKey,
     wallet?: Wallet
   ): Promise<TransactionBuilder>;
 }
