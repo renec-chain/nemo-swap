@@ -1,7 +1,7 @@
 {
-  "name": "@renec-foundation/redex-sdk",
-  "version": "0.8.1",
-  "description": "Typescript SDK to interact with Orca's Whirlpool program.",
+  "name": "@renec-foundation/nemoswap-sdk",
+  "version": "0.9.2",
+  "description": "Typescript SDK to interact with NemoSwap program.",
   "license": "Apache-2.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -49,20 +49,22 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/orca-so/whirlpools.git"
+    "url": "git+https://github.com/renec-chain/nemo-swap.git"
   },
   "keywords": [
     "orca_so",
     "orca",
-    "solana",
     "typescript",
     "sdk",
     "crypto",
-    "dex"
+    "dex",
+    "nemo",
+    "nemoswap",
+    "renec"
   ],
-  "author": "team@orca.so",
+  "author": "dev@renec.foundation",
   "bugs": {
-    "url": "https://github.com/orca-so/whirlpools/issues"
+    "url": "https://github.com/renec-chain/nemo-swap/issues"
   },
-  "homepage": "https://www.orca.so"
+  "homepage": "https://renec.org"
 }

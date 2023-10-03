@@ -1,4 +1,4 @@
-import { PublicKey} from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import {
   Percentage,
   resolveOrCreateATAs,
@@ -11,19 +11,22 @@ import {
   swapQuoteByInputToken,
   twoHopSwapQuoteFromSwapQuotes,
   WhirlpoolIx,
+  PoolUtil,
 } from "@renec/redex-sdk";
 import { loadProvider, loadWallets } from "./utils";
 import deployed from "./deployed.json";
 import { u64 } from "@solana/spl-token";
 
+const TICK_SPACING = 32;
+
 async function main() {
   const wallets = loadWallets();
 
-  if (!wallets.poolCreatorAuthKeypair) {
-    throw new Error("Please provide pool_creator_authority_wallet wallet");
+  if (!wallets.userKeypair) {
+    throw new Error("Please provide user_wallet wallet");
   }
 
-  const { ctx } = loadProvider(wallets.poolCreatorAuthKeypair);
+  const { ctx } = loadProvider(wallets.userKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(
@@ -32,28 +35,49 @@ async function main() {
     return;
   }
 
-  const whirlpoolKey1 = new PublicKey(
-    "Bfb9AgpqK6y6wxVQZSryXbRDnWKc6dwjAHmnL9sXuXNB"
+  // renec - reusd
+  const renecPubkey = new PublicKey(
+    "So11111111111111111111111111111111111111112"
+  );
+  const reusdPubkey = new PublicKey(
+    "Afy8qEgeJykFziRwiCk6tnBbd3uzxMoEqn2GTNCyGN7P"
+  );
+  const revndPubkey = new PublicKey(
+    "DSodi59U9ZWRnVgP94VNnKamFybYpsqYj2iKL1jQF7Ag"
   );
 
-  const whirlpoolKey2 = new PublicKey(
-    "CYY6QDsFYqmJ2MtiS6EWbjnVR61EGWx89h9NfU7oK4Cw"
-  );
+  // Get pool info
+  const pool1Tokens = PoolUtil.orderMints(renecPubkey, reusdPubkey);
+  const pool2Tokens = PoolUtil.orderMints(reusdPubkey, revndPubkey);
+
+  // Get whirlpool 1: renec - reusd
+  const whirlpoolKey1 = PDAUtil.getWhirlpool(
+    ctx.program.programId,
+    new PublicKey(deployed.REDEX_CONFIG_PUB),
+    new PublicKey(pool1Tokens[0].toString()),
+    new PublicKey(pool1Tokens[1].toString()),
+    32
+  ).publicKey;
+
+  // get whirlpool 2: reusd - revnd
+  const whirlpoolKey2 = PDAUtil.getWhirlpool(
+    ctx.program.programId,
+    new PublicKey(deployed.REDEX_CONFIG_PUB),
+    new PublicKey(pool2Tokens[0].toString()),
+    new PublicKey(pool2Tokens[1].toString()),
+    32
+  ).publicKey;
+
+  // Get quote to swap
   const client = buildWhirlpoolClient(ctx);
   const whirlpool1 = await client.getPool(whirlpoolKey1, true);
-  const whirlpoolData1 = whirlpool1.getData();
-  console.log("pool 1 - tokenMintA: ", whirlpoolData1.tokenMintA.toString());
-  console.log("pool 1 - tokenMintB: ", whirlpoolData1.tokenMintB.toString());
-
   const whirlpool2 = await client.getPool(whirlpoolKey2, true);
-  const whirlpoolData2 = whirlpool2.getData();
 
-  console.log("pool 2 - tokenMintA: ", whirlpoolData2.tokenMintA.toString());
-  console.log("pool 2 - tokenMintB: ", whirlpoolData2.tokenMintB.toString());
-  const amount = new u64(1000);
+  const amount = new u64(100000);
+  // renec is the input token
   const quote1 = await swapQuoteByInputToken(
     whirlpool1,
-    whirlpoolData1.tokenMintB,
+    renecPubkey,
     amount,
     Percentage.fromFraction(1, 100),
     ctx.program.programId,
@@ -61,9 +85,10 @@ async function main() {
     true
   );
 
+  // reusd is the intermediate token
   const quote2 = await swapQuoteByInputToken(
     whirlpool2,
-    whirlpoolData2.tokenMintA,
+    reusdPubkey,
     quote1.estimatedAmountOut,
     Percentage.fromFraction(1, 100),
     ctx.program.programId,
@@ -71,76 +96,11 @@ async function main() {
     true
   );
 
-  const twoHopSwapQuote = twoHopSwapQuoteFromSwapQuotes(quote1, quote2);
+  // two hop swap
+  const tx = await client.twoHopSwap(quote1, whirlpool1, quote2, whirlpool2);
 
-  const oracleOne = PDAUtil.getOracle(
-    ctx.program.programId,
-    whirlpoolKey1
-  ).publicKey;
-  const oracleTwo = PDAUtil.getOracle(
-    ctx.program.programId,
-    whirlpoolKey2
-  ).publicKey;
-
-  const txBuilder = new TransactionBuilder(ctx.connection, ctx.wallet)
-
-  const [resolvedAtaOneA, resolvedAtaOneB, resolvedAtaTwoA, resolvedAtaTwoB] =
-    await resolveOrCreateATAs(
-      ctx.connection,
-      wallets.userKeypair.publicKey,
-      [
-        { tokenMint: whirlpoolData1.tokenMintA, wrappedSolAmountIn: ZERO },
-        { tokenMint: whirlpoolData1.tokenMintB, wrappedSolAmountIn: ZERO },
-        { tokenMint: whirlpoolData2.tokenMintA, wrappedSolAmountIn: ZERO },
-        { tokenMint: whirlpoolData2.tokenMintB, wrappedSolAmountIn: ZERO },
-      ],
-      () => ctx.fetcher.getAccountRentExempt()
-    );
-  const createATAInstructions = [];
-  const { address: tokenOwnerAccountOneA, ...tokenOwnerAccountOneAIx } =
-    resolvedAtaOneA;
-  const { address: tokenOwnerAccountOneB, ...tokenOwnerAccountOneBIx } =
-    resolvedAtaOneB;
-  const { address: tokenOwnerAccountTwoA, ...tokenOwnerAccountTwoAIx } =
-    resolvedAtaTwoA;
-  const { address: tokenOwnerAccountTwoB, ...tokenOwnerAccountTwoBIx } =
-    resolvedAtaTwoB;
-
-  createATAInstructions.push(tokenOwnerAccountOneAIx);
-  createATAInstructions.push(tokenOwnerAccountOneBIx);
-  createATAInstructions.push(tokenOwnerAccountTwoAIx);
-  createATAInstructions.push(tokenOwnerAccountTwoBIx);
-  if (createATAInstructions.length) {
-    console.log(`add: ${createATAInstructions.length} create ATAs account instructions`)
-    txBuilder.addInstructions(createATAInstructions);
-  }
-
-  const poolParams = {
-    whirlpoolOne: whirlpoolKey1,
-    whirlpoolTwo: whirlpoolKey2,
-    tokenOwnerAccountOneA: tokenOwnerAccountOneA,
-    tokenVaultOneA: whirlpoolData1.tokenVaultA,
-    tokenOwnerAccountOneB: tokenOwnerAccountOneB,
-    tokenVaultOneB: whirlpoolData1.tokenVaultB,
-    tokenOwnerAccountTwoA: tokenOwnerAccountTwoA,
-    tokenVaultTwoA: whirlpoolData2.tokenVaultA,
-    tokenOwnerAccountTwoB: tokenOwnerAccountTwoB,
-    tokenVaultTwoB: whirlpoolData2.tokenVaultB,
-    oracleOne,
-    oracleTwo,
-  };
-
-  const ix = WhirlpoolIx.twoHopSwapIx(ctx.program, {
-    ...twoHopSwapQuote,
-    ...poolParams,
-    tokenAuthority: wallets.userKeypair.publicKey,
-  });
-
-  const tx = await txBuilder.addInstruction(ix)
-    .addSigner(wallets.userKeypair)
-    .buildAndExecute();
-
-  console.log("transaction: ", tx);
+  const txHash = await tx.buildAndExecute();
+  console.log("txHash:", txHash);
 }
 
 main().catch((reason) => {

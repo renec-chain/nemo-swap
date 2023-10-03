@@ -1,5 +1,5 @@
 import { Percentage, TransactionBuilder } from "@orca-so/common-sdk";
-import { Address } from "@project-serum/anchor";
+import { Address, Wallet } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { WhirlpoolContext } from "./context";
 import { WhirlpoolClientImpl } from "./impl/whirlpool-client-impl";
@@ -13,6 +13,7 @@ import {
   WhirlpoolData,
 } from "./types/public";
 import { TokenAccountInfo, TokenInfo, WhirlpoolRewardInfo } from "./types/public/client-types";
+import { SwapQuote } from "./quotes/public";
 
 /**
  * Helper class to help interact with Whirlpool Accounts with a simpler interface.
@@ -113,6 +114,14 @@ export interface WhirlpoolClient {
    * @returns A transaction builder to resolve ATA for tokenA and tokenB if needed, and collect protocol fees for all pools
    */
   collectProtocolFeesForPools: (poolAddresses: Address[]) => Promise<TransactionBuilder>;
+
+  twoHopSwap(
+    swapInput1: SwapQuote,
+    whirlpool1: Whirlpool,
+    swapInput2: SwapQuote,
+    whirlpool2: Whirlpool,
+    wallet?: Wallet
+  ): Promise<TransactionBuilder>;
 }
 
 /**
