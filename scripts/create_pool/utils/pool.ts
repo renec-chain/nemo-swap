@@ -1,8 +1,11 @@
 import readline from "readline";
 import Decimal from "decimal.js";
 import config from "../config.json";
+import config_testnet from "../config-testnet.json";
 import { PoolUtil } from "@renec/redex-sdk";
 import { PoolInfo } from "./types";
+import { getConfig } from ".";
+require("dotenv").config();
 
 export async function askToConfirmPoolInfo(poolInfo: PoolInfo): Promise<void> {
   const rl = readline.createInterface({
@@ -59,7 +62,8 @@ export function checkTokenReversed(
 }
 
 export function getPoolInfo(poolIndex: number): PoolInfo {
-  let pool = config.POOLS[poolIndex];
+  const config = getConfig();
+  const pool = config.POOLS[poolIndex];
 
   const correctTokenOrder = PoolUtil.orderMints(
     pool.TOKEN_MINT_A,

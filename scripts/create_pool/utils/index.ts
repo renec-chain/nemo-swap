@@ -2,7 +2,7 @@ import { PublicKey, Connection, Keypair, Commitment } from "@solana/web3.js";
 import { AnchorProvider, Wallet, BN } from "@project-serum/anchor";
 import { WhirlpoolContext, TokenInfo } from "@renec/redex-sdk";
 import { NATIVE_MINT, u64 } from "@solana/spl-token";
-import config from "../config.json";
+require("dotenv").config();
 
 export const ZERO_BN = new BN(0);
 export const ONE_SOL = 1000000000;
@@ -20,6 +20,7 @@ export const loadProvider = function (payerKeypair: Keypair) {
   const wallets = loadWallets();
   const commitment: Commitment = "confirmed";
 
+  const config = getConfig();
   const connection = new Connection(config.RPC_ENDPOINT_URL, { commitment });
   const wallet = new Wallet(payerKeypair);
   const provider = new AnchorProvider(connection, wallet, {});
@@ -43,6 +44,7 @@ export const ROLES = {
   REWARD_EMISSIONS_SUPPER_AUTH: "reward_emissions_supper_authority_wallet",
   POOL_CREATOR_AUTH: "pool_creator_authority_wallet",
   USER: "user_wallet",
+  TOKEN_MINT_AUTH: "token_mint_authority_wallet",
 };
 
 type RoleType = (typeof ROLES)[keyof typeof ROLES];
@@ -107,3 +109,11 @@ export enum TickSpacing {
   SixtyFour = 64,
   Standard = 128,
 }
+
+export const getConfig = () => {
+  if (process.env.IS_TESTNET && process.env.IS_TESTNET === "true") {
+    return require("../config-testnet.json");
+  } else {
+    return require("../config.json");
+  }
+};
