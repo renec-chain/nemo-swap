@@ -1,15 +1,18 @@
 import { buildWhirlpoolClient, PriceMath } from "@renec/redex-sdk";
-import { loadProvider, delay, getTokenMintInfo, loadWallets } from "./utils";
+import {
+  loadProvider,
+  delay,
+  getTokenMintInfo,
+  loadWallets,
+  ROLES,
+} from "./utils";
 import deployed from "./deployed.json";
 
 async function main() {
-  const wallets = loadWallets();
+  const wallets = loadWallets([ROLES.USER]);
+  const userKeypair = wallets[ROLES.USER];
 
-  if (!wallets.userKeypair) {
-    throw new Error("Please provide user_wallet wallet");
-  }
-
-  const { ctx } = loadProvider(wallets.userKeypair);
+  const { ctx } = loadProvider(userKeypair);
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(
       "ReDEX Pool Config is not found. Please run `npm run 00-create-pool-config` ."

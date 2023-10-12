@@ -5,7 +5,7 @@ import {
   WhirlpoolIx,
   toTx,
 } from "@renec/redex-sdk";
-import { loadProvider, getTokenMintInfo, loadWallets } from "./utils";
+import { loadProvider, getTokenMintInfo, loadWallets, ROLES } from "./utils";
 import config from "./config.json";
 import deployed from "./deployed.json";
 import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";
@@ -20,17 +20,12 @@ async function main() {
   const discountFeeRate = 5000;
   const discountTokenRateOverTokenA = new BN(2000000000); // 1 NSF = 2 token A
 
-  const wallets = loadWallets();
+  const wallets = loadWallets([ROLES.POOL_CREATOR_AUTH]);
+  const poolCreatorAuthKeypair = wallets[ROLES.POOL_CREATOR_AUTH];
 
-  if (!wallets.poolCreatorAuthKeypair) {
-    throw new Error("Please provide pool_creator_authority_wallet wallet");
-  }
-  console.log(
-    "pool creator: ",
-    wallets.poolCreatorAuthKeypair.publicKey.toString()
-  );
+  console.log("pool creator: ", poolCreatorAuthKeypair.publicKey.toString());
 
-  const { ctx } = loadProvider(wallets.poolCreatorAuthKeypair);
+  const { ctx } = loadProvider(poolCreatorAuthKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(
@@ -79,7 +74,7 @@ async function main() {
             whirlpool: whirlpool.getAddress(),
             discountToken: discountTokenMint,
             whirlpoolDiscountInfoPDA,
-            poolCreatorAuthority: wallets.poolCreatorAuthKeypair.publicKey,
+            poolCreatorAuthority: poolCreatorAuthKeypair.publicKey,
             tokenConversionRate: tokenConversionRate,
             discountFeeRate: discountFeeRate,
             discountTokenRateOverTokenA: discountTokenRateOverTokenA,

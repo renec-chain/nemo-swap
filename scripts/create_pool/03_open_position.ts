@@ -6,7 +6,7 @@ import {
   increaseLiquidityQuoteByInputTokenWithParams,
 } from "@renec/redex-sdk";
 import { DecimalUtil, Percentage } from "@orca-so/common-sdk";
-import { loadProvider, getTokenMintInfo, loadWallets } from "./utils";
+import { loadProvider, getTokenMintInfo, loadWallets, ROLES } from "./utils";
 import Decimal from "decimal.js";
 import config from "./config.json";
 import deployed from "./deployed.json";
@@ -14,12 +14,8 @@ import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";
 import { u64 } from "@solana/spl-token";
 
 async function main() {
-  const wallets = loadWallets();
-
-  if (!wallets.userKeypair) {
-    throw new Error("Please provide user_wallet wallet");
-  }
-  console.log("user: ", wallets.userKeypair.publicKey.toString());
+  const wallets = loadWallets([ROLES.USER]);
+  const userKeypair = wallets[ROLES.USER];
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(
@@ -28,7 +24,7 @@ async function main() {
     return;
   }
 
-  const { ctx } = loadProvider(wallets.userKeypair);
+  const { ctx } = loadProvider(userKeypair);
 
   const REDEX_CONFIG_PUB = new PublicKey(deployed.REDEX_CONFIG_PUB);
   const client = buildWhirlpoolClient(ctx);

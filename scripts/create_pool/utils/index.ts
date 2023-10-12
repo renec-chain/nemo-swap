@@ -36,59 +36,32 @@ export const loadProvider = function (payerKeypair: Keypair) {
     wallets,
   };
 };
+export const ROLES = {
+  DEPLOYER: "deployer_wallet",
+  COLLECT_PROTOCOL_FEES_AUTH: "collect_protocol_fees_authority_wallet",
+  FEE_AUTH: "fee_authority_wallet",
+  REWARD_EMISSIONS_SUPPER_AUTH: "reward_emissions_supper_authority_wallet",
+  POOL_CREATOR_AUTH: "pool_creator_authority_wallet",
+  USER: "user_wallet",
+};
 
-export const loadWallets = function (): NemoswapAccounts {
-  let deployerKeypair: Keypair | undefined = undefined;
-  let collectProtocolFeesAuthKeypair: Keypair | undefined = undefined;
-  let feeAuthKeypair: Keypair | undefined = undefined;
-  let rewardEmissionSupperAuthKeypair: Keypair | undefined = undefined;
-  let poolCreatorAuthKeypair: Keypair | undefined = undefined;
-  let userKeypair: Keypair | undefined = undefined;
+type RoleType = (typeof ROLES)[keyof typeof ROLES];
+export type Account = { [key in RoleType]?: Keypair };
 
-  try {
-    const deployerWallet = require("../../.wallets/deployer_wallet.json");
-    deployerKeypair = Keypair.fromSecretKey(Uint8Array.from(deployerWallet));
-  } catch {}
-
-  try {
-    const collectProtocolFeesAuthWallet = require("../../.wallets/collect_protocol_fees_authority_wallet.json");
-    collectProtocolFeesAuthKeypair = Keypair.fromSecretKey(
-      Uint8Array.from(collectProtocolFeesAuthWallet)
-    );
-  } catch {}
-
-  try {
-    const feeAuthWallet = require("../../.wallets/fee_authority_wallet.json");
-    feeAuthKeypair = Keypair.fromSecretKey(Uint8Array.from(feeAuthWallet));
-  } catch {}
-
-  try {
-    const rewardEmissionSupperAuthWallet = require("../../.wallets/reward_emissions_supper_authority_wallet.json");
-    rewardEmissionSupperAuthKeypair = Keypair.fromSecretKey(
-      Uint8Array.from(rewardEmissionSupperAuthWallet)
-    );
-  } catch {}
-
-  try {
-    const poolCreatorAuthWallet = require("../../.wallets/pool_creator_authority_wallet.json");
-    poolCreatorAuthKeypair = Keypair.fromSecretKey(
-      Uint8Array.from(poolCreatorAuthWallet)
-    );
-  } catch {}
-
-  try {
-    const userWallet = require("../../.wallets/user_wallet.json");
-    userKeypair = Keypair.fromSecretKey(Uint8Array.from(userWallet));
-  } catch {}
-
-  return {
-    deployerKeypair,
-    collectProtocolFeesAuthKeypair,
-    feeAuthKeypair,
-    rewardEmissionSupperAuthKeypair,
-    poolCreatorAuthKeypair,
-    userKeypair,
-  };
+export const loadWallets = (
+  requiredRoles: RoleType[] = Object.values(ROLES) as RoleType[]
+): Account => {
+  return requiredRoles.reduce<Account>((acc, role) => {
+    try {
+      const walletData = require(`../../.wallets/${role}.json`);
+      acc[role] = Keypair.fromSecretKey(Uint8Array.from(walletData));
+    } catch (error) {
+      throw new Error(
+        `Failed to load the wallet for role: ${role}. Reason: ${error.message}`
+      );
+    }
+    return acc;
+  }, {} as Account);
 };
 
 export const getNativeMintInfo = async function () {
