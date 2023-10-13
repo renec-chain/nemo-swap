@@ -72,7 +72,6 @@ export function getPoolInfo(poolIndex: number): PoolInfo {
 
   let mintAPub = correctTokenOrder[0].toString();
   let mintBPub = correctTokenOrder[1].toString();
-  console.log({ mintAPub, mintBPub });
 
   // Check if pool is reversed
   let isTokenReversed = checkTokenReversed(
