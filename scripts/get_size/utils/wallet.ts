@@ -6,7 +6,7 @@ import {
   web3,
 } from "@project-serum/anchor";
 import { TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
-import { PublicKey, Keypair, Connection } from "@solana/web3.js";
+import { PublicKey, Keypair, Connection, Transaction } from "@solana/web3.js";
 
 export const fundSolAccount = async (connection: Connection, to: PublicKey) => {
   await connection.requestAirdrop(to, 1 * 10 ** 9);
@@ -17,3 +17,10 @@ export const genNewWallet = async (connection: Connection): Promise<Wallet> => {
   await fundSolAccount(connection, newKeypair.publicKey);
   return new Wallet(newKeypair);
 };
+
+export interface CustomWallet {
+  signTransaction(tx: Transaction): Promise<Transaction>;
+  signAllTransactions(txs: Transaction[]): Promise<Transaction[]>;
+  publicKey: PublicKey;
+  payer: Keypair;
+}
