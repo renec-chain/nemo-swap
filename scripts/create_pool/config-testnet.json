@@ -34,6 +34,42 @@
       "SLIPPAGE": "100",
       "INPUT_MINT": "7nBCWxXw5W73cDQkZ1EkTwApkSmbtCoYcqurBfPMQVr4",
       "INPUT_AMOUNT": "100"
+    },
+    {
+      "TOKEN_MINT_A": "8JJU5PZpvFUjyRFnv3SirA29D7Npof7pevLjB9RgM4H9",
+      "TOKEN_MINT_B": "A87iWdfMEkkD59A5T8gtRdCuBwBskjFfmr9KjcgfvsPq",
+      "TICK_SPACING": 32,
+      "OPEN_POSITION": true,
+      "INIT_AMOUNT_B_PER_A": "3.0",
+      "LOWER_B_PER_A_PRICE": "0.0003",
+      "UPPER_B_PER_A_PRICE": "300",
+      "SLIPPAGE": "0.1",
+      "INPUT_MINT": "8JJU5PZpvFUjyRFnv3SirA29D7Npof7pevLjB9RgM4H9",
+      "INPUT_AMOUNT": "100"
+    },
+    {
+      "TOKEN_MINT_A": "4PozLu4GToP2UbUgA1AmLFuNmoKkwJevLaMF9w4rK43G",
+      "TOKEN_MINT_B": "8JJU5PZpvFUjyRFnv3SirA29D7Npof7pevLjB9RgM4H9",
+      "TICK_SPACING": 32,
+      "OPEN_POSITION": true,
+      "INIT_AMOUNT_B_PER_A": "2.0",
+      "LOWER_B_PER_A_PRICE": "0.0002",
+      "UPPER_B_PER_A_PRICE": "200",
+      "SLIPPAGE": "0.1",
+      "INPUT_MINT": "8JJU5PZpvFUjyRFnv3SirA29D7Npof7pevLjB9RgM4H9",
+      "INPUT_AMOUNT": "100"
+    },
+    {
+      "TOKEN_MINT_A": "So11111111111111111111111111111111111111112",
+      "TOKEN_MINT_B": "4PozLu4GToP2UbUgA1AmLFuNmoKkwJevLaMF9w4rK43G",
+      "TICK_SPACING": 32,
+      "OPEN_POSITION": true,
+      "INIT_AMOUNT_B_PER_A": "2.0",
+      "LOWER_B_PER_A_PRICE": "0.0002",
+      "UPPER_B_PER_A_PRICE": "200",
+      "SLIPPAGE": "0.1",
+      "INPUT_MINT": "So11111111111111111111111111111111111111112",
+      "INPUT_AMOUNT": "0.2"
     }
   ]
 }

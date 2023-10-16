@@ -15,17 +15,12 @@ import {
   WhirlpoolClient,
   buildWhirlpoolClient,
   swapQuoteByInputToken,
-  swapWithFeeDiscountQuoteByInputToken,
 } from "@renec/redex-sdk";
-import {
-  getConfig,
-  loadProvider,
-  loadWallets,
-  ROLES,
-} from "../create_pool/utils";
+import { loadProvider, loadWallets, ROLES } from "../create_pool/utils";
 import {
   CustomWallet,
   genNewWallet,
+  getTxSize,
   getWhirlPool,
   mintToByAuthority,
 } from "./utils";
@@ -33,76 +28,57 @@ import { getPoolInfo } from "../create_pool/utils/pool";
 import {
   TwoHopTokens,
   executeGaslessTx,
+  getOtherTokenOfPool,
   getTwoHopSwapTokens,
 } from "./utils/swap";
 import { u64 } from "@solana/spl-token";
-import {
-  GaslessDapp,
-  GaslessTransaction,
-  Wallet,
-  sendToGasless,
-} from "@renec-foundation/gasless-sdk";
-import { Address } from "@project-serum/anchor";
+import { GaslessDapp, GaslessTransaction } from "@renec-foundation/gasless-sdk";
+import { Address, Wallet } from "@project-serum/anchor";
 
-const SLIPPAGE = Percentage.fromFraction(1, 100);
+const SLIPPAGE = Percentage.fromFraction(50, 100);
 
 async function main() {
-  const config = getConfig();
-
   const wallets = loadWallets([ROLES.USER]);
-  const userAuth = wallets[ROLES.USER];
 
+  const userTokenAuth = wallets[ROLES.USER];
   // Generate new wallets for testing
-  const { ctx } = loadProvider(userAuth);
+  const { ctx } = loadProvider(userTokenAuth);
   const client = buildWhirlpoolClient(ctx);
-  const newWallet = await genNewWallet(ctx.connection);
-  console.log("new wallet:", newWallet.publicKey.toString());
 
-  const poolInfo0 = getPoolInfo(0);
-  const poolInfo1 = getPoolInfo(1);
+  const newWallet = await genNewWallet(ctx.connection);
+
+  const poolInfo0 = getPoolInfo(0); // renec - reusd
+  const poolInfo1 = getPoolInfo(1); // reusd - revnd
+  const poolInfo2 = getPoolInfo(2); // rebtc - reeth
+  const poolInfo3 = getPoolInfo(3); // revnd - rebtc
+  const poolInfo4 = getPoolInfo(4); // revnd - renec
 
   const pool0 = await getWhirlPool(client, poolInfo0);
   const pool1 = await getWhirlPool(client, poolInfo1);
+  const pool2 = await getWhirlPool(client, poolInfo2);
+  const pool3 = await getWhirlPool(client, poolInfo3);
+  const pool4 = await getWhirlPool(client, poolInfo4);
 
-  // GEt swap tokens
-  const twoHopTokens = getTwoHopSwapTokens(pool0, pool1);
-
-  // await mintToByAuthority(
-  //   ctx.provider,
-  //   new PublicKey(twoHopTokens.pool2OtherToken),
-  //   newWallet.publicKey,
-  //   0
+  // tokens to tokens
+  // await swapThreeHops(
+  //   "tokens to tokens",
+  //   client,
+  //   pool0,
+  //   pool3,
+  //   pool2,
+  //   [0, 2],
+  //   [],
+  //   newWallet
   // );
-  // Get swap quote
-  const amount = new u64(10);
-  const quote1 = await swapWithFeeDiscountQuoteByInputToken(
-    pool0,
-    new PublicKey(config.DISCOUNT_TOKEN),
-    twoHopTokens.pool1OtherToken,
-    amount,
-    SLIPPAGE,
-    ctx.program.programId,
-    ctx.fetcher,
-    true
-  );
 
-  const quote2 = await swapQuoteByInputToken(
-    pool1,
-    twoHopTokens.intermidaryToken,
-    quote1.estimatedAmountOut,
-    SLIPPAGE,
-    ctx.program.programId,
-    ctx.fetcher,
-    true
-  );
-
-  // swap two hops
-  await swapTwoHops(
-    "two hops - 0 ",
+  await swapThreeHops(
+    "renec as intermediary",
     client,
-    pool0,
+    pool3,
     pool1,
+    pool0,
     [0, 1, 2],
+    [1],
     newWallet
   );
 }
@@ -111,17 +87,18 @@ main().catch((reason) => {
   console.log("ERROR:", reason);
 });
 
-const swapTwoHops = async (
+const swapThreeHops = async (
   testCase: string,
   client: WhirlpoolClient,
   pool0: Whirlpool,
   pool1: Whirlpool,
+  pool2: Whirlpool,
   preCreateTokenAccountTwoHops: number[],
-  walletKeypair: Keypair,
+  createOneHopTokenAccount: number[],
+  wallet: Keypair,
   executeGasless = false
 ) => {
   console.log("\n\n Test case: ", testCase);
-  const wallet = new Wallet(walletKeypair);
   // Swap route: reusd -> revnd -> rebtc -> reeth
   const twoHopsSwapToken = getTwoHopSwapTokens(pool0, pool1); // reusd - revnd - rebtc
   await createTokenAccounts(
@@ -135,8 +112,27 @@ const swapTwoHops = async (
     wallet.publicKey
   );
 
+  const otherPool2Token = getOtherTokenOfPool(
+    pool2,
+    new PublicKey(twoHopsSwapToken.pool2OtherToken)
+  );
+
+  await createTokenAccounts(
+    client,
+    [twoHopsSwapToken.pool2OtherToken, otherPool2Token],
+    createOneHopTokenAccount,
+    wallet.publicKey
+  );
+
   // Swap three hops
-  const tx = await getTwoHopSwapIx(client, pool0, pool1, wallet);
+  const tx = await getSwapThreeHopsIxs(
+    client,
+    pool0,
+    pool1,
+    pool2,
+    twoHopsSwapToken,
+    wallet
+  );
 
   try {
     console.log("tx size: ", await tx.txnSize());
@@ -148,7 +144,7 @@ const swapTwoHops = async (
   const dappUtil = await GaslessDapp.new(client.getContext().connection);
   const gaslessTxn = GaslessTransaction.fromTransactionBuilder(
     client.getContext().connection,
-    wallet as CustomWallet,
+    new Wallet(wallet) as CustomWallet,
     tx.compressIx(true),
     dappUtil
   );
@@ -157,14 +153,14 @@ const swapTwoHops = async (
 };
 
 // utils function
-const getTwoHopSwapIx = async (
+const getSwapThreeHopsIxs = async (
   client: WhirlpoolClient,
   pool0: Whirlpool,
   pool1: Whirlpool,
-  wallet: Wallet
+  pool2: Whirlpool,
+  twoHopTokens: TwoHopTokens,
+  wallet: Keypair
 ): Promise<TransactionBuilder> => {
-  const twoHopTokens = getTwoHopSwapTokens(pool0, pool1);
-
   const amount = new u64(10);
   const quote1 = await swapQuoteByInputToken(
     pool0,
@@ -189,7 +185,30 @@ const getTwoHopSwapIx = async (
   console.log("quote2: ", quote2.estimatedAmountOut.toString());
 
   // two hop swap
-  let twoHopTx = await client.twoHopSwap(quote1, pool0, quote2, pool1, wallet);
+  let twoHopTx = await client.twoHopSwap(
+    quote1,
+    pool0,
+    quote2,
+    pool1,
+    new Wallet(wallet)
+  );
+
+  // Append a one hop swap
+  const intermediaryToken2 = new PublicKey(twoHopTokens.pool2OtherToken);
+  const otherPool3Token = getOtherTokenOfPool(pool2, intermediaryToken2);
+
+  const quote3 = await swapQuoteByInputToken(
+    pool2,
+    intermediaryToken2,
+    quote2.estimatedAmountOut,
+    SLIPPAGE,
+    client.getContext().program.programId,
+    client.getContext().fetcher,
+    true
+  );
+  console.log("quote3: ", quote3.estimatedAmountOut.toString());
+  const oneHopTx = await pool2.swap(quote3, wallet.publicKey);
+  twoHopTx.addInstruction(oneHopTx.compressIx(true));
 
   return twoHopTx;
 };

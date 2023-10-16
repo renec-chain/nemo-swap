@@ -14,7 +14,7 @@ import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";
 import { u64 } from "@solana/spl-token";
 
 async function main() {
-  const POOL_INDEX = 1;
+  const POOL_INDEX = 4;
   const wallets = loadWallets([ROLES.USER]);
   const userKeypair = wallets[ROLES.USER];
 

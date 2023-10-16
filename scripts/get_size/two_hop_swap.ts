@@ -15,15 +15,22 @@ import {
   swapQuoteByInputToken,
 } from "@renec/redex-sdk";
 import { loadProvider, loadWallets, ROLES } from "../create_pool/utils";
-import { CustomWallet, genNewWallet, getWhirlPool } from "./utils";
+import {
+  CustomWallet,
+  genNewWallet,
+  getWhirlPool,
+  mintToByAuthority,
+} from "./utils";
 import { getPoolInfo } from "../create_pool/utils/pool";
-import { getTwoHopSwapTokens } from "./utils/swap";
+import { executeGaslessTx, getTwoHopSwapTokens } from "./utils/swap";
 import { u64 } from "@solana/spl-token";
 import {
   GaslessDapp,
   GaslessTransaction,
   sendToGasless,
 } from "@renec-foundation/gasless-sdk";
+import { exec } from "mz/child_process";
+import { Wallet } from "@project-serum/anchor";
 
 const SLIPPAGE = Percentage.fromFraction(1, 100);
 
@@ -35,9 +42,8 @@ async function main() {
   const { ctx } = loadProvider(tokenMintAuth);
   const client = buildWhirlpoolClient(ctx);
 
-  const newWallet = await genNewWallet(ctx.connection);
-
-  console.log("new wallet:", newWallet.publicKey.toString());
+  const newWalletKeypair = await genNewWallet(ctx.connection);
+  console.log("new wallet:", newWalletKeypair.publicKey.toString());
 
   const poolInfo0 = getPoolInfo(0);
   const poolInfo1 = getPoolInfo(1);
@@ -46,7 +52,21 @@ async function main() {
   const pool1 = await getWhirlPool(client, poolInfo1);
 
   // GEt swap tokens
-  const twoHopTokens = getTwoHopSwapTokens(poolInfo0, poolInfo1);
+  const twoHopTokens = getTwoHopSwapTokens(pool0, pool1);
+
+  // await mintToByAuthority(
+  //   ctx.provider,
+  //   new PublicKey(twoHopTokens.intermidaryToken),
+  //   newWallet.publicKey,
+  //   0
+  // );
+  // await mintToByAuthority(
+  //   ctx.provider,
+  //   new PublicKey(twoHopTokens.pool2OtherToken),
+  //   newWallet.publicKey,
+  //   0
+  // );
+
   const amount = new u64(100);
   const quote1 = await swapQuoteByInputToken(
     pool0,
@@ -58,10 +78,6 @@ async function main() {
     true
   );
 
-  console.log("quote1:", quote1);
-  console.log("intermidaryToken:", twoHopTokens.intermidaryToken);
-  console.log("pool2 other token:", twoHopTokens.pool2OtherToken);
-  console.log("pool1 other token:", quote1.estimatedAmountOut.toNumber());
   const quote2 = await swapQuoteByInputToken(
     pool1,
     twoHopTokens.intermidaryToken,
@@ -71,53 +87,23 @@ async function main() {
     ctx.fetcher,
     true
   );
-  console.log("quote2:", quote2);
 
   // two hop swap
-  const tx = await client.twoHopSwap(quote1, pool0, quote2, pool1, newWallet);
+  const wallet = new Wallet(newWalletKeypair);
+  const tx = await client.twoHopSwap(quote1, pool0, quote2, pool1, wallet);
 
-  const rawSize = await tx.txnSize();
-  console.log("raw size:", rawSize);
-
-  const buildTx = await tx.build();
-  const buildSize = buildTx.transaction.serialize({
-    verifySignatures: false,
-    requireAllSignatures: false,
-  }).length;
-  console.log("build size:", buildSize);
-
-  process.exit(0);
   // Construct gasless txn
   const dappUtil = await GaslessDapp.new(ctx.connection);
   const gaslessTxn = GaslessTransaction.fromTransactionBuilder(
     ctx.connection,
-    newWallet as CustomWallet,
+    wallet as CustomWallet,
     tx.compressIx(true),
     dappUtil
   );
 
-  // const txId = gaslessTxn.asyncBuildAndExecute((error: any, txId: string) => {
-  //   if (error) {
-  //     console.log("error:", error);
-  //   } else {
-  //     console.log("txId:", txId);
-  //   }
-  // });
-
-  const transaction = await gaslessTxn.build();
-
-  const txSize = transaction.serialize({
-    verifySignatures: false,
-    requireAllSignatures: false,
-  }).length;
-
-  console.log("Tx size: ", txSize);
+  await executeGaslessTx(gaslessTxn, true);
 }
 
 main().catch((reason) => {
   console.log("ERROR:", reason);
 });
-
-const txSize = async (connection: Connection) => {
-  let recentBlockhash = await connection.getLatestBlockhash();
-};

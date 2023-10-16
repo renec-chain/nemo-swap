@@ -7,7 +7,7 @@ import deployed from "./deployed.json";
 import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";
 
 async function main() {
-  const POOL_INDEX = 1;
+  const POOL_INDEX = 4;
   const wallets = loadWallets([ROLES.POOL_CREATOR_AUTH]);
   const poolCreatorAuthKeypair = wallets[ROLES.POOL_CREATOR_AUTH];
 

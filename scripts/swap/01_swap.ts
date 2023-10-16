@@ -9,19 +9,18 @@ import {
   loadProvider,
   getTokenMintInfo,
   loadWallets,
+  ROLES,
 } from "../create_pool/utils";
 import deployed from "../create_pool/deployed.json";
 import { askToConfirmPoolInfo, getPoolInfo } from "../create_pool/utils/pool";
 import { u64 } from "@solana/spl-token";
 
 async function main() {
-  const wallets = loadWallets();
+  const wallets = loadWallets([ROLES.USER]);
 
-  if (!wallets.poolCreatorAuthKeypair) {
-    throw new Error("Please provide pool_creator_authority_wallet wallet");
-  }
+  const userWallet = wallets[ROLES.USER];
 
-  const { ctx } = loadProvider(wallets.poolCreatorAuthKeypair);
+  const { ctx } = loadProvider(userWallet);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(
@@ -35,7 +34,7 @@ async function main() {
   );
   const client = buildWhirlpoolClient(ctx);
 
-  let poolInfo = getPoolInfo(0);
+  let poolInfo = getPoolInfo(4);
   await askToConfirmPoolInfo(poolInfo);
   const mintAPub = new PublicKey(poolInfo.tokenMintA);
   const mintBPub = new PublicKey(poolInfo.tokenMintB);
@@ -60,14 +59,14 @@ async function main() {
       whirlpool,
       whirlpoolData.tokenMintA,
       new u64(100),
-      Percentage.fromFraction(1, 100),
+      Percentage.fromFraction(50, 100),
       ctx.program.programId,
       ctx.fetcher,
       true
     );
     console.log(quote);
-    const tx = await whirlpool.swap(quote, wallets.userKeypair.publicKey);
-    tx.addSigner(wallets.userKeypair);
+    const tx = await whirlpool.swap(quote, userWallet.publicKey);
+    tx.addSigner(userWallet);
     const sig = await tx.buildAndExecute();
     console.log(sig);
   }

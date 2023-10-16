@@ -23,7 +23,11 @@ export async function mintToByAuthority(
 ): Promise<string> {
   const tx = new web3.Transaction();
 
+  if (mint.equals(new PublicKey(WRENEC))) {
+    return "native token, skip";
+  }
   const userTokenAccount = await deriveATA(destination, mint);
+  const srcTokenAccount = await deriveATA(provider.wallet.publicKey, mint);
 
   tx.add(
     Token.createAssociatedTokenAccountInstruction(
@@ -37,9 +41,9 @@ export async function mintToByAuthority(
   );
 
   tx.add(
-    Token.createMintToInstruction(
+    Token.createTransferInstruction(
       TOKEN_PROGRAM_ID,
-      mint,
+      srcTokenAccount,
       userTokenAccount,
       provider.wallet.publicKey,
       [],
@@ -49,3 +53,7 @@ export async function mintToByAuthority(
 
   return provider.sendAndConfirm(tx, [], { commitment: "confirmed" });
 }
+
+export const WRENEC = new web3.PublicKey(
+  "So11111111111111111111111111111111111111112"
+);
