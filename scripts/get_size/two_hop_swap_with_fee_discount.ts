@@ -13,9 +13,20 @@ import {
   PDAUtil,
   buildWhirlpoolClient,
   swapQuoteByInputToken,
+  swapWithFeeDiscountQuoteByInputToken,
 } from "@renec/redex-sdk";
-import { loadProvider, loadWallets, ROLES } from "../create_pool/utils";
-import { CustomWallet, genNewWallet, getWhirlPool } from "./utils";
+import {
+  getConfig,
+  loadProvider,
+  loadWallets,
+  ROLES,
+} from "../create_pool/utils";
+import {
+  CustomWallet,
+  genNewWallet,
+  getWhirlPool,
+  mintToByAuthority,
+} from "./utils";
 import { getPoolInfo } from "../create_pool/utils/pool";
 import { getTwoHopSwapTokens } from "./utils/swap";
 import { u64 } from "@solana/spl-token";
@@ -28,15 +39,15 @@ import {
 const SLIPPAGE = Percentage.fromFraction(1, 100);
 
 async function main() {
-  const wallets = loadWallets([ROLES.TOKEN_MINT_AUTH]);
+  const config = getConfig();
 
+  const wallets = loadWallets([ROLES.TOKEN_MINT_AUTH]);
   const tokenMintAuth = wallets[ROLES.TOKEN_MINT_AUTH];
+
   // Generate new wallets for testing
   const { ctx } = loadProvider(tokenMintAuth);
   const client = buildWhirlpoolClient(ctx);
-
   const newWallet = await genNewWallet(ctx.connection);
-
   console.log("new wallet:", newWallet.publicKey.toString());
 
   const poolInfo0 = getPoolInfo(0);
@@ -47,9 +58,21 @@ async function main() {
 
   // GEt swap tokens
   const twoHopTokens = getTwoHopSwapTokens(poolInfo0, poolInfo1);
+
+  // Generate discount token
+  const discountToken = new PublicKey(config.DISCOUNT_TOKEN);
+  await mintToByAuthority(
+    ctx.provider,
+    discountToken,
+    newWallet.publicKey,
+    10000
+  );
+
+  // Get swap quote
   const amount = new u64(100);
-  const quote1 = await swapQuoteByInputToken(
+  const quote1 = await swapWithFeeDiscountQuoteByInputToken(
     pool0,
+    new PublicKey(config.DISCOUNT_TOKEN),
     twoHopTokens.pool1OtherToken,
     amount,
     SLIPPAGE,
@@ -58,10 +81,6 @@ async function main() {
     true
   );
 
-  console.log("quote1:", quote1);
-  console.log("intermidaryToken:", twoHopTokens.intermidaryToken);
-  console.log("pool2 other token:", twoHopTokens.pool2OtherToken);
-  console.log("pool1 other token:", quote1.estimatedAmountOut.toNumber());
   const quote2 = await swapQuoteByInputToken(
     pool1,
     twoHopTokens.intermidaryToken,
@@ -71,10 +90,16 @@ async function main() {
     ctx.fetcher,
     true
   );
-  console.log("quote2:", quote2);
 
   // two hop swap
-  const tx = await client.twoHopSwap(quote1, pool0, quote2, pool1, newWallet);
+  const tx = await client.twoHopSwapWithFeeDiscount(
+    quote1,
+    pool0,
+    quote2,
+    pool1,
+    discountToken,
+    newWallet
+  );
 
   const rawSize = await tx.txnSize();
   console.log("raw size:", rawSize);

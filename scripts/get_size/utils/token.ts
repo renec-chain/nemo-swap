@@ -1,6 +1,12 @@
 import { AnchorProvider, BN, Provider, web3 } from "@project-serum/anchor";
-import { TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+  Token,
+} from "@solana/spl-token";
 import { PublicKey, Keypair, Connection } from "@solana/web3.js";
+import { deriveATA } from "@orca-so/common-sdk";
+import { createAssociatedTokenInstructionData } from "@renec-foundation/gasless-sdk";
 
 /**
  * Mints tokens to the specified destination token account.
@@ -11,21 +17,35 @@ import { PublicKey, Keypair, Connection } from "@solana/web3.js";
  */
 export async function mintToByAuthority(
   provider: AnchorProvider,
-  authority: Keypair,
   mint: PublicKey,
   destination: PublicKey,
   amount: number | BN
 ): Promise<string> {
   const tx = new web3.Transaction();
+
+  const userTokenAccount = await deriveATA(destination, mint);
+
+  tx.add(
+    Token.createAssociatedTokenAccountInstruction(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      mint,
+      userTokenAccount,
+      destination,
+      provider.wallet.publicKey
+    )
+  );
+
   tx.add(
     Token.createMintToInstruction(
       TOKEN_PROGRAM_ID,
       mint,
-      destination,
-      authority.publicKey,
+      userTokenAccount,
+      provider.wallet.publicKey,
       [],
       amount
     )
   );
-  return provider.sendAndConfirm(tx, [authority], { commitment: "confirmed" });
+
+  return provider.sendAndConfirm(tx, [], { commitment: "confirmed" });
 }

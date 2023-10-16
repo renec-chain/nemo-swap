@@ -14,7 +14,7 @@ import { BN } from "@project-serum/anchor";
 async function main() {
   // fixed input
   const discountTokenMint = new PublicKey(
-    "33TX1A6V23ZAKfnCZvtSyvdKDfUDeLafVvRHCdGBp8xG"
+    "J1ccfcMXCcQQUMS6vPquq7LaYLujuQX8AbxF5PHRKx8U"
   );
   const tokenConversionRate = 4000; // 10 Renec -> 6
   const discountFeeRate = 5000;
@@ -37,58 +37,56 @@ async function main() {
   const REDEX_CONFIG_PUB = new PublicKey(deployed.REDEX_CONFIG_PUB);
   const client = buildWhirlpoolClient(ctx);
 
-  for (let i = 0; i < config.POOLS.length; i++) {
-    let poolInfo = getPoolInfo(i);
-    await askToConfirmPoolInfo(poolInfo);
+  let poolInfo = getPoolInfo(1);
+  await askToConfirmPoolInfo(poolInfo);
 
-    const mintAPub = new PublicKey(poolInfo.tokenMintA);
-    const mintBPub = new PublicKey(poolInfo.tokenMintB);
-    const tokenMintA = await getTokenMintInfo(ctx, mintAPub);
-    const tokenMintB = await getTokenMintInfo(ctx, mintBPub);
+  const mintAPub = new PublicKey(poolInfo.tokenMintA);
+  const mintBPub = new PublicKey(poolInfo.tokenMintB);
+  const tokenMintA = await getTokenMintInfo(ctx, mintAPub);
+  const tokenMintB = await getTokenMintInfo(ctx, mintBPub);
 
-    if (tokenMintA && tokenMintB) {
-      console.log("===================================================");
-      console.log("token_a:", mintAPub.toBase58());
-      console.log("token_b:", mintBPub.toBase58());
+  if (tokenMintA && tokenMintB) {
+    console.log("===================================================");
+    console.log("token_a:", mintAPub.toBase58());
+    console.log("token_b:", mintBPub.toBase58());
 
-      const whirlpoolPda = PDAUtil.getWhirlpool(
-        ctx.program.programId,
-        REDEX_CONFIG_PUB,
-        mintAPub,
-        mintBPub,
-        poolInfo.tickSpacing
-      );
+    const whirlpoolPda = PDAUtil.getWhirlpool(
+      ctx.program.programId,
+      REDEX_CONFIG_PUB,
+      mintAPub,
+      mintBPub,
+      poolInfo.tickSpacing
+    );
 
-      try {
-        const whirlpool = await client.getPool(whirlpoolPda.publicKey);
-        if (whirlpool) {
-          const whirlpoolDiscountInfoPDA = PDAUtil.getWhirlpoolDiscountInfo(
-            ctx.program.programId,
-            whirlpool.getAddress(),
-            discountTokenMint
-          );
+    try {
+      const whirlpool = await client.getPool(whirlpoolPda.publicKey);
+      if (whirlpool) {
+        const whirlpoolDiscountInfoPDA = PDAUtil.getWhirlpoolDiscountInfo(
+          ctx.program.programId,
+          whirlpool.getAddress(),
+          discountTokenMint
+        );
 
-          const whirlpoolData = await whirlpool.refreshData();
-          const ix = WhirlpoolIx.initializePoolDiscountInfoIx(ctx.program, {
-            whirlpoolsConfig: whirlpoolData.whirlpoolsConfig,
-            whirlpool: whirlpool.getAddress(),
-            discountToken: discountTokenMint,
-            whirlpoolDiscountInfoPDA,
-            poolCreatorAuthority: poolCreatorAuthKeypair.publicKey,
-            tokenConversionRate: tokenConversionRate,
-            discountFeeRate: discountFeeRate,
-            discountTokenRateOverTokenA: discountTokenRateOverTokenA,
-          });
+        const whirlpoolData = await whirlpool.refreshData();
+        const ix = WhirlpoolIx.initializePoolDiscountInfoIx(ctx.program, {
+          whirlpoolsConfig: whirlpoolData.whirlpoolsConfig,
+          whirlpool: whirlpool.getAddress(),
+          discountToken: discountTokenMint,
+          whirlpoolDiscountInfoPDA,
+          poolCreatorAuthority: poolCreatorAuthKeypair.publicKey,
+          tokenConversionRate: tokenConversionRate,
+          discountFeeRate: discountFeeRate,
+          discountTokenRateOverTokenA: discountTokenRateOverTokenA,
+        });
 
-          let tx = toTx(ctx, ix);
-          const txHash = await tx.buildAndExecute();
+        let tx = toTx(ctx, ix);
+        const txHash = await tx.buildAndExecute();
 
-          console.log("Tx hash: ", txHash);
-          return;
-        }
-      } catch (e) {
-        throw new Error("failed to get pool info: " + e);
+        console.log("Tx hash: ", txHash);
+        return;
       }
+    } catch (e) {
+      throw new Error("failed to get pool info: " + e);
     }
   }
 }
