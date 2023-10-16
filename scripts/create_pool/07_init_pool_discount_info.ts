@@ -5,17 +5,22 @@ import {
   WhirlpoolIx,
   toTx,
 } from "@renec/redex-sdk";
-import { loadProvider, getTokenMintInfo, loadWallets, ROLES } from "./utils";
-import config from "./config.json";
+import {
+  loadProvider,
+  getTokenMintInfo,
+  loadWallets,
+  ROLES,
+  getConfig,
+} from "./utils";
 import deployed from "./deployed.json";
 import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";
 import { BN } from "@project-serum/anchor";
 
+const config = getConfig();
 async function main() {
   // fixed input
-  const discountTokenMint = new PublicKey(
-    "J1ccfcMXCcQQUMS6vPquq7LaYLujuQX8AbxF5PHRKx8U"
-  );
+  const discountTokenMint = new PublicKey(config.DISCOUNT_TOKEN);
+  const poolIndex = 2;
   const tokenConversionRate = 4000; // 10 Renec -> 6
   const discountFeeRate = 5000;
   const discountTokenRateOverTokenA = new BN(2000000000); // 1 NSF = 2 token A
@@ -37,7 +42,7 @@ async function main() {
   const REDEX_CONFIG_PUB = new PublicKey(deployed.REDEX_CONFIG_PUB);
   const client = buildWhirlpoolClient(ctx);
 
-  let poolInfo = getPoolInfo(1);
+  let poolInfo = getPoolInfo(poolIndex);
   await askToConfirmPoolInfo(poolInfo);
 
   const mintAPub = new PublicKey(poolInfo.tokenMintA);

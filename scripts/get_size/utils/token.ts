@@ -26,6 +26,7 @@ export async function mintToByAuthority(
   if (mint.equals(new PublicKey(WRENEC))) {
     return "native token, skip";
   }
+
   const userTokenAccount = await deriveATA(destination, mint);
   const srcTokenAccount = await deriveATA(provider.wallet.publicKey, mint);
 

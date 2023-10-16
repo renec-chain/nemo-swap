@@ -1,8 +1,10 @@
 import { Address } from "@project-serum/anchor";
 import { PoolInfo } from "../../create_pool/utils/types";
 import { GaslessTransaction } from "@renec-foundation/gasless-sdk";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { Whirlpool } from "@renec/redex-sdk";
+import { Instruction } from "@orca-so/common-sdk";
+export const MEMO_V2_PROGRAM_ID = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr";
 
 export type TwoHopTokens = {
   pool1OtherToken: Address;
@@ -92,4 +94,23 @@ export const executeGaslessTx = async (
       console.log("execute gasless tx fail: ", e);
     }
   }
+};
+
+export const getLogMemoIx = async (
+  from: PublicKey,
+  message: string
+): Promise<Instruction> => {
+  const transactionInstruction = new TransactionInstruction({
+    keys: [{ pubkey: from, isSigner: true, isWritable: false }],
+    data: Buffer.from(message),
+    programId: new PublicKey(MEMO_V2_PROGRAM_ID),
+  });
+
+  let ix = {
+    instructions: [transactionInstruction],
+    cleanupInstructions: [],
+    signers: [],
+  };
+
+  return ix;
 };
