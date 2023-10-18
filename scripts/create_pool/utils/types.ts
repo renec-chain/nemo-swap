@@ -14,7 +14,8 @@ export type PoolInfo = {
   isOpenPosition: boolean;
 
   discountTokenMint?: Address;
-  tokenConversionRate?: Decimal;
-  discountFeeRateOverTokenConvertedAmount?: Decimal;
+  tokenConversionRate?: number;
+  discountFeeRateOverTokenConvertedAmount?: number;
   discountTokenRateOverTokenA?: Decimal;
+  discountTokenRateOverTokenAExpo?: number;
 };
