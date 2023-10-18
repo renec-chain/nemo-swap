@@ -5,26 +5,29 @@ import {
   WhirlpoolIx,
   toTx,
 } from "@renec/redex-sdk";
+import { getRateOverToken } from "@renec/redex-sdk/src/impl/util";
 import { loadProvider, getTokenMintInfo, loadWallets } from "./utils";
 import config from "./config.json";
 import deployed from "./deployed.json";
 import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";
-import { u64 } from "@solana/spl-token";
+import { BN } from "@project-serum/anchor";
+import { FEE_DISCOUNT_DENOMINATOR } from "./utils/consts";
+import { DecimalUtil } from "@orca-so/common-sdk";
 
 async function main() {
   // fixed input
 
   const wallets = loadWallets();
 
+  // Check required roles
   if (!wallets.poolCreatorAuthKeypair) {
     throw new Error("Please provide pool_creator_authority_wallet wallet");
   }
-  console.log(
-    "pool creator: ",
-    wallets.poolCreatorAuthKeypair.publicKey.toString()
-  );
 
   const { ctx } = loadProvider(wallets.poolCreatorAuthKeypair);
+  if (!wallets.poolCreatorAuthKeypair) {
+    throw new Error("Please provide pool_creator_authority_wallet wallet");
+  }
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(
@@ -40,6 +43,17 @@ async function main() {
     let poolInfo = getPoolInfo(i);
     await askToConfirmPoolInfo(poolInfo);
 
+    if (
+      !poolInfo.discountTokenMint ||
+      !poolInfo.tokenConversionRate ||
+      !poolInfo.discountTokenRateOverTokenA ||
+      !poolInfo.discountTokenRateOverTokenAExpo
+    ) {
+      throw new Error(
+        "Please provide discountTokenMint, tokenConversionRate, discountTokenRateOverTokenA, discountTokenRateOverTokenAExpo"
+      );
+    }
+
     const mintAPub = new PublicKey(poolInfo.tokenMintA);
     const mintBPub = new PublicKey(poolInfo.tokenMintB);
     const tokenMintA = await getTokenMintInfo(ctx, mintAPub);
@@ -49,29 +63,6 @@ async function main() {
       console.log("===================================================");
       console.log("token_a:", mintAPub.toBase58());
       console.log("token_b:", mintBPub.toBase58());
-
-      if (!poolInfo.discountTokenMint) {
-        throw new Error("Please provide discount_token_mint");
-      }
-
-      if (!poolInfo.tokenConversionRate) {
-        throw new Error("Please provide token_conversion_rate");
-      }
-
-      if (!poolInfo.discountFeeRateOverTokenConvertedAmount) {
-        throw new Error(
-          "Please provide discount_fee_rate_over_token_converted_amount"
-        );
-      }
-
-      if (!poolInfo.discountTokenRateOverTokenA) {
-        throw new Error("Please provide discount_token_rate_over_token_a");
-      }
-
-      const discountTokenMint = new PublicKey(poolInfo.discountTokenMint);
-      const tokenConversionRate = poolInfo.tokenConversionRate;
-      const discountFeeRate = poolInfo.discountFeeRateOverTokenConvertedAmount;
-      const discountTokenRateOverTokenA = poolInfo.discountTokenRateOverTokenA;
 
       const whirlpoolPda = PDAUtil.getWhirlpool(
         ctx.program.programId,
@@ -84,6 +75,7 @@ async function main() {
       try {
         const whirlpool = await client.getPool(whirlpoolPda.publicKey);
         if (whirlpool) {
+          const discountTokenMint = new PublicKey(poolInfo.discountTokenMint);
           const whirlpoolDiscountInfoPDA = PDAUtil.getWhirlpoolDiscountInfo(
             ctx.program.programId,
             whirlpool.getAddress(),
@@ -97,9 +89,17 @@ async function main() {
             discountToken: discountTokenMint,
             whirlpoolDiscountInfoPDA,
             poolCreatorAuthority: wallets.poolCreatorAuthKeypair.publicKey,
-            tokenConversionRate: tokenConversionRate.mul(new u64(1000)),
-            discountFeeRate: discountFeeRate,
-            discountTokenRateOverTokenA: discountTokenRateOverTokenA,
+            tokenConversionRate:
+              poolInfo.tokenConversionRate * FEE_DISCOUNT_DENOMINATOR,
+            discountFeeRate:
+              poolInfo.discountFeeRateOverTokenConvertedAmount *
+              FEE_DISCOUNT_DENOMINATOR,
+            discountTokenRateOverTokenA: getRateOverToken(
+              whirlpool.getTokenAInfo(),
+              poolInfo.discountTokenRateOverTokenAExpo,
+              poolInfo.discountTokenRateOverTokenA
+            ),
+            expo: poolInfo.discountTokenRateOverTokenAExpo,
           });
 
           let tx = toTx(ctx, ix);
