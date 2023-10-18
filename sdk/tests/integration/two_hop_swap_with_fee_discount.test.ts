@@ -313,7 +313,7 @@ describe("two-hop swap with fee discounts", () => {
       discountTokenMint
     );
 
-    await tx.buildAndExecute();
+    await tx.tx.buildAndExecute();
 
     let postUserTokenBalance = await getUserTokenBalancesByTokenMints(ctx.wallet.publicKey, [
       inputToken,
