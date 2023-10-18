@@ -10,44 +10,52 @@ export async function askToConfirmPoolInfo(poolInfo: PoolInfo): Promise<void> {
     output: process.stdout,
   });
 
-  let message = "";
-  let optionalFields = "";
-  if (poolInfo.discountTokenMint)
-    optionalFields += `discount_token_mint: ${poolInfo.discountTokenMint}\n`;
-  if (poolInfo.tokenConversionRate)
-    optionalFields += `token_conversion_rate: ${poolInfo.tokenConversionRate.toFixed(
-      6
-    )}\n`;
-  if (poolInfo.discountFeeRateOverTokenConvertedAmount)
-    optionalFields += `discount_fee_rate_over_token_converted_amount: ${poolInfo.discountFeeRateOverTokenConvertedAmount.toFixed(
-      6
-    )}\n`;
-  if (poolInfo.discountTokenRateOverTokenA)
-    optionalFields += `discount_token_rate_over_token_a: ${poolInfo.discountTokenRateOverTokenA.toFixed(
-      6
-    )}\n`;
-  if (poolInfo.discountTokenRateOverTokenAExpo)
-    optionalFields += `discount_token_rate_over_token_a_expo: ${poolInfo.discountTokenRateOverTokenAExpo.toFixed(
-      6
-    )}\n`;
-
   await new Promise<void>((resolve) => {
     rl.question(
-      ` ${message} \n
-        This is your pool information: 
-          -----------------------------------------------
-          token_a: ${poolInfo.tokenMintA}  
-          token_b: ${poolInfo.tokenMintB} 
-          tick_spacing: ${poolInfo.tickSpacing} 
-          price_b_per_a: ${poolInfo.initialAmountBPerA.toFixed(6)} 
-          lower_b_per_a_price: ${poolInfo.lowerBPerAPrice.toFixed(6)} 
-          upper_b_per_a_price: ${poolInfo.upperBPerAPrice.toFixed(6)} 
-          slippage: ${poolInfo.slippage.toFixed(6)} 
-          input_mint: ${poolInfo.inputMint} 
-          input_amount: ${poolInfo.inputAmount.toFixed(6)}
-          ${optionalFields}
-          -----------------------------------------------
-          Do you want to proceed? (y/n) `,
+      `This is your pool information: 
+      -----------------------------------------------
+      token_a: ${poolInfo.tokenMintA}  
+      token_b: ${poolInfo.tokenMintB} 
+      tick_spacing: ${poolInfo.tickSpacing} 
+      price_b_per_a: ${poolInfo.initialAmountBPerA.toFixed(6)} 
+      lower_b_per_a_price: ${poolInfo.lowerBPerAPrice.toFixed(6)} 
+      upper_b_per_a_price: ${poolInfo.upperBPerAPrice.toFixed(6)} 
+      slippage: ${poolInfo.slippage.toFixed(6)} 
+      input_mint: ${poolInfo.inputMint} 
+      input_amount: ${poolInfo.inputAmount.toFixed(6)}
+      ${
+        poolInfo.discountTokenMint
+          ? `discount_token_mint: ${poolInfo.discountTokenMint}`
+          : ""
+      }
+      ${
+        poolInfo.tokenConversionRate
+          ? `token_conversion_rate: ${poolInfo.tokenConversionRate.toFixed(6)}`
+          : ""
+      }
+      ${
+        poolInfo.discountFeeRateOverTokenConvertedAmount
+          ? `discount_fee_rate_over_token_converted_amount: ${poolInfo.discountFeeRateOverTokenConvertedAmount.toFixed(
+              6
+            )}`
+          : ""
+      }
+      ${
+        poolInfo.discountTokenRateOverTokenA
+          ? `discount_token_rate_over_token_a: ${poolInfo.discountTokenRateOverTokenA.toFixed(
+              6
+            )}`
+          : ""
+      }
+      ${
+        poolInfo.discountTokenRateOverTokenAExpo
+          ? `discount_token_rate_over_token_a_expo: ${poolInfo.discountTokenRateOverTokenAExpo.toFixed(
+              6
+            )}`
+          : ""
+      }
+      -----------------------------------------------
+      Do you want to proceed? (y/n) `,
       (answer) => {
         rl.close();
         if (answer.toLowerCase() !== "y") {
@@ -110,13 +118,6 @@ export function getPoolInfo(poolIndex: number): PoolInfo {
   let correctLowerBPerAPrice = lowerBPerAPrice;
   let correctUpperBPerAPrice = upperBPerAPrice;
 
-  // Get correct pool info if tokens are reversed
-  if (isTokenReversed) {
-    correctInitialAmountBPerA = initialAmountBPerA.pow(-1);
-    correctLowerBPerAPrice = upperBPerAPrice.pow(-1);
-    correctUpperBPerAPrice = lowerBPerAPrice.pow(-1);
-  }
-
   const result: PoolInfo = {
     tokenMintA: mintAPub,
     tokenMintB: mintBPub,
@@ -131,24 +132,24 @@ export function getPoolInfo(poolIndex: number): PoolInfo {
   };
 
   // Check if optional fields are present and if so, add them to the result
-  if (pool.DISCOUNT_TOKEN_MINT) {
-    result.discountTokenMint = pool.DISCOUNT_TOKEN_MINT;
+  if (pool["DISCOUNT_TOKEN_MINT"]) {
+    result.discountTokenMint = pool["DISCOUNT_TOKEN_MINT"];
   }
-  if (pool.TOKEN_CONVERSION_RATE) {
-    result.tokenConversionRate = pool.TOKEN_CONVERSION_RATE;
+  if (pool["TOKEN_CONVERSION_RATE"]) {
+    result.tokenConversionRate = parseFloat(pool["TOKEN_CONVERSION_RATE"]);
   }
-  if (pool.DISCOUNT_RATE_OVER_TOKEN_CONVERTED_AMOUNT) {
-    result.discountFeeRateOverTokenConvertedAmount =
-      pool.DISCOUNT_RATE_OVER_TOKEN_CONVERTED_AMOUNT;
-  }
-  if (pool.DISCOUNT_TOKEN_RATE_OVER_TOKEN_A) {
-    result.discountTokenRateOverTokenA = new Decimal(
-      pool.DISCOUNT_TOKEN_RATE_OVER_TOKEN_A
+  if (pool["DISCOUNT_RATE_OVER_TOKEN_CONVERTED_AMOUNT"]) {
+    result.discountFeeRateOverTokenConvertedAmount = parseFloat(
+      pool["DISCOUNT_RATE_OVER_TOKEN_CONVERTED_AMOUNT"]
     );
   }
-
-  if (pool.EXPO) {
-    result.discountTokenRateOverTokenAExpo = pool.EXPO;
+  if (pool["DISCOUNT_TOKEN_RATE_OVER_TOKEN_A"]) {
+    result.discountTokenRateOverTokenA = new Decimal(
+      pool["DISCOUNT_TOKEN_RATE_OVER_TOKEN_A"]
+    );
+  }
+  if (pool["EXPO"]) {
+    result.discountTokenRateOverTokenAExpo = parseInt(pool["EXPO"]);
   }
 
   return result;

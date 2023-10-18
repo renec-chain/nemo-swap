@@ -93,15 +93,3 @@ export async function getTokenVaultAccountInfos(
   }
   return [vaultInfoA, vaultInfoB];
 }
-
-export function getRateOverToken(
-  token: TokenInfo,
-  expo: number,
-  rawRate: Decimal // rate = rawRate * 10^dY * 10^expo
-): u64 {
-  if (expo < 0) {
-    throw new Error("expo should be positive");
-  }
-
-  return DecimalUtil.toU64(rawRate, expo + token.decimals);
-}

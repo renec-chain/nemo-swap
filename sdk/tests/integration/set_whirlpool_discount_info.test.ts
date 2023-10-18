@@ -25,7 +25,7 @@ import {
 } from "../utils";
 
 import { arrayTickIndexToTickIndex, buildPosition, setupSwapTest } from "../utils/swap-test-utils";
-import { getRateOverToken } from "../../src/impl/util";
+import { getRateOverToken } from "../../src";
 import Decimal from "decimal.js";
 
 describe("set_fee_discount_info", () => {

@@ -9,19 +9,17 @@ import {
   loadProvider,
   getTokenMintInfo,
   loadWallets,
+  ROLES,
 } from "../create_pool/utils";
 import deployed from "../create_pool/deployed.json";
 import { askToConfirmPoolInfo, getPoolInfo } from "../create_pool/utils/pool";
 import { u64 } from "@solana/spl-token";
 
 async function main() {
-  const wallets = loadWallets();
+  const wallets = loadWallets([ROLES.USER]);
+  const userKeypair = wallets[ROLES.USER];
 
-  if (!wallets.poolCreatorAuthKeypair) {
-    throw new Error("Please provide pool_creator_authority_wallet wallet");
-  }
-
-  const { ctx } = loadProvider(wallets.poolCreatorAuthKeypair);
+  const { ctx } = loadProvider(userKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(
@@ -30,9 +28,6 @@ async function main() {
     return;
   }
   const REDEX_CONFIG_PUB = new PublicKey(deployed.REDEX_CONFIG_PUB);
-  const whirlpoolKey = new PublicKey(
-    "HmruH4dvo1FdsLNDpFFnurtm6ih3YhwcbiDNnHu8bec2"
-  );
   const client = buildWhirlpoolClient(ctx);
 
   let poolInfo = getPoolInfo(0);
