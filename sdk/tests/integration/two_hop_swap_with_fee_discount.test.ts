@@ -32,7 +32,7 @@ import {
   InitAquariumParams,
 } from "../utils/init-utils";
 import Decimal from "decimal.js";
-import { getRateOverToken } from "../../src/impl/util";
+import { getRateOverToken } from "../../src/";
 
 const TOKEN_CONVERSION_FEE_RATE = 4000; // 40%
 const DISCOUNT_FEE_RATE = 5000; // 50% of token conversion rate
