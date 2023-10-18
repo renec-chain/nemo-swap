@@ -1,16 +1,8 @@
 import { PublicKey } from "@solana/web3.js";
-import {
-  Percentage,
-  resolveOrCreateATAs,
-  ZERO,
-  TransactionBuilder,
-} from "@orca-so/common-sdk";
+import { Percentage } from "@orca-so/common-sdk";
 import {
   PDAUtil,
   buildWhirlpoolClient,
-  swapQuoteByInputToken,
-  twoHopSwapQuoteFromSwapQuotes,
-  WhirlpoolIx,
   PoolUtil,
   swapWithFeeDiscountQuoteByInputToken,
 } from "@renec/redex-sdk";
@@ -116,7 +108,7 @@ async function main() {
     new Wallet(sourceKeypair)
   );
 
-  const txHash = await tx.buildAndExecute();
+  const txHash = await tx.tx.buildAndExecute();
   console.log("txHash:", txHash);
 }
 
