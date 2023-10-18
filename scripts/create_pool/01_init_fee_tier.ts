@@ -7,13 +7,14 @@ import {
   PDAUtil,
   FeeTierData,
 } from "@renec/redex-sdk";
-import { loadProvider, delay, loadWallets } from "./utils";
+import { loadProvider, delay, loadWallets, ROLES } from "./utils";
 import config from "./config.json";
 import deployed from "./deployed.json";
 const MAX_FEE_RATE = 1000000;
 
 async function main() {
-  const wallets = loadWallets();
+  const wallets = loadWallets([ROLES.FEE_AUTH]);
+  const feeAuthKeypair = wallets[ROLES.FEE_AUTH];
 
   // Check required roles
   if (!wallets.feeAuthKeypair) {
@@ -67,7 +68,7 @@ async function main() {
       const tx = toTx(
         ctx,
         WhirlpoolIx.initializeFeeTierIx(ctx.program, params)
-      ).addSigner(wallets.feeAuthKeypair);
+      ).addSigner(feeAuthKeypair);
       const txid = await tx.buildAndExecute();
       console.log("fee tier account deployed at txid:", txid);
       feeTierAccount = (await ctx.fetcher.getFeeTier(

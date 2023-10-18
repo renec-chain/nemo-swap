@@ -30,7 +30,7 @@ import {
   setupSwapTest,
 } from "../../../utils/swap-test-utils";
 import { PublicKey, Signer } from "@solana/web3.js";
-import { getRateOverToken } from "../../../../src/impl/util";
+import { getRateOverToken } from "../../../../src/";
 import Decimal from "decimal.js";
 
 describe("swap_with_fee_discount", () => {
