@@ -30,6 +30,8 @@ import {
   setupSwapTest,
 } from "../../../utils/swap-test-utils";
 import { PublicKey, Signer } from "@solana/web3.js";
+import { getRateOverToken } from "../../../../src/impl/util";
+import Decimal from "decimal.js";
 
 describe("swap_with_fee_discount", () => {
   const provider = anchor.AnchorProvider.local();
@@ -46,7 +48,8 @@ describe("swap_with_fee_discount", () => {
   const TOKEN_CONVERSION_FEE_RATE = 4000; // 40%
   const DISCOUNT_FEE_RATE = 5000; // 50% of token conversion rate
   const DISCOUNT_FEE_RATE_MUL_VALUE = 10000;
-  const TOKEN_A_RATE = 2;
+  const RAW_TOKEN_A_RATE = 2;
+  const EXPO = 6;
 
   // Note: tokens created from setupSwapTest have decimals = 0
   it("swap aToB && exact in", async () => {
@@ -86,7 +89,8 @@ describe("swap_with_fee_discount", () => {
       discountTokenMint,
       TOKEN_CONVERSION_FEE_RATE,
       DISCOUNT_FEE_RATE,
-      new anchor.BN(TOKEN_A_RATE)
+      getRateOverToken(whirlpool.getTokenAInfo(), 6, new Decimal(RAW_TOKEN_A_RATE)),
+      EXPO
     );
 
     // compute swap ix
@@ -169,8 +173,8 @@ describe("swap_with_fee_discount", () => {
       .div(new BN(DISCOUNT_FEE_RATE_MUL_VALUE))
       .div(new BN(DISCOUNT_FEE_RATE_MUL_VALUE));
 
-    // 1 x 10^(decimal_d) * vD = TOKEN_A_RATE * vA and qD2 * vD = qA2 * vA  -> qD2 = qA2 / TOKEN_A_RATE * 10^(decimal_d)
-    const expectedBurnAmount = burnAmountInTokenA.div(new BN(TOKEN_A_RATE)); // 1 discount Token = TOKEN_A_RATE * token A
+    // 1 x 10^(decimal_d) * vD = RAW_TOKEN_A_RATE * vA and qD2 * vD = qA2 * vA  -> qD2 = qA2 / RAW_TOKEN_A_RATE * 10^(decimal_d)
+    const expectedBurnAmount = burnAmountInTokenA.div(new BN(RAW_TOKEN_A_RATE)); // 1 discount Token = RAW_TOKEN_A_RATE * token A
 
     assert.ok(isApproxEqual(quoteWithDiscount.estimatedBurnAmount, new BN(0), expectedBurnAmount));
   });
@@ -211,7 +215,8 @@ describe("swap_with_fee_discount", () => {
       discountTokenMint,
       TOKEN_CONVERSION_FEE_RATE,
       DISCOUNT_FEE_RATE,
-      new anchor.BN(TOKEN_A_RATE)
+      getRateOverToken(whirlpool.getTokenAInfo(), 6, new Decimal(RAW_TOKEN_A_RATE)),
+      EXPO
     );
 
     // Compute swap ix
@@ -302,7 +307,7 @@ describe("swap_with_fee_discount", () => {
       .mul(new BN(quoteWithDiscount.estimatedAmountOut))
       .div(new BN(quoteWithDiscount.estimatedAmountIn));
 
-    const expectedBurnAmount = burnAmountInTokenA.div(new BN(TOKEN_A_RATE));
+    const expectedBurnAmount = burnAmountInTokenA.div(new BN(RAW_TOKEN_A_RATE));
     assert.ok(isApproxEqual(quoteWithDiscount.estimatedBurnAmount, new BN(0), expectedBurnAmount));
   });
 
@@ -343,7 +348,8 @@ describe("swap_with_fee_discount", () => {
       discountTokenMint,
       TOKEN_CONVERSION_FEE_RATE,
       DISCOUNT_FEE_RATE,
-      new anchor.BN(2)
+      getRateOverToken(whirlpool.getTokenAInfo(), 6, new Decimal(RAW_TOKEN_A_RATE)),
+      EXPO
     );
 
     // compute swap ix
@@ -427,8 +433,8 @@ describe("swap_with_fee_discount", () => {
       .div(new BN(DISCOUNT_FEE_RATE_MUL_VALUE))
       .div(new BN(DISCOUNT_FEE_RATE_MUL_VALUE));
 
-    // 1 x 10^(decimal_d) * vD = TOKEN_A_RATE * vA and qD2 * vD = qA2 * vA  -> qD2 = qA2 / TOKEN_A_RATE * 10^(decimal_d)
-    const expectedBurnAmount = burnAmountInTokenA.div(new BN(TOKEN_A_RATE)); // 1 discount Token = TOKEN_A_RATE * token A
+    // 1 x 10^(decimal_d) * vD = RAW_TOKEN_A_RATE * vA and qD2 * vD = qA2 * vA  -> qD2 = qA2 / RAW_TOKEN_A_RATE * 10^(decimal_d)
+    const expectedBurnAmount = burnAmountInTokenA.div(new BN(RAW_TOKEN_A_RATE)); // 1 discount Token = RAW_TOKEN_A_RATE * token A
 
     assert.ok(isApproxEqual(quoteWithDiscount.estimatedBurnAmount, new BN(0), expectedBurnAmount));
   });
@@ -470,7 +476,8 @@ describe("swap_with_fee_discount", () => {
       discountTokenMint,
       TOKEN_CONVERSION_FEE_RATE,
       DISCOUNT_FEE_RATE,
-      new anchor.BN(2)
+      getRateOverToken(whirlpool.getTokenAInfo(), 6, new Decimal(RAW_TOKEN_A_RATE)),
+      EXPO
     );
 
     // compute swap ix
@@ -568,7 +575,7 @@ describe("swap_with_fee_discount", () => {
       .mul(new BN(quoteWithDiscount.estimatedAmountIn))
       .div(new BN(quoteWithDiscount.estimatedAmountOut));
 
-    const expectedBurnAmount = burnAmountInTokenA.div(new BN(TOKEN_A_RATE));
+    const expectedBurnAmount = burnAmountInTokenA.div(new BN(RAW_TOKEN_A_RATE));
     assert.ok(isApproxEqual(quoteWithDiscount.estimatedBurnAmount, new BN(0), expectedBurnAmount));
   });
 
@@ -608,7 +615,8 @@ describe("swap_with_fee_discount", () => {
       discountTokenMintB,
       TOKEN_CONVERSION_FEE_RATE,
       DISCOUNT_FEE_RATE,
-      new anchor.BN(TOKEN_A_RATE)
+      getRateOverToken(whirlpool.getTokenAInfo(), 6, new Decimal(RAW_TOKEN_A_RATE)),
+      EXPO
     );
 
     // compute swap ix
@@ -698,7 +706,8 @@ describe("swap_with_fee_discount", () => {
       discountTokenMint1,
       TOKEN_CONVERSION_FEE_RATE,
       DISCOUNT_FEE_RATE,
-      new anchor.BN(TOKEN_A_RATE)
+      getRateOverToken(whirlpool.getTokenAInfo(), 6, new Decimal(RAW_TOKEN_A_RATE)),
+      EXPO
     );
 
     // discount token mint 2 is initialized
@@ -708,7 +717,8 @@ describe("swap_with_fee_discount", () => {
       discountTokenMint2,
       TOKEN_CONVERSION_FEE_RATE,
       DISCOUNT_FEE_RATE,
-      new anchor.BN(TOKEN_A_RATE)
+      getRateOverToken(whirlpool.getTokenAInfo(), 6, new Decimal(RAW_TOKEN_A_RATE)),
+      EXPO
     );
 
     // compute swap ix

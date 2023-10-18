@@ -164,6 +164,10 @@ export type Whirlpool = {
           "type": "u16"
         },
         {
+          "name": "expo",
+          "type": "u8"
+        },
+        {
           "name": "tokenRateOverWhirlpoolTokenA",
           "type": "u64"
         }
@@ -1085,6 +1089,10 @@ export type Whirlpool = {
           "type": "u16"
         },
         {
+          "name": "expo",
+          "type": "u8"
+        },
+        {
           "name": "tokenRateOverWhirlpoolTokenA",
           "type": "u64"
         }
@@ -1873,6 +1881,10 @@ export type Whirlpool = {
           {
             "name": "discountFeeRate",
             "type": "u16"
+          },
+          {
+            "name": "expo",
+            "type": "u8"
           },
           {
             "name": "discountTokenRateOverTokenA",
@@ -2440,6 +2452,10 @@ export const IDL: Whirlpool = {
           "type": "u16"
         },
         {
+          "name": "expo",
+          "type": "u8"
+        },
+        {
           "name": "tokenRateOverWhirlpoolTokenA",
           "type": "u64"
         }
@@ -3361,6 +3377,10 @@ export const IDL: Whirlpool = {
           "type": "u16"
         },
         {
+          "name": "expo",
+          "type": "u8"
+        },
+        {
           "name": "tokenRateOverWhirlpoolTokenA",
           "type": "u64"
         }
@@ -4149,6 +4169,10 @@ export const IDL: Whirlpool = {
           {
             "name": "discountFeeRate",
             "type": "u16"
+          },
+          {
+            "name": "expo",
+            "type": "u8"
           },
           {
             "name": "discountTokenRateOverTokenA",

@@ -166,4 +166,5 @@ export type WhirlpoolDiscountInfoData = {
   tokenConversionFeeRate: number;
   discountFeeRate: number;
   discountTokenRateOverTokenA: BN;
+  expo: number;
 };

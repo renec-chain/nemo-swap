@@ -11,10 +11,22 @@ export async function askToConfirmPoolInfo(poolInfo: PoolInfo): Promise<void> {
   });
 
   let message = "";
-  if (poolInfo.isTokenReversed) {
-    message =
-      "\n---> WARNING: This pool token order is reversed, and the correct pool information is adjusted as the following.\n";
-  }
+  let optionalFields = "";
+  if (poolInfo.discountTokenMint)
+    optionalFields += `discount_token_mint: ${poolInfo.discountTokenMint}\n`;
+  if (poolInfo.tokenConversionRate)
+    optionalFields += `token_conversion_rate: ${poolInfo.tokenConversionRate.toFixed(
+      6
+    )}\n`;
+  if (poolInfo.discountFeeRateOverTokenConvertedAmount)
+    optionalFields += `discount_fee_rate_over_token_converted_amount: ${poolInfo.discountFeeRateOverTokenConvertedAmount.toFixed(
+      6
+    )}\n`;
+  if (poolInfo.discountTokenRateOverTokenA)
+    optionalFields += `discount_token_rate_over_token_a: ${poolInfo.discountTokenRateOverTokenA.toFixed(
+      6
+    )}\n`;
+
   await new Promise<void>((resolve) => {
     rl.question(
       ` ${message} \n
@@ -29,6 +41,7 @@ export async function askToConfirmPoolInfo(poolInfo: PoolInfo): Promise<void> {
           slippage: ${poolInfo.slippage.toFixed(6)} 
           input_mint: ${poolInfo.inputMint} 
           input_amount: ${poolInfo.inputAmount.toFixed(6)}
+          ${optionalFields}
           -----------------------------------------------
           Do you want to proceed? (y/n) `,
       (answer) => {
@@ -68,7 +81,6 @@ export function getPoolInfo(poolIndex: number): PoolInfo {
 
   let mintAPub = correctTokenOrder[0].toString();
   let mintBPub = correctTokenOrder[1].toString();
-  console.log({ mintAPub, mintBPub });
 
   // Check if pool is reversed
   let isTokenReversed = checkTokenReversed(
@@ -77,6 +89,12 @@ export function getPoolInfo(poolIndex: number): PoolInfo {
     mintAPub,
     mintBPub
   );
+
+  if (isTokenReversed) {
+    console.log(
+      `\n---> WARNING:  Token order of POOL ${poolIndex} is in reversed. Please adjust the config info.\n`
+    );
+  }
 
   // Get default pool info
   let initialAmountBPerA = new Decimal(pool.INIT_AMOUNT_B_PER_A);
@@ -87,15 +105,14 @@ export function getPoolInfo(poolIndex: number): PoolInfo {
   let correctLowerBPerAPrice = lowerBPerAPrice;
   let correctUpperBPerAPrice = upperBPerAPrice;
 
-  // Get correct pool info
+  // Get correct pool info if tokens are reversed
   if (isTokenReversed) {
     correctInitialAmountBPerA = initialAmountBPerA.pow(-1);
     correctLowerBPerAPrice = upperBPerAPrice.pow(-1);
     correctUpperBPerAPrice = lowerBPerAPrice.pow(-1);
   }
 
-  return {
-    isTokenReversed,
+  const result: PoolInfo = {
     tokenMintA: mintAPub,
     tokenMintB: mintBPub,
     tickSpacing: pool.TICK_SPACING,
@@ -107,4 +124,24 @@ export function getPoolInfo(poolIndex: number): PoolInfo {
     inputAmount: new Decimal(pool.INPUT_AMOUNT),
     isOpenPosition: pool.OPEN_POSITION,
   };
+
+  // Check if optional fields are present and if so, add them to the result
+  if (pool.DISCOUNT_TOKEN_MINT) {
+    result.discountTokenMint = pool.DISCOUNT_TOKEN_MINT;
+  }
+  if (pool.TOKEN_CONVERSION_RATE) {
+    result.tokenConversionRate = new Decimal(pool.TOKEN_CONVERSION_RATE);
+  }
+  if (pool.DISCOUNT_FEE_RATE_OVER_TOKEN_CONVERTED_AMOUNT) {
+    result.discountFeeRateOverTokenConvertedAmount = new Decimal(
+      pool.DISCOUNT_FEE_RATE_OVER_TOKEN_CONVERTED_AMOUNT
+    );
+  }
+  if (pool.DISCOUNT_TOKEN_RATE_OVER_TOKEN_A) {
+    result.discountTokenRateOverTokenA = new Decimal(
+      pool.DISCOUNT_TOKEN_RATE_OVER_TOKEN_A
+    );
+  }
+
+  return result;
 }

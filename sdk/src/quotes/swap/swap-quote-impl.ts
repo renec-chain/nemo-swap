@@ -280,8 +280,10 @@ function calculateEquivalentDiscountTokenAmount(
   }
 
   const tenPowerDecimals = new BN(10).pow(new BN(whirlpoolDiscountInfo.tokenDecimals));
+  const tenPowerExpo = new BN(10).pow(new BN(whirlpoolDiscountInfo.expo));
   const amountInDiscountToken = burnAmountInTokenA
     .mul(tenPowerDecimals)
+    .mul(tenPowerExpo)
     .div(whirlpoolDiscountInfo.discountTokenRateOverTokenA);
 
   return amountInDiscountToken;

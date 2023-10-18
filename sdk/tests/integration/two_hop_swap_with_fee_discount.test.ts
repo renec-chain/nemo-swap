@@ -31,10 +31,14 @@ import {
   getTokenAccsForPools,
   InitAquariumParams,
 } from "../utils/init-utils";
+import Decimal from "decimal.js";
+import { getRateOverToken } from "../../src/impl/util";
 
 const TOKEN_CONVERSION_FEE_RATE = 4000; // 40%
 const DISCOUNT_FEE_RATE = 5000; // 50% of token conversion rate
 const DISCOUNT_FEE_RATE_MUL_VALUE = 10000;
+const RAW_TOKEN_A_RATE = 2;
+const EXPO = 6;
 
 describe("two-hop swap with fee discounts", () => {
   const provider = anchor.AnchorProvider.local();
@@ -109,7 +113,8 @@ describe("two-hop swap with fee discounts", () => {
       discountTokenMint,
       TOKEN_CONVERSION_FEE_RATE,
       DISCOUNT_FEE_RATE,
-      new anchor.BN(2)
+      getRateOverToken(whirlpoolOne.getTokenAInfo(), 6, new Decimal(RAW_TOKEN_A_RATE)),
+      EXPO
     );
 
     const whirlpoolTwoDiscountInfoPubkey = await initializePoolDiscountInfo(
@@ -118,7 +123,8 @@ describe("two-hop swap with fee discounts", () => {
       discountTokenMint,
       TOKEN_CONVERSION_FEE_RATE,
       DISCOUNT_FEE_RATE,
-      new anchor.BN(2)
+      getRateOverToken(whirlpoolTwo.getTokenAInfo(), 6, new Decimal(RAW_TOKEN_A_RATE)),
+      EXPO
     );
 
     const whirlpoolOneDiscountInfoData = await ctx.fetcher.getPoolDiscountInfo(
@@ -242,7 +248,8 @@ describe("two-hop swap with fee discounts", () => {
       discountTokenMint,
       TOKEN_CONVERSION_FEE_RATE,
       DISCOUNT_FEE_RATE,
-      new anchor.BN(2)
+      getRateOverToken(whirlpoolOne.getTokenAInfo(), 6, new Decimal(RAW_TOKEN_A_RATE)),
+      EXPO
     );
 
     const whirlpoolTwoDiscountInfoPubkey = await initializePoolDiscountInfo(
@@ -251,7 +258,8 @@ describe("two-hop swap with fee discounts", () => {
       discountTokenMint,
       TOKEN_CONVERSION_FEE_RATE,
       DISCOUNT_FEE_RATE,
-      new anchor.BN(2)
+      getRateOverToken(whirlpoolTwo.getTokenAInfo(), 6, new Decimal(RAW_TOKEN_A_RATE)),
+      EXPO
     );
 
     const whirlpoolOneDiscountInfoData = await ctx.fetcher.getPoolDiscountInfo(

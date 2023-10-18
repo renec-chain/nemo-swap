@@ -13,6 +13,7 @@ export type SetPoolDiscountInfoParam = {
   poolCreatorAuthority: PublicKey;
   tokenConversionRate: number;
   discountFeeRate: number;
+  expo: number;
   discountTokenRateOverTokenA: BN;
 };
 
@@ -28,12 +29,14 @@ export function setPoolDiscountInfoIx(
     tokenConversionRate,
     whirlpoolDiscountInfoPDA,
     discountFeeRate,
+    expo,
     discountTokenRateOverTokenA,
   } = params;
 
-  const ix = program.instruction.initializePoolDiscountInfo(
+  const ix = program.instruction.setPoolDiscountInfo(
     tokenConversionRate,
     discountFeeRate,
+    expo,
     discountTokenRateOverTokenA,
     {
       accounts: {

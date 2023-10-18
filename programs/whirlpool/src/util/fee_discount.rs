@@ -26,9 +26,11 @@ pub fn calculate_equivalent_discount_token_amount(
     }
 
     // calculate equivalent value in discount token
-    // 10^discount_token.decimals * vD = discount_token_rate_over_token_a * vA and qD2 * vD = qA2 * vA -> qD2 = qA2 / discount_token_rate_over_a * 10^discount_token.decimals
+    // 10^discount_token.decimals * vD = (discount_token_rate_over_token_a / 10^expo) * vA and qD2 * vD = qA2 * vA -> qD2 = qA2 * 10^expo / discount_token_rate_over_a * 10^discount_token.decimals
     let amount_in_discount_token = amount_in_token_a
         .checked_mul(10u128.pow(discount_token.decimals as u32))
+        .ok_or(ErrorCode::MultiplicationOverflow)?
+        .checked_mul(10u128.pow(whirlpool_discount_info.expo as u32))
         .ok_or(ErrorCode::MultiplicationOverflow)?
         .checked_div(whirlpool_discount_info.discount_token_rate_over_token_a as u128)
         .ok_or(ErrorCode::DivideByZero)?;
