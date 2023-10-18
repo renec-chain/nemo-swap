@@ -164,6 +164,10 @@
           "type": "u16"
         },
         {
+          "name": "expo",
+          "type": "u8"
+        },
+        {
           "name": "tokenRateOverWhirlpoolTokenA",
           "type": "u64"
         }
@@ -1085,6 +1089,10 @@
           "type": "u16"
         },
         {
+          "name": "expo",
+          "type": "u8"
+        },
+        {
           "name": "tokenRateOverWhirlpoolTokenA",
           "type": "u64"
         }
@@ -1873,6 +1881,10 @@
           {
             "name": "discountFeeRate",
             "type": "u16"
+          },
+          {
+            "name": "expo",
+            "type": "u8"
           },
           {
             "name": "discountTokenRateOverTokenA",

@@ -1,7 +1,7 @@
 //! A concentrated liquidity AMM contract powered by Orca.
 use anchor_lang::prelude::*;
 
-declare_id!("4ERwQLtitCdCvSqjzrrVUTeZNfisLNuo3J8HVrbo6mn6");
+declare_id!("B5goNUferRjFnoY33AU9WoZPe7aDWGNZqNYRYq9sWhN8");
 
 #[doc(hidden)]
 pub mod constants;
@@ -82,12 +82,14 @@ pub mod whirlpool {
         ctx: Context<InitializeWhirlpoolDiscountInfo>,
         token_conversion_fee_rate: u16,
         discount_fee_rate: u16,
+        expo: u8,
         token_rate_over_whirlpool_token_a: u64,
     ) -> ProgramResult {
         return instructions::initialize_whirlpool_discount_info::handler(
             ctx,
             token_conversion_fee_rate,
             discount_fee_rate,
+            expo,
             token_rate_over_whirlpool_token_a,
         );
     }
@@ -403,12 +405,14 @@ pub mod whirlpool {
         ctx: Context<SetPoolDiscountInfo>,
         token_conversion_fee_rate: u16,
         discount_fee_rate: u16,
+        expo: u8,
         token_rate_over_whirlpool_token_a: u64,
     ) -> ProgramResult {
         return instructions::set_whirlpool_discount_info::handler(
             ctx,
             token_conversion_fee_rate,
             discount_fee_rate,
+            expo,
             token_rate_over_whirlpool_token_a,
         );
     }
