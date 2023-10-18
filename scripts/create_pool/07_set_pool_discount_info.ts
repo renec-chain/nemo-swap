@@ -82,7 +82,6 @@ async function main() {
             .getFetcher()
             .getPoolDiscountInfo(whirlpoolDiscountInfoPDA.publicKey);
 
-          console.log("whirlpool discoutn data: ", whirlpoolDiscountInfoData);
           if (whirlpoolDiscountInfoData != null) {
             console.log("Setting pool discount info data... \n");
             ix = WhirlpoolIx.setPoolDiscountInfoIx(ctx.program, {
@@ -151,6 +150,7 @@ async function main() {
             } %`
           );
           console.log("Expo: ", whirlpoolDiscountInfoData.expo.toString());
+
           console.log(
             `Discount token rate over token a: ${DecimalUtil.fromU64(
               whirlpoolDiscountInfoData.discountTokenRateOverTokenA,
