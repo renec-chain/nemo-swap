@@ -26,6 +26,10 @@ export async function askToConfirmPoolInfo(poolInfo: PoolInfo): Promise<void> {
     optionalFields += `discount_token_rate_over_token_a: ${poolInfo.discountTokenRateOverTokenA.toFixed(
       6
     )}\n`;
+  if (poolInfo.discountTokenRateOverTokenAExpo)
+    optionalFields += `discount_token_rate_over_token_a_expo: ${poolInfo.discountTokenRateOverTokenAExpo.toFixed(
+      6
+    )}\n`;
 
   await new Promise<void>((resolve) => {
     rl.question(
@@ -94,6 +98,7 @@ export function getPoolInfo(poolIndex: number): PoolInfo {
     console.log(
       `\n---> WARNING:  Token order of POOL ${poolIndex} is in reversed. Please adjust the config info.\n`
     );
+    process.exit(1);
   }
 
   // Get default pool info
@@ -130,17 +135,20 @@ export function getPoolInfo(poolIndex: number): PoolInfo {
     result.discountTokenMint = pool.DISCOUNT_TOKEN_MINT;
   }
   if (pool.TOKEN_CONVERSION_RATE) {
-    result.tokenConversionRate = new Decimal(pool.TOKEN_CONVERSION_RATE);
+    result.tokenConversionRate = pool.TOKEN_CONVERSION_RATE;
   }
-  if (pool.DISCOUNT_FEE_RATE_OVER_TOKEN_CONVERTED_AMOUNT) {
-    result.discountFeeRateOverTokenConvertedAmount = new Decimal(
-      pool.DISCOUNT_FEE_RATE_OVER_TOKEN_CONVERTED_AMOUNT
-    );
+  if (pool.DISCOUNT_RATE_OVER_TOKEN_CONVERTED_AMOUNT) {
+    result.discountFeeRateOverTokenConvertedAmount =
+      pool.DISCOUNT_RATE_OVER_TOKEN_CONVERTED_AMOUNT;
   }
   if (pool.DISCOUNT_TOKEN_RATE_OVER_TOKEN_A) {
     result.discountTokenRateOverTokenA = new Decimal(
       pool.DISCOUNT_TOKEN_RATE_OVER_TOKEN_A
     );
+  }
+
+  if (pool.EXPO) {
+    result.discountTokenRateOverTokenAExpo = pool.EXPO;
   }
 
   return result;
