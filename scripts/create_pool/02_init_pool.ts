@@ -78,7 +78,6 @@ async function main() {
       console.log("deploying new pool...");
 
       const currentA2BPrice = new Decimal(poolInfo.initialAmountBPerA);
-      console.log("currentA2BPrice: ", currentA2BPrice.toFixed(6));
       const tickIndex = PriceMath.priceToInitializableTickIndex(
         currentA2BPrice,
         tokenMintA.decimals,

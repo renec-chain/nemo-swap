@@ -13,20 +13,17 @@ import {
   WhirlpoolIx,
   PoolUtil,
 } from "@renec/redex-sdk";
-import { loadProvider, loadWallets } from "../create_pool/utils";
+import { ROLES, loadProvider, loadWallets } from "../create_pool/utils";
 import deployed from "../create_pool/deployed.json";
 import { u64 } from "@solana/spl-token";
 
 const TICK_SPACING = 32;
 
 async function main() {
-  const wallets = loadWallets();
+  const wallets = loadWallets([ROLES.USER]);
+  const userKeypair = wallets[ROLES.USER];
 
-  if (!wallets.userKeypair) {
-    throw new Error("Please provide user_wallet wallet");
-  }
-
-  const { ctx } = loadProvider(wallets.userKeypair);
+  const { ctx } = loadProvider(userKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(
