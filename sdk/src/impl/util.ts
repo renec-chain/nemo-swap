@@ -1,5 +1,5 @@
 import BN from "bn.js";
-import { NATIVE_MINT } from "@solana/spl-token";
+import { MintInfo, NATIVE_MINT, u64 } from "@solana/spl-token";
 import { AccountFetcher, PoolUtil, TokenInfo } from "..";
 import {
   WhirlpoolData,
@@ -7,6 +7,8 @@ import {
   WhirlpoolRewardInfoData,
   TokenAccountInfo,
 } from "../types/public";
+import Decimal from "decimal.js";
+import { DecimalUtil } from "@orca-so/common-sdk";
 
 export async function getTokenMintInfos(
   fetcher: AccountFetcher,
@@ -90,4 +92,16 @@ export async function getTokenVaultAccountInfos(
     throw new Error(`Unable to fetch TokenAccountInfo for vault - ${vaultB}`);
   }
   return [vaultInfoA, vaultInfoB];
+}
+
+export function getRateOverToken(
+  token: TokenInfo,
+  expo: number,
+  rawRate: Decimal // rate = rawRate * 10^dY * 10^expo
+): u64 {
+  if (expo < 0) {
+    throw new Error("expo should be positive");
+  }
+
+  return DecimalUtil.toU64(rawRate, expo + token.decimals);
 }
