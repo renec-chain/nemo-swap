@@ -5,7 +5,6 @@ import {
   getTokenMintInfo,
   loadWallets,
   getConfig,
-  ROLES,
 } from "./utils";
 import deployed from "./deployed.json";
 const config = getConfig();

@@ -6,12 +6,19 @@ import {
 } from "@renec/redex-sdk";
 
 import { DecimalUtil, Percentage } from "@orca-so/common-sdk";
-import { loadProvider, getTokenMintInfo, loadWallets, ROLES } from "./utils";
+import {
+  loadProvider,
+  getTokenMintInfo,
+  loadWallets,
+  getConfig,
+} from "./utils";
 import Decimal from "decimal.js";
 import deployed from "./deployed.json";
 import { getPoolInfo } from "./utils/pool";
 import { getInitializableTickArrays } from "./utils/tickArrays";
 import { u64 } from "@solana/spl-token";
+const config = getConfig();
+
 async function main() {
   let poolIndex = parseInt(process.argv[2]);
 

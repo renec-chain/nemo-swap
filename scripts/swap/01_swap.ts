@@ -28,8 +28,7 @@ async function main() {
 
   let poolInfo = getPoolInfo(poolIndex);
 
-  const wallets = loadWallets([ROLES.USER]);
-  const userKeypair = wallets[ROLES.USER];
+  const wallets = loadWallets();
 
   const { ctx } = loadProvider(userKeypair);
 
@@ -42,6 +41,7 @@ async function main() {
   const REDEX_CONFIG_PUB = new PublicKey(deployed.REDEX_CONFIG_PUB);
   const client = buildWhirlpoolClient(ctx);
 
+  await askToConfirmPoolInfo(poolInfo);
   const mintAPub = new PublicKey(poolInfo.tokenMintA);
   const mintBPub = new PublicKey(poolInfo.tokenMintB);
   const tokenMintA = await getTokenMintInfo(ctx, mintAPub);
