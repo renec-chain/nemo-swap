@@ -348,52 +348,81 @@ export class WhirlpoolClientImpl implements WhirlpoolClient {
     const whirlpoolData1 = whirlpool1.getData();
     const whirlpoolData2 = whirlpool2.getData();
 
-    const resolveAllAtas = await resolveOrCreateATAs(
-      this.ctx.connection,
-      sourceWallet.publicKey,
-      [
-        {
+    const tokensWithIndex = [
+      {
+        token: {
           tokenMint: whirlpoolData1.tokenMintA,
           wrappedSolAmountIn: swapQuote1.aToB ? swapQuote1.amount : ZERO,
         },
-        {
+        index: 0,
+      },
+      {
+        token: {
           tokenMint: whirlpoolData1.tokenMintB,
           wrappedSolAmountIn: !swapQuote1.aToB ? swapQuote1.amount : ZERO,
         },
-        {
+        index: 1,
+      },
+      {
+        token: {
           tokenMint: whirlpoolData2.tokenMintA,
           wrappedSolAmountIn: swapQuote2.aToB ? swapQuote2.amount : ZERO,
         },
-        {
+        index: 2,
+      },
+      {
+        token: {
           tokenMint: whirlpoolData2.tokenMintB,
           wrappedSolAmountIn: !swapQuote2.aToB ? swapQuote2.amount : ZERO,
         },
-      ],
+        index: 3,
+      },
+    ];
+
+    // Filter the array to remove duplicate tokens
+    const seen = new Set<string>();
+
+    const indexMapping: { [key: number]: number } = {};
+    const filteredTokens: Array<{
+      token: (typeof tokensWithIndex)[0]["token"];
+      mappedIndex: number;
+    }> = [];
+
+    tokensWithIndex.forEach((t) => {
+      const key = t.token.tokenMint.toBase58();
+      if (!seen.has(key)) {
+        seen.add(key);
+        filteredTokens.push({ token: t.token, mappedIndex: t.index });
+        indexMapping[t.index] = filteredTokens.length - 1;
+      } else {
+        indexMapping[t.index] = filteredTokens.findIndex(
+          (ft) => ft.token.tokenMint.toBase58() === key
+        );
+      }
+    });
+
+    const resolveAllAtas = await resolveOrCreateATAs(
+      this.ctx.connection,
+      sourceWallet.publicKey,
+      filteredTokens.map((t) => t.token),
       () => this.ctx.fetcher.getAccountRentExempt()
     );
 
-    const createATAInstructions = [];
-    // make a set of unique address
-    const uniqueAddresses = new Set<string>();
-    for (const resolveAta of resolveAllAtas) {
-      const { address: ataAddress, ...instructions } = resolveAta;
-
-      if (!uniqueAddresses.has(ataAddress.toBase58())) {
-        createATAInstructions.push(instructions);
-        uniqueAddresses.add(ataAddress.toBase58());
-      }
-    }
+    const createATAInstructions = filteredTokens.map((ft) => {
+      const { address, ...instructions } = resolveAllAtas[ft.mappedIndex];
+      return instructions;
+    });
 
     const poolParams = {
       whirlpoolOne: whirlpool1.getAddress(),
       whirlpoolTwo: whirlpool2.getAddress(),
-      tokenOwnerAccountOneA: resolveAllAtas[0].address,
+      tokenOwnerAccountOneA: resolveAllAtas[indexMapping[0]].address,
       tokenVaultOneA: whirlpoolData1.tokenVaultA,
-      tokenOwnerAccountOneB: resolveAllAtas[1].address,
+      tokenOwnerAccountOneB: resolveAllAtas[indexMapping[1]].address,
       tokenVaultOneB: whirlpoolData1.tokenVaultB,
-      tokenOwnerAccountTwoA: resolveAllAtas[2].address,
+      tokenOwnerAccountTwoA: resolveAllAtas[indexMapping[2]].address,
       tokenVaultTwoA: whirlpoolData2.tokenVaultA,
-      tokenOwnerAccountTwoB: resolveAllAtas[3].address,
+      tokenOwnerAccountTwoB: resolveAllAtas[indexMapping[3]].address,
       tokenVaultTwoB: whirlpoolData2.tokenVaultB,
       oracleOne,
       oracleTwo,
