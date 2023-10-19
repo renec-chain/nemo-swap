@@ -16,8 +16,16 @@ import { askToConfirmPoolInfo, getPoolInfo } from "../create_pool/utils/pool";
 import { u64 } from "@solana/spl-token";
 
 async function main() {
-  const wallets = loadWallets([ROLES.USER]);
-  const userKeypair = wallets[ROLES.USER];
+  const poolIndex = parseInt(process.argv[2]);
+
+  if (isNaN(poolIndex)) {
+    console.error("Please provide a valid pool index.");
+    return;
+  }
+
+  let poolInfo = getPoolInfo(poolIndex);
+
+  const wallets = loadWallets();
 
   const { ctx } = loadProvider(userKeypair);
 
@@ -30,7 +38,6 @@ async function main() {
   const REDEX_CONFIG_PUB = new PublicKey(deployed.REDEX_CONFIG_PUB);
   const client = buildWhirlpoolClient(ctx);
 
-  let poolInfo = getPoolInfo(0);
   await askToConfirmPoolInfo(poolInfo);
   const mintAPub = new PublicKey(poolInfo.tokenMintA);
   const mintBPub = new PublicKey(poolInfo.tokenMintB);

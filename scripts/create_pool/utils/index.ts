@@ -2,12 +2,13 @@ import { PublicKey, Connection, Keypair, Commitment } from "@solana/web3.js";
 import { AnchorProvider, Wallet, BN } from "@project-serum/anchor";
 import { WhirlpoolContext, TokenInfo } from "@renec/redex-sdk";
 import { NATIVE_MINT, u64 } from "@solana/spl-token";
-import config from "../config.json";
+require("dotenv").config();
 
 export const ZERO_BN = new BN(0);
 export const ONE_SOL = 1000000000;
 
 export const loadProvider = function (payerKeypair: Keypair) {
+  const config = getConfig();
   const wallets = loadWallets();
   const commitment: Commitment = "confirmed";
   const connection = new Connection(config.RPC_ENDPOINT_URL, { commitment });
@@ -99,3 +100,11 @@ export enum TickSpacing {
   SixtyFour = 64,
   Standard = 128,
 }
+
+export const getConfig = () => {
+  if (process.env.IS_TESTNET && process.env.IS_TESTNET === "true") {
+    return require("../config-testnet.json");
+  } else {
+    return require("../config.json");
+  }
+};
