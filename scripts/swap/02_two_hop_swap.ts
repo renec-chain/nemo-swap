@@ -16,10 +16,23 @@ import {
 import { ROLES, loadProvider, loadWallets } from "../create_pool/utils";
 import deployed from "../create_pool/deployed.json";
 import { u64 } from "@solana/spl-token";
+import { getPoolInfo } from "../create_pool/utils/pool";
+import { getTwoHopSwapTokens } from "./utils";
 
 const TICK_SPACING = 32;
 
 async function main() {
+  const poolIndex1 = parseInt(process.argv[2]);
+  const poolIndex2 = parseInt(process.argv[3]);
+
+  if (isNaN(poolIndex1) || isNaN(poolIndex2)) {
+    console.error("Please provide two valid pool indexes.");
+    return;
+  }
+
+  let poolInfo1 = getPoolInfo(poolIndex1);
+  let poolInfo2 = getPoolInfo(poolIndex2);
+
   const wallets = loadWallets([ROLES.USER]);
   const userKeypair = wallets[ROLES.USER];
 
@@ -32,27 +45,12 @@ async function main() {
     return;
   }
 
-  // renec - reusd
-  const renecPubkey = new PublicKey(
-    "So11111111111111111111111111111111111111112"
-  );
-  const reusdPubkey = new PublicKey(
-    "Afy8qEgeJykFziRwiCk6tnBbd3uzxMoEqn2GTNCyGN7P"
-  );
-  const revndPubkey = new PublicKey(
-    "DSodi59U9ZWRnVgP94VNnKamFybYpsqYj2iKL1jQF7Ag"
-  );
-
-  // Get pool info
-  const pool1Tokens = PoolUtil.orderMints(renecPubkey, reusdPubkey);
-  const pool2Tokens = PoolUtil.orderMints(reusdPubkey, revndPubkey);
-
   // Get whirlpool 1: renec - reusd
   const whirlpoolKey1 = PDAUtil.getWhirlpool(
     ctx.program.programId,
     new PublicKey(deployed.REDEX_CONFIG_PUB),
-    new PublicKey(pool1Tokens[0].toString()),
-    new PublicKey(pool1Tokens[1].toString()),
+    new PublicKey(poolInfo1.tokenMintA),
+    new PublicKey(poolInfo1.tokenMintB),
     TICK_SPACING
   ).publicKey;
 
@@ -60,8 +58,8 @@ async function main() {
   const whirlpoolKey2 = PDAUtil.getWhirlpool(
     ctx.program.programId,
     new PublicKey(deployed.REDEX_CONFIG_PUB),
-    new PublicKey(pool2Tokens[0].toString()),
-    new PublicKey(pool2Tokens[1].toString()),
+    new PublicKey(poolInfo2.tokenMintA),
+    new PublicKey(poolInfo2.tokenMintB),
     TICK_SPACING
   ).publicKey;
 
@@ -70,11 +68,13 @@ async function main() {
   const whirlpool1 = await client.getPool(whirlpoolKey1, true);
   const whirlpool2 = await client.getPool(whirlpoolKey2, true);
 
-  const amount = new u64(100000);
+  const twoHopsTokens = getTwoHopSwapTokens(whirlpool1, whirlpool2);
+
+  const amount = new u64(900);
   // renec is the input token
   const quote1 = await swapQuoteByInputToken(
     whirlpool1,
-    renecPubkey,
+    twoHopsTokens.pool1OtherToken,
     amount,
     Percentage.fromFraction(1, 100),
     ctx.program.programId,
@@ -85,7 +85,7 @@ async function main() {
   // reusd is the intermediate token
   const quote2 = await swapQuoteByInputToken(
     whirlpool2,
-    reusdPubkey,
+    twoHopsTokens.intermidaryToken,
     quote1.estimatedAmountOut,
     Percentage.fromFraction(1, 100),
     ctx.program.programId,

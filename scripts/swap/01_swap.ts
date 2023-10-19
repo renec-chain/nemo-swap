@@ -25,7 +25,8 @@ async function main() {
 
   let poolInfo = getPoolInfo(poolIndex);
 
-  const wallets = loadWallets();
+  const wallets = loadWallets([ROLES.USER]);
+  const userKeypair = wallets[ROLES.USER];
 
   const { ctx } = loadProvider(userKeypair);
 
@@ -60,14 +61,13 @@ async function main() {
 
     const quote = await swapQuoteByInputToken(
       whirlpool,
-      whirlpoolData.tokenMintA,
+      whirlpoolData.tokenMintB,
       new u64(1000),
       Percentage.fromFraction(1, 100),
       ctx.program.programId,
       ctx.fetcher,
       true
     );
-    console.log(quote);
     const tx = await whirlpool.swap(quote, userKeypair.publicKey);
     tx.addSigner(wallets.userKeypair);
     const sig = await tx.buildAndExecute();
