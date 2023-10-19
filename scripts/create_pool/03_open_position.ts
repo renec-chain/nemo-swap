@@ -6,12 +6,17 @@ import {
   increaseLiquidityQuoteByInputTokenWithParams,
 } from "@renec/redex-sdk";
 import { DecimalUtil, Percentage } from "@orca-so/common-sdk";
-import { loadProvider, getTokenMintInfo, loadWallets, ROLES } from "./utils";
+import {
+  loadProvider,
+  getTokenMintInfo,
+  loadWallets,
+  getConfig,
+} from "./utils";
 import Decimal from "decimal.js";
-import config from "./config.json";
 import deployed from "./deployed.json";
 import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";
 import { u64 } from "@solana/spl-token";
+const config = getConfig();
 
 async function main() {
   const wallets = loadWallets([ROLES.USER]);

@@ -1,8 +1,9 @@
 import readline from "readline";
 import Decimal from "decimal.js";
-import config from "../config.json";
 import { PoolUtil } from "@renec/redex-sdk";
 import { PoolInfo } from "./types";
+import { getConfig } from ".";
+const config = getConfig();
 
 export async function askToConfirmPoolInfo(poolInfo: PoolInfo): Promise<void> {
   const rl = readline.createInterface({

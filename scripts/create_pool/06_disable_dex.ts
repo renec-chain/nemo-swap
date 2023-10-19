@@ -1,8 +1,13 @@
 import { PublicKey } from "@solana/web3.js";
 import { PDAUtil, buildWhirlpoolClient } from "@renec/redex-sdk";
-import { loadProvider, getTokenMintInfo, loadWallets, ROLES } from "./utils";
-import config from "./config.json";
+import {
+  loadProvider,
+  getTokenMintInfo,
+  loadWallets,
+  getConfig,
+} from "./utils";
 import deployed from "./deployed.json";
+const config = getConfig();
 
 const IS_ENABLE = false;
 
