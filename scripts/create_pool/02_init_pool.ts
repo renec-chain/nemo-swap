@@ -1,10 +1,16 @@
 import { PublicKey } from "@solana/web3.js";
 import { PDAUtil, buildWhirlpoolClient, PriceMath } from "@renec/redex-sdk";
-import { loadProvider, getTokenMintInfo, loadWallets, ROLES } from "./utils";
+import {
+  loadProvider,
+  getTokenMintInfo,
+  loadWallets,
+  getConfig,
+} from "./utils";
 import Decimal from "decimal.js";
-import config from "./config.json";
 import deployed from "./deployed.json";
 import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";
+
+const config = getConfig();
 
 async function main() {
   const wallets = loadWallets([ROLES.POOL_CREATOR_AUTH]);

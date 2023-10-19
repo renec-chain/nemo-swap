@@ -7,11 +7,9 @@ import {
   PDAUtil,
   FeeTierData,
 } from "@renec/redex-sdk";
-import { loadProvider, delay, loadWallets, ROLES } from "./utils";
-import config from "./config.json";
+import { loadProvider, delay, loadWallets, getConfig } from "./utils";
 import deployed from "./deployed.json";
-const fs = require("fs");
-const deployedPath = "./create_pool/deployed.json";
+const config = getConfig();
 
 async function main() {
   const wallets = loadWallets([ROLES.FEE_AUTH]);

@@ -5,11 +5,16 @@ import {
   WhirlpoolIx,
   toTx,
 } from "@renec/redex-sdk";
-import { loadProvider, getTokenMintInfo, loadWallets } from "./utils";
-import config from "./config.json";
+import {
+  loadProvider,
+  getTokenMintInfo,
+  loadWallets,
+  getConfig,
+} from "./utils";
 import deployed from "./deployed.json";
 import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";
 import { BN } from "@project-serum/anchor";
+const config = getConfig();
 
 async function main() {
   // fixed input
