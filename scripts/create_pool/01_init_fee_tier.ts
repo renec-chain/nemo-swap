@@ -7,9 +7,8 @@ import {
   PDAUtil,
   FeeTierData,
 } from "@renec/redex-sdk";
-import { loadProvider, delay, loadWallets, getConfig, ROLES } from "./utils";
+import { loadProvider, delay, loadWallets, getConfig } from "./utils";
 import deployed from "./deployed.json";
-const MAX_FEE_RATE = 10000;
 const config = getConfig();
 
 async function main() {

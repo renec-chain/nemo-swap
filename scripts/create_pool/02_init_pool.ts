@@ -5,11 +5,12 @@ import {
   getTokenMintInfo,
   loadWallets,
   getConfig,
-  ROLES,
 } from "./utils";
 import Decimal from "decimal.js";
 import deployed from "./deployed.json";
 import { getPoolInfo } from "./utils/pool";
+
+const config = getConfig();
 
 async function main() {
   let poolIndex = parseInt(process.argv[2]);
