@@ -381,28 +381,21 @@ export class WhirlpoolClientImpl implements WhirlpoolClient {
 
     const resolveAllAtas = await Promise.all(resolveAllAtasPromise);
 
-    const createATAInstructions = [];
-    // make a set of unique address
-    const uniqueAddresses = new Set<string>();
-    for (const resolveAta of resolveAllAtas) {
-      const { address: ataAddress, ...instructions } = resolveAta;
-
-      if (!uniqueAddresses.has(ataAddress.toBase58())) {
-        createATAInstructions.push(instructions);
-        uniqueAddresses.add(ataAddress.toBase58());
-      }
-    }
+    const createATAInstructions = filteredTokens.map((ft) => {
+      const { address, ...instructions } = resolveAllAtas[ft.mappedIndex];
+      return instructions;
+    });
 
     const poolParams = {
       whirlpoolOne: whirlpool1.getAddress(),
       whirlpoolTwo: whirlpool2.getAddress(),
-      tokenOwnerAccountOneA: resolveAllAtas[0].address,
+      tokenOwnerAccountOneA: resolveAllAtas[indexMapping[0]].address,
       tokenVaultOneA: whirlpoolData1.tokenVaultA,
-      tokenOwnerAccountOneB: resolveAllAtas[1].address,
+      tokenOwnerAccountOneB: resolveAllAtas[indexMapping[1]].address,
       tokenVaultOneB: whirlpoolData1.tokenVaultB,
-      tokenOwnerAccountTwoA: resolveAllAtas[2].address,
+      tokenOwnerAccountTwoA: resolveAllAtas[indexMapping[2]].address,
       tokenVaultTwoA: whirlpoolData2.tokenVaultA,
-      tokenOwnerAccountTwoB: resolveAllAtas[3].address,
+      tokenOwnerAccountTwoB: resolveAllAtas[indexMapping[3]].address,
       tokenVaultTwoB: whirlpoolData2.tokenVaultB,
       oracleOne,
       oracleTwo,
