@@ -1,23 +1,16 @@
 import { PublicKey } from "@solana/web3.js";
 import { PDAUtil, buildWhirlpoolClient, PriceMath } from "@renec/redex-sdk";
-import { loadProvider, getTokenMintInfo, loadWallets } from "./utils";
+import { loadProvider, getTokenMintInfo, loadWallets, ROLES } from "./utils";
 import Decimal from "decimal.js";
 import config from "./config.json";
 import deployed from "./deployed.json";
 import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";
 
 async function main() {
-  const wallets = loadWallets();
+  const wallets = loadWallets([ROLES.POOL_CREATOR_AUTH]);
+  const poolCreatorAuthKeypair = wallets[ROLES.POOL_CREATOR_AUTH];
 
-  if (!wallets.poolCreatorAuthKeypair) {
-    throw new Error("Please provide pool_creator_authority_wallet wallet");
-  }
-  console.log(
-    "pool creator: ",
-    wallets.poolCreatorAuthKeypair.publicKey.toString()
-  );
-
-  const { ctx } = loadProvider(wallets.poolCreatorAuthKeypair);
+  const { ctx } = loadProvider(poolCreatorAuthKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(

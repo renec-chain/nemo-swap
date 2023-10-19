@@ -10,6 +10,7 @@ export const initializePoolDiscountInfo = async (
   tokenConversionRate: number,
   discountFeeRate: number,
   discountTokenRateOverTokenA: BN,
+  expo: number,
   wallet?: Signer
 ): Promise<PublicKey> => {
   let poolCreatorAuthority = wallet?.publicKey || ctx.wallet.publicKey;
@@ -28,6 +29,46 @@ export const initializePoolDiscountInfo = async (
     poolCreatorAuthority,
     tokenConversionRate: tokenConversionRate,
     discountFeeRate: discountFeeRate,
+    expo,
+    discountTokenRateOverTokenA: discountTokenRateOverTokenA,
+  });
+
+  let tx = toTx(ctx, ix);
+  if (wallet) {
+    tx = tx.addSigner(wallet);
+  }
+  await tx.buildAndExecute();
+
+  return whirlpoolDiscountInfoPDA.publicKey;
+};
+
+export const setPoolDiscountInfo = async (
+  ctx: WhirlpoolContext,
+  whirlpool: Whirlpool,
+  discountTokenMint: PublicKey,
+  tokenConversionRate: number,
+  discountFeeRate: number,
+  discountTokenRateOverTokenA: BN,
+  expo: number,
+  wallet?: Signer
+): Promise<PublicKey> => {
+  let poolCreatorAuthority = wallet?.publicKey || ctx.wallet.publicKey;
+  const whirlpoolDiscountInfoPDA = PDAUtil.getWhirlpoolDiscountInfo(
+    ctx.program.programId,
+    whirlpool.getAddress(),
+    discountTokenMint
+  );
+
+  const whirlpoolData = await whirlpool.refreshData();
+  const ix = WhirlpoolIx.setPoolDiscountInfoIx(ctx.program, {
+    whirlpoolsConfig: whirlpoolData.whirlpoolsConfig,
+    whirlpool: whirlpool.getAddress(),
+    discountToken: discountTokenMint,
+    whirlpoolDiscountInfoPDA,
+    poolCreatorAuthority,
+    tokenConversionRate: tokenConversionRate,
+    discountFeeRate: discountFeeRate,
+    expo,
     discountTokenRateOverTokenA: discountTokenRateOverTokenA,
   });
 

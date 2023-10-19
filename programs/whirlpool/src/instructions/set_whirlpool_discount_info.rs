@@ -27,6 +27,7 @@ pub fn handler(
     ctx: Context<SetPoolDiscountInfo>,
     token_conversion_fee_rate: u16,
     discount_fee_rate: u16,
+    expo: u8,
     discount_token_rate_over_token_a: u64,
 ) -> ProgramResult {
     let whirlpool_discount_info = &mut ctx.accounts.whirlpool_discount_info;
@@ -36,6 +37,7 @@ pub fn handler(
         discount_token.decimals,
         token_conversion_fee_rate,
         discount_fee_rate,
+        expo,
         discount_token_rate_over_token_a,
     )
 }

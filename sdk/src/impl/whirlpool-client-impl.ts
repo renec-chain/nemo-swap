@@ -25,7 +25,7 @@ import { Position, Whirlpool, WhirlpoolClient } from "../whirlpool-client";
 import { PositionImpl } from "./position-impl";
 import { getRewardInfos, getTokenMintInfos, getTokenVaultAccountInfos } from "./util";
 import { WhirlpoolImpl } from "./whirlpool-impl";
-import { SwapQuote, twoHopSwapQuoteFromSwapQuotes } from "../quotes/public";
+import { FeeDiscountSwapQuote, SwapQuote, twoHopSwapQuoteFromSwapQuotes } from "../quotes/public";
 
 export class WhirlpoolClientImpl implements WhirlpoolClient {
   constructor(readonly ctx: WhirlpoolContext) {}
@@ -409,13 +409,13 @@ export class WhirlpoolClientImpl implements WhirlpoolClient {
   }
 
   public async twoHopSwapWithFeeDiscount(
-    swapQuote1: SwapQuote,
+    swapQuote1: FeeDiscountSwapQuote,
     whirlpool1: Whirlpool,
-    swapQuote2: SwapQuote,
+    swapQuote2: FeeDiscountSwapQuote,
     whirlpool2: Whirlpool,
     discountToken: PublicKey,
     wallet?: Wallet | undefined
-  ): Promise<TransactionBuilder> {
+  ): Promise<{ tx: TransactionBuilder; estimatedBurnAmount: BN; estimatedDiscountAmount: BN }> {
     const twoHopSwapQuote = twoHopSwapQuoteFromSwapQuotes(swapQuote1, swapQuote2);
     const sourceWallet = wallet ?? this.ctx.provider.wallet;
 
@@ -509,6 +509,12 @@ export class WhirlpoolClientImpl implements WhirlpoolClient {
       discountTokenOwnerAccount,
     });
 
-    return toTx(this.ctx, twoHopIx).prependInstructions(createATAInstructions);
+    return {
+      tx: toTx(this.ctx, twoHopIx).prependInstructions(createATAInstructions),
+      estimatedBurnAmount: swapQuote1.estimatedBurnAmount.add(swapQuote2.estimatedBurnAmount),
+      estimatedDiscountAmount: swapQuote1.estimatedDiscountAmount.add(
+        swapQuote2.estimatedDiscountAmount
+      ),
+    };
   }
 }
