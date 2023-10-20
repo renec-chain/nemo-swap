@@ -15,8 +15,20 @@ import {
 import deployed from "../create_pool//deployed.json";
 import { askToConfirmPoolInfo, getPoolInfo } from "../create_pool/utils/pool";
 import { u64 } from "@solana/spl-token";
+import { GaslessDapp, GaslessTransaction } from "@renec-foundation/gasless-sdk";
+import { Wallet } from "@project-serum/anchor";
+import { executeGaslessTx } from "./utils";
 
 async function main() {
+  const poolIndex = parseInt(process.argv[2]);
+
+  if (isNaN(poolIndex)) {
+    console.error("Please provide a valid pool index.");
+    return;
+  }
+
+  let poolInfo = getPoolInfo(poolIndex);
+
   const wallets = loadWallets([ROLES.USER]);
   const userKeypair = wallets[ROLES.USER];
 
@@ -24,7 +36,6 @@ async function main() {
   const REDEX_CONFIG_PUB = new PublicKey(deployed.REDEX_CONFIG_PUB);
   const client = buildWhirlpoolClient(ctx);
 
-  let poolInfo = getPoolInfo(0);
   await askToConfirmPoolInfo(poolInfo);
 
   if (!poolInfo.discountTokenMint) {
@@ -67,8 +78,19 @@ async function main() {
       userKeypair.publicKey
     );
     tx.addSigner(wallets.userKeypair);
-    const sig = await tx.buildAndExecute();
-    console.log(sig);
+    const txSize = await tx.txnSize();
+    console.log("Raw tx size: ", txSize);
+
+    // Construct gasless txn
+    const dappUtil = await GaslessDapp.new(client.getContext().connection);
+    const gaslessTxn = GaslessTransaction.fromTransactionBuilder(
+      client.getContext().connection,
+      new Wallet(userKeypair),
+      tx.compressIx(true),
+      dappUtil
+    );
+
+    await executeGaslessTx(gaslessTxn, true);
   }
 }
 

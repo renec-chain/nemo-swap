@@ -1,5 +1,13 @@
 import { Address } from "@project-serum/anchor";
 import { Whirlpool } from "@renec/redex-sdk";
+import { PublicKey, TransactionInstruction } from "@solana/web3.js";
+import { Instruction } from "@orca-so/common-sdk";
+export const MEMO_V2_PROGRAM_ID = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr";
+
+export * from "./gasless";
+export * from "./wallet";
+export * from "./token";
+export * from "./pool";
 
 export type TwoHopTokens = {
   pool1OtherToken: Address;
@@ -49,4 +57,23 @@ export const getTwoHopSwapTokens = (
     pool2OtherToken,
     intermidaryToken: intermediaryToken,
   };
+};
+
+export const getLogMemoIx = async (
+  from: PublicKey,
+  message: string
+): Promise<Instruction> => {
+  const transactionInstruction = new TransactionInstruction({
+    keys: [{ pubkey: from, isSigner: true, isWritable: false }],
+    data: Buffer.from(message),
+    programId: new PublicKey(MEMO_V2_PROGRAM_ID),
+  });
+
+  let ix = {
+    instructions: [transactionInstruction],
+    cleanupInstructions: [],
+    signers: [],
+  };
+
+  return ix;
 };

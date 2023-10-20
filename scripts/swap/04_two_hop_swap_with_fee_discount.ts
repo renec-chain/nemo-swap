@@ -10,8 +10,9 @@ import { ROLES, loadProvider, loadWallets } from "../create_pool/utils";
 import deployed from "../create_pool/deployed.json";
 import { u64 } from "@solana/spl-token";
 import { Wallet } from "@project-serum/anchor";
-import { getTwoHopSwapTokens } from "./utils";
+import { executeGaslessTx, getTwoHopSwapTokens } from "./utils";
 import { getPoolInfo } from "../create_pool/utils/pool";
+import { GaslessDapp, GaslessTransaction } from "@renec-foundation/gasless-sdk";
 
 const TICK_SPACING = 32;
 
@@ -92,7 +93,7 @@ async function main() {
   );
 
   // two hop swap
-  const tx = await client.twoHopSwapWithFeeDiscount(
+  const twoHopTransaction = await client.twoHopSwapWithFeeDiscount(
     quote1,
     whirlpool1,
     quote2,
@@ -101,8 +102,20 @@ async function main() {
     new Wallet(userKeypair)
   );
 
-  const txHash = await tx.tx.buildAndExecute();
-  console.log("txHash:", txHash);
+  const tx = twoHopTransaction.tx;
+  const txSize = await tx.txnSize();
+  console.log("Raw tx size: ", txSize);
+
+  // Construct gasless txn
+  const dappUtil = await GaslessDapp.new(client.getContext().connection);
+  const gaslessTxn = GaslessTransaction.fromTransactionBuilder(
+    client.getContext().connection,
+    new Wallet(userKeypair),
+    tx.compressIx(true),
+    dappUtil
+  );
+
+  await executeGaslessTx(gaslessTxn, true);
 }
 
 main().catch((reason) => {
