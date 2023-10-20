@@ -6,38 +6,31 @@ import {
   PoolUtil,
   swapWithFeeDiscountQuoteByInputToken,
 } from "@renec/redex-sdk";
-import { loadProvider, loadWallets } from "../create_pool/utils";
+import { ROLES, loadProvider, loadWallets } from "../create_pool/utils";
 import deployed from "../create_pool/deployed.json";
 import { u64 } from "@solana/spl-token";
 import { Wallet } from "@project-serum/anchor";
+import { getTwoHopSwapTokens } from "./utils";
+import { getPoolInfo } from "../create_pool/utils/pool";
 
 const TICK_SPACING = 32;
 
 async function main() {
-  // fixed params
-  const renecPubkey = new PublicKey(
-    "So11111111111111111111111111111111111111112"
-  );
-  const reusdPubkey = new PublicKey(
-    "Afy8qEgeJykFziRwiCk6tnBbd3uzxMoEqn2GTNCyGN7P"
-  );
-  const revndPubkey = new PublicKey(
-    "DSodi59U9ZWRnVgP94VNnKamFybYpsqYj2iKL1jQF7Ag"
-  );
+  const poolIndex1 = parseInt(process.argv[2]);
+  const poolIndex2 = parseInt(process.argv[3]);
 
-  const discountToken = new PublicKey(
-    "33TX1A6V23ZAKfnCZvtSyvdKDfUDeLafVvRHCdGBp8xG"
-  );
-
-  // perform two hop swap
-  const wallets = loadWallets();
-
-  if (!wallets.userKeypair) {
-    throw new Error("Please provide user_wallet wallet");
+  if (isNaN(poolIndex1) || isNaN(poolIndex2)) {
+    console.error("Please provide two valid pool indexes.");
+    return;
   }
 
-  const sourceKeypair = wallets.userKeypair;
-  const { ctx } = loadProvider(wallets.userKeypair);
+  let poolInfo1 = getPoolInfo(poolIndex1);
+  let poolInfo2 = getPoolInfo(poolIndex2);
+
+  const wallets = loadWallets([ROLES.USER]);
+  const userKeypair = wallets[ROLES.USER];
+
+  const { ctx } = loadProvider(userKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(
@@ -46,16 +39,12 @@ async function main() {
     return;
   }
 
-  // Get pool info
-  const pool1Tokens = PoolUtil.orderMints(renecPubkey, reusdPubkey);
-  const pool2Tokens = PoolUtil.orderMints(reusdPubkey, revndPubkey);
-
   // Get whirlpool 1: renec - reusd
   const whirlpoolKey1 = PDAUtil.getWhirlpool(
     ctx.program.programId,
     new PublicKey(deployed.REDEX_CONFIG_PUB),
-    new PublicKey(pool1Tokens[0].toString()),
-    new PublicKey(pool1Tokens[1].toString()),
+    new PublicKey(poolInfo1.tokenMintA),
+    new PublicKey(poolInfo1.tokenMintB),
     TICK_SPACING
   ).publicKey;
 
@@ -63,8 +52,8 @@ async function main() {
   const whirlpoolKey2 = PDAUtil.getWhirlpool(
     ctx.program.programId,
     new PublicKey(deployed.REDEX_CONFIG_PUB),
-    new PublicKey(pool2Tokens[0].toString()),
-    new PublicKey(pool2Tokens[1].toString()),
+    new PublicKey(poolInfo2.tokenMintA),
+    new PublicKey(poolInfo2.tokenMintB),
     TICK_SPACING
   ).publicKey;
 
@@ -73,12 +62,16 @@ async function main() {
   const whirlpool1 = await client.getPool(whirlpoolKey1, true);
   const whirlpool2 = await client.getPool(whirlpoolKey2, true);
 
-  const amount = new u64(100000);
+  const twoHopsTokens = getTwoHopSwapTokens(whirlpool1, whirlpool2);
+
+  const amount = new u64(900);
+  const discountToken = new PublicKey(poolInfo1.discountTokenMint);
+
   // renec is the input token
   const quote1 = await swapWithFeeDiscountQuoteByInputToken(
     whirlpool1,
     discountToken,
-    renecPubkey,
+    twoHopsTokens.pool1OtherToken,
     amount,
     Percentage.fromFraction(1, 100),
     ctx.program.programId,
@@ -90,7 +83,7 @@ async function main() {
   const quote2 = await swapWithFeeDiscountQuoteByInputToken(
     whirlpool2,
     discountToken,
-    reusdPubkey,
+    twoHopsTokens.intermidaryToken,
     quote1.estimatedAmountOut,
     Percentage.fromFraction(1, 100),
     ctx.program.programId,
@@ -105,7 +98,7 @@ async function main() {
     quote2,
     whirlpool2,
     discountToken,
-    new Wallet(sourceKeypair)
+    new Wallet(userKeypair)
   );
 
   const txHash = await tx.tx.buildAndExecute();
