@@ -10,9 +10,8 @@ import { ROLES, loadProvider, loadWallets } from "../create_pool/utils";
 import deployed from "../create_pool/deployed.json";
 import { u64 } from "@solana/spl-token";
 import { Wallet } from "@project-serum/anchor";
-import { executeGaslessTx, getTwoHopSwapTokens } from "./utils";
+import { getTwoHopSwapTokens } from "./utils";
 import { getPoolInfo } from "../create_pool/utils/pool";
-import { GaslessDapp, GaslessTransaction } from "@renec-foundation/gasless-sdk";
 
 const TICK_SPACING = 32;
 
