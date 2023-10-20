@@ -1,11 +1,7 @@
 //! A concentrated liquidity AMM contract powered by Orca.
 use anchor_lang::prelude::*;
 
-<<<<<<< HEAD
-declare_id!("B5goNUferRjFnoY33AU9WoZPe7aDWGNZqNYRYq9sWhN8");
-=======
 declare_id!("7LDiNqumVZiaKHmCKrkqn4cMQuEngYRzLXev24HN7CPk");
->>>>>>> 092b065 (chore: use get config function to get testnet config pool info)
 
 #[doc(hidden)]
 pub mod constants;
