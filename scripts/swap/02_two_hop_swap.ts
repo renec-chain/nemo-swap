@@ -81,7 +81,7 @@ async function main() {
     [100, 0, 0],
     new BN(100000),
     newWallet,
-    discountTokenMint,
+    null,
     true
   );
 

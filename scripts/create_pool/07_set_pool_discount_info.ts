@@ -7,7 +7,9 @@ import {
   getRateOverToken,
 } from "@renec/redex-sdk";
 import {} from "@renec/redex-sdk/src";
-import { loadProvider, loadWallets, ROLES } from "./utils";
+import { loadProvider, getTokenMintInfo, loadWallets, ROLES } from "./utils";
+import deployed from "./deployed.json";
+import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";
 import { FEE_DISCOUNT_DENOMINATOR } from "./utils/consts";
 import { DecimalUtil, Instruction } from "@orca-so/common-sdk";
 import { Decimal } from "decimal.js";
