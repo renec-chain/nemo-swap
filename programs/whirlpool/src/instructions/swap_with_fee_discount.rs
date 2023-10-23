@@ -71,7 +71,31 @@ pub fn handler(
         timestamp,
     )?;
 
-    // TODO: calculate fee_discount value, and transfer tokens
+    let burn_amount_in_discount_token = calculate_equivalent_discount_token_amount(
+        whirlpool_discount_info,
+        discount_token,
+        &swap_update,
+        burn_fee_accumulated,
+        amount_specified_is_input,
+        a_to_b,
+    )?;
+
+    let discount_token_amount_in_discount_token = calculate_equivalent_discount_token_amount(
+        whirlpool_discount_info,
+        discount_token,
+        &swap_update,
+        discount_amount_accumulated,
+        amount_specified_is_input,
+        a_to_b,
+    )?;
+
+    burn_token(
+        discount_token.to_account_info(),
+        discount_token_owner_account.to_account_info(),
+        ctx.accounts.token_authority.to_account_info(),
+        ctx.accounts.token_program.to_account_info(),
+        burn_amount_in_discount_token,
+    )?;
 
     if amount_specified_is_input {
         if (a_to_b && other_amount_threshold > swap_update.amount_b)
