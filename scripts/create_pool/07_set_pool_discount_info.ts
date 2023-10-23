@@ -8,10 +8,8 @@ import {
 } from "@renec/redex-sdk";
 import {} from "@renec/redex-sdk/src";
 import { loadProvider, getTokenMintInfo, loadWallets, ROLES } from "./utils";
-import config from "./config.json";
 import deployed from "./deployed.json";
 import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";
-import { BN } from "@project-serum/anchor";
 import { FEE_DISCOUNT_DENOMINATOR } from "./utils/consts";
 import { DecimalUtil, Instruction } from "@orca-so/common-sdk";
 
