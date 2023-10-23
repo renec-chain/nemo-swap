@@ -1,6 +1,6 @@
 {
   "RPC_ENDPOINT_URL": "https://api-testnet.renec.foundation:8899/",
-  "REDEX_PROGRAM_ID": "7LDiNqumVZiaKHmCKrkqn4cMQuEngYRzLXev24HN7CPk",
+  "REDEX_PROGRAM_ID": "BnPBUnXGBDDner1rtk64j1KBDLUJjKtd6WhFK7ReW5xd",
   "PROTOCOL_FEE_RATE": 300,
   "FEE_TIERS": [
     {
@@ -43,7 +43,7 @@
       "DISCOUNT_TOKEN_MINT": "J1ccfcMXCcQQUMS6vPquq7LaYLujuQX8AbxF5PHRKx8U",
       "TOKEN_CONVERSION_RATE": "0.4",
       "DISCOUNT_RATE_OVER_TOKEN_CONVERTED_AMOUNT": "0.5",
-      "DISCOUNT_TOKEN_RATE_OVER_TOKEN_A": "1.2",
+      "DISCOUNT_TOKEN_RATE_OVER_TOKEN_A": "2",
       "EXPO": "4"
     },
     {
