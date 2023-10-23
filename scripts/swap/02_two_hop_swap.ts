@@ -38,12 +38,10 @@ import {
   GaslessDapp,
   GaslessTransaction,
   Wallet,
-  sendToGasless,
 } from "@renec-foundation/gasless-sdk";
 import { Address, BN } from "@project-serum/anchor";
 
 const SLIPPAGE = Percentage.fromFraction(1, 100);
-const config = getConfig();
 
 async function main() {
   const wallets = loadWallets([ROLES.USER]);
@@ -80,9 +78,9 @@ async function main() {
     pool1,
     [0, 1, 2],
     [100, 0, 0],
-    new BN(500),
+    new BN(100000),
     newWallet,
-    feeDiscountToken,
+    null,
     true
   );
 

@@ -20,16 +20,19 @@ echo "expected program id: $PROGRAM_ID"
 
 # update program id to the config.json file
 CONFIG_JSON_FILE_PATH="scripts/create_pool/config.json"
+TESTNET_CONFIG_JSON_FILE_PATH="scripts/create_pool/config-testnet.json"
 
 # Replace the existing declare_id! line with the new PROGRAM_ID
 if [[ "$OSTYPE" == "darwin"* ]]; then
     # Mac OSX
     sed -i "" "s/declare_id!(\"[^\"]*\")/declare_id!(\"$PROGRAM_ID\")/g" "$FILE_PATH"
     sed -i "" "s/\"REDEX_PROGRAM_ID\": \"[^\"]*\"/\"REDEX_PROGRAM_ID\": \"$PROGRAM_ID\"/g" "$CONFIG_JSON_FILE_PATH"
+    sed -i "" "s/\"REDEX_PROGRAM_ID\": \"[^\"]*\"/\"REDEX_PROGRAM_ID\": \"$PROGRAM_ID\"/g" "$TESTNET_CONFIG_JSON_FILE_PATH"
 else
     # Linux and others
     sed -i "s/declare_id!(\"[^\"]*\")/declare_id!(\"$PROGRAM_ID\")/g" "$FILE_PATH"
     sed -i "s/\"REDEX_PROGRAM_ID\": \"[^\"]*\"/\"REDEX_PROGRAM_ID\": \"$PROGRAM_ID\"/g" "$CONFIG_JSON_FILE_PATH"
+    sed -i "s/\"REDEX_PROGRAM_ID\": \"[^\"]*\"/\"REDEX_PROGRAM_ID\": \"$PROGRAM_ID\"/g" "$TESTNET_CONFIG_JSON_FILE_PATH"
 fi
 
 # Get program id from the file

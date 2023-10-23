@@ -110,17 +110,6 @@ pub fn handler(
         a_to_b,
     )?;
 
-    msg!(
-        "SAVE: token: {:?} - amount: {}",
-        discount_token.key(),
-        discount_token_amount_in_discount_token
-    );
-    msg!(
-        "BURN: token: {:?} - amount: {}",
-        discount_token.key(),
-        burn_amount_in_discount_token
-    );
-
     burn_token(
         discount_token.to_account_info(),
         discount_token_owner_account.to_account_info(),
