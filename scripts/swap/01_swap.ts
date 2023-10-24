@@ -78,14 +78,14 @@ async function main() {
     // Construct gasless txn
     const dappUtil = await GaslessDapp.new(client.getContext().connection);
 
-    // const gaslessTxn = GaslessTransaction.fromTransactionBuilder(
-    //   client.getContext().connection,
-    //   new Wallet(userKeypair),
-    //   tx.compressIx(true),
-    //   dappUtil
-    // );
+    const gaslessTxn = GaslessTransaction.fromTransactionBuilder(
+      client.getContext().connection,
+      new Wallet(userKeypair),
+      tx.compressIx(true),
+      dappUtil
+    );
 
-    // await executeGaslessTx(gaslessTxn, true);
+    await executeGaslessTx(gaslessTxn, true);
   }
 }
 
