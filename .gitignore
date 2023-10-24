@@ -8,4 +8,4 @@ test-ledger/
 sdk/dist/
 sdk/node_modules
 scripts/.wallets
-.env 
+.env
