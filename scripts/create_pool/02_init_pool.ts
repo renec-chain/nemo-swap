@@ -19,10 +19,11 @@ async function main() {
     console.error("Using default pool index 0");
   }
 
-  const wallets = loadWallets([ROLES.POOL_CREATOR_AUTH]);
+  const wallets = loadWallets([ROLES.POOL_CREATOR_AUTH, ROLES.USER]);
   const poolCreatorAuthKeypair = wallets[ROLES.POOL_CREATOR_AUTH];
+  const userKeypair = wallets[ROLES.USER];
 
-  const { ctx } = loadProvider(poolCreatorAuthKeypair);
+  const { ctx } = loadProvider(userKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(
@@ -91,7 +92,7 @@ async function main() {
       tickIndex,
       ctx.wallet.publicKey
     );
-    const txid = await tx.buildAndExecute();
+    const txid = tx.addSigner(poolCreatorAuthKeypair).buildAndExecute();
     console.log(
       `new pool account ${poolKey.toString()} deployed at txid:`,
       txid

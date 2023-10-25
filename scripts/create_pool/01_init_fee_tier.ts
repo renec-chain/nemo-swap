@@ -12,10 +12,11 @@ import deployed from "./deployed.json";
 const config = getConfig();
 
 async function main() {
-  const wallets = loadWallets([ROLES.FEE_AUTH]);
+  const wallets = loadWallets([ROLES.FEE_AUTH, ROLES.USER]);
   const feeAuthKeypair = wallets[ROLES.FEE_AUTH];
+  const userKeypair = wallets[ROLES.USER];
 
-  const { ctx } = loadProvider(feeAuthKeypair);
+  const { ctx } = loadProvider(userKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(
