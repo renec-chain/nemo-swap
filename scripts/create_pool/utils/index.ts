@@ -34,7 +34,6 @@ export const ROLES = {
   FEE_AUTH: "fee_authority_wallet",
   REWARD_EMISSIONS_SUPPER_AUTH: "reward_emissions_supper_authority_wallet",
   POOL_CREATOR_AUTH: "pool_creator_authority_wallet",
-  TOKEN_MINT_AUTH: "token_mint_authority_wallet",
   USER: "user_wallet",
 };
 
