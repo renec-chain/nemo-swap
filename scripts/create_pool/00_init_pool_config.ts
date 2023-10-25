@@ -19,6 +19,7 @@ async function main() {
     ROLES.FEE_AUTH,
     ROLES.REWARD_EMISSIONS_SUPPER_AUTH,
     ROLES.POOL_CREATOR_AUTH,
+    ROLES.USER,
   ]);
 
   const deployerKeypair = wallets[ROLES.DEPLOYER];
@@ -28,8 +29,9 @@ async function main() {
   const rewardEmissionSupperAuthKeypair =
     wallets[ROLES.REWARD_EMISSIONS_SUPPER_AUTH];
   const poolCreatorAuthKeypair = wallets[ROLES.POOL_CREATOR_AUTH];
+  const userKeypair = wallets[ROLES.USER]; // in vault scripts, user acts as payer
 
-  const { ctx } = loadProvider(deployerKeypair);
+  const { ctx } = loadProvider(userKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log("deploying redex pool config...");

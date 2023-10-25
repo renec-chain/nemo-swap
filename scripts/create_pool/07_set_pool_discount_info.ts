@@ -21,10 +21,12 @@ async function main() {
     console.error("Using default pool index 0");
   }
 
-  const wallets = loadWallets([ROLES.POOL_CREATOR_AUTH]);
-  const poolCreatorAuthKeypair = wallets[ROLES.POOL_CREATOR_AUTH];
+  const wallets = loadWallets([ROLES.POOL_CREATOR_AUTH, ROLES.USER]);
 
-  const { ctx } = loadProvider(poolCreatorAuthKeypair);
+  const poolCreatorAuthKeypair = wallets[ROLES.POOL_CREATOR_AUTH];
+  const userKeypair = wallets[ROLES.USER];
+
+  const { ctx } = loadProvider(userKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(
@@ -129,7 +131,9 @@ async function main() {
         }
 
         let tx = toTx(ctx, ix);
-        const txHash = await tx.buildAndExecute();
+        const txHash = await tx
+          .addSigner(poolCreatorAuthKeypair)
+          .buildAndExecute();
         console.log("Tx hash: ", txHash);
 
         whirlpoolDiscountInfoData = await client
