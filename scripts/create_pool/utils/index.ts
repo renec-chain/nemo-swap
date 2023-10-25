@@ -101,7 +101,7 @@ export enum TickSpacing {
 }
 
 export const getConfig = () => {
-  if (process.env.IS_TESTNET === "true") {
+  if (process.env.TESTNET === "1") {
     return require("../config-testnet.json");
   } else {
     return require("../config.json");
