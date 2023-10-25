@@ -12,21 +12,11 @@ import deployed from "./deployed.json";
 const config = getConfig();
 
 async function main() {
-  const wallets = loadWallets([ROLES.FEE_AUTH]);
+  const wallets = loadWallets([ROLES.FEE_AUTH, ROLES.USER]);
   const feeAuthKeypair = wallets[ROLES.FEE_AUTH];
+  const userKeypair = wallets[ROLES.USER];
 
-  // Check required roles
-  if (!wallets.feeAuthKeypair) {
-    throw new Error("Please provide fee_authority_wallet wallet");
-  }
-
-  if (!wallets.userKeypair) {
-    throw new Error("Please provide user_wallet wallet");
-  }
-
-  console.log("fee auth: ", wallets.feeAuthKeypair.publicKey.toString());
-
-  const { ctx } = loadProvider(wallets.userKeypair);
+  const { ctx } = loadProvider(userKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(
