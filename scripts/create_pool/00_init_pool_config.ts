@@ -22,7 +22,6 @@ async function main() {
     ROLES.USER,
   ]);
 
-  const deployerKeypair = wallets[ROLES.DEPLOYER];
   const collectProtocolFeesAuthKeypair =
     wallets[ROLES.COLLECT_PROTOCOL_FEES_AUTH];
   const feeAuthKeypair = wallets[ROLES.FEE_AUTH];
