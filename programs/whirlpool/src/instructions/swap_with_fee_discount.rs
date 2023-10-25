@@ -81,7 +81,7 @@ pub fn handler(
         ctx.accounts.tick_array_2.load_mut().ok(),
     );
 
-    let (swap_update, discount_amount_accumulated, burn_fee_accumulated) = swap_with_fee_discount(
+    let (swap_update, _, burn_fee_accumulated) = swap_with_fee_discount(
         &whirlpool,
         &whirlpool_discount_info,
         &mut swap_tick_sequence,
@@ -97,15 +97,6 @@ pub fn handler(
         discount_token,
         &swap_update,
         burn_fee_accumulated,
-        amount_specified_is_input,
-        a_to_b,
-    )?;
-
-    let discount_token_amount_in_discount_token = calculate_equivalent_discount_token_amount(
-        whirlpool_discount_info,
-        discount_token,
-        &swap_update,
-        discount_amount_accumulated,
         amount_specified_is_input,
         a_to_b,
     )?;

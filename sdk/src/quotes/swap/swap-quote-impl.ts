@@ -49,6 +49,9 @@ export function simulateSwap(params: SwapQuoteParam): SwapQuote {
     throw new WhirlpoolsError("Provided tokenAmount is zero.", SwapErrorCode.ZeroTradableAmount);
   }
 
+  console.log("tickArrays", tickArrays);
+  console.log("ticks: ", tickArrays[0].data?.ticks);
+
   const tickSequence = new TickArraySequence(tickArrays, whirlpoolData.tickSpacing, aToB);
 
   // Ensure 1st search-index resides on the 1st array in the sequence to match smart contract expectation.
