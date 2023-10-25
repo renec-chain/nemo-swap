@@ -36,7 +36,7 @@ else
 fi
 
 # Get program id from the file
-UPDATED_PROGRAM_ID=$(grep -E 'declare_id!\("[A-Za-z0-9]{44}"\);' "$FILE_PATH" | grep -oE '[A-Za-z0-9]{44}')
+UPDATED_PROGRAM_ID=$(grep -E 'declare_id!\("[A-Za-z0-9]{43,44}"\);' "$FILE_PATH" | grep -oE '[A-Za-z0-9]{43,44}')
 echo "updated program id: $UPDATED_PROGRAM_ID"
 
 # Compare it to the existing PROGRAM_ID
