@@ -1,6 +1,6 @@
 {
   "RPC_ENDPOINT_URL": "https://api-testnet.renec.foundation:8899/",
-  "REDEX_PROGRAM_ID": "H2YA8gdNHr6PwyWXvav3chfSRenusMXQxatjUfkscGpj",
+  "REDEX_PROGRAM_ID": "Du37SN5ScPDrHJVf2JSu1QX6HvDXa9EMHtEVCqLjsaPx",
   "PROTOCOL_FEE_RATE": 300,
   "FEE_TIERS": [
     {

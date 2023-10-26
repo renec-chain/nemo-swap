@@ -43,6 +43,7 @@ import { Address, BN } from "@project-serum/anchor";
 
 const SLIPPAGE = Percentage.fromFraction(1, 100);
 
+//usage: 02_two_hop_swap <pool-idx-0> <pool-idx-1> <discount-token-mint | null>
 async function main() {
   const wallets = loadWallets([ROLES.USER]);
   const userAuth = wallets[ROLES.USER];
@@ -58,6 +59,11 @@ async function main() {
   const poolIdx0 = parseInt(process.argv[2]);
   const poolIdx1 = parseInt(process.argv[3]);
 
+  const discountTokenMintStr = process.argv[4];
+  const discountTokenMint = discountTokenMintStr
+    ? new PublicKey(discountTokenMintStr)
+    : null;
+
   if (isNaN(poolIdx0) || isNaN(poolIdx1)) {
     console.error("Please provide two valid pool indexes.");
     return;
@@ -65,11 +71,6 @@ async function main() {
 
   const pool0 = await getWhirlPool(client, getPoolInfo(poolIdx0));
   const pool1 = await getWhirlPool(client, getPoolInfo(poolIdx1));
-
-  // swap two hops
-  const feeDiscountToken = new PublicKey(
-    getPoolInfo(poolIdx0).discountTokenMint
-  );
 
   await swapTwoHops(
     "two hops - 0 ",
@@ -80,7 +81,7 @@ async function main() {
     [100, 0, 0],
     new BN(100000),
     newWallet,
-    null,
+    discountTokenMint,
     true
   );
 

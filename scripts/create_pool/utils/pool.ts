@@ -68,26 +68,5 @@ export function getPoolInfo(poolIndex: number): PoolInfo {
     isOpenPosition: pool.OPEN_POSITION,
   };
 
-  // Check if optional fields are present and if so, add them to the result
-  if (pool["DISCOUNT_TOKEN_MINT"]) {
-    result.discountTokenMint = pool["DISCOUNT_TOKEN_MINT"];
-  }
-  if (pool["TOKEN_CONVERSION_RATE"]) {
-    result.tokenConversionRate = parseFloat(pool["TOKEN_CONVERSION_RATE"]);
-  }
-  if (pool["DISCOUNT_RATE_OVER_TOKEN_CONVERTED_AMOUNT"]) {
-    result.discountFeeRateOverTokenConvertedAmount = parseFloat(
-      pool["DISCOUNT_RATE_OVER_TOKEN_CONVERTED_AMOUNT"]
-    );
-  }
-  if (pool["DISCOUNT_TOKEN_RATE_OVER_TOKEN_A"]) {
-    result.discountTokenRateOverTokenA = new Decimal(
-      pool["DISCOUNT_TOKEN_RATE_OVER_TOKEN_A"]
-    );
-  }
-  if (pool["EXPO"]) {
-    result.discountTokenRateOverTokenAExpo = parseInt(pool["EXPO"]);
-  }
-
   return result;
 }
