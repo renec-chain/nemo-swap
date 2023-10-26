@@ -25,8 +25,9 @@ impl WhirlpoolDiscountInfo {
         expo: u8,
         discount_token_rate_over_token_a: u64,
     ) -> Result<(), ProgramError> {
+        // max token conversion rate is at 99.99% (9999) (fee after discount cannot be 0)
         require!(
-            token_coversion_fee_rate as u128 <= DISCOUNT_FEE_RATE_MUL_VALUE,
+            (token_coversion_fee_rate as u128) < DISCOUNT_FEE_RATE_MUL_VALUE,
             ErrorCode::FeeRateMaxExceeded
         );
 
