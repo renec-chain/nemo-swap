@@ -402,7 +402,8 @@ fn apply_fee_discount(
     discount_fee_accumulated: u64,
     burn_fee_accoumulated: u64,
 ) -> Result<(u64, u64), ErrorCode> {
-    if whirlpool_discount_info.token_conversion_fee_rate as u128 >= DISCOUNT_FEE_RATE_MUL_VALUE {
+    // max conversion rate is at 99.99% (9999)
+    if whirlpool_discount_info.token_conversion_fee_rate as u128 > DISCOUNT_FEE_RATE_MUL_VALUE {
         return Err(ErrorCode::FeeRateMaxExceeded.into());
     }
 

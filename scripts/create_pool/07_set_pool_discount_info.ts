@@ -32,9 +32,11 @@ async function main() {
   if (
     isNaN(tokenConversionRate) ||
     tokenConversionRate < 0 ||
-    tokenConversionRate > 1
+    tokenConversionRate >= 1
   ) {
-    throw new Error("Token conversion rate should be a float between 0 and 1");
+    throw new Error(
+      "Token conversion rate should be a greater or equal to 0 and less than 1"
+    );
   }
 
   const discountFeeRate = parseFloat(process.argv[5]);
