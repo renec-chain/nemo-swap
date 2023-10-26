@@ -15,7 +15,7 @@ import {
 } from "./utils";
 import Decimal from "decimal.js";
 import deployed from "./deployed.json";
-import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";
+import { getPoolInfo } from "./utils/pool";
 import { u64 } from "@solana/spl-token";
 const config = getConfig();
 
@@ -43,7 +43,6 @@ async function main() {
   const client = buildWhirlpoolClient(ctx);
 
   let poolInfo = getPoolInfo(poolIndex);
-  await askToConfirmPoolInfo(poolInfo);
   const mintAPub = new PublicKey(poolInfo.tokenMintA);
   const mintBPub = new PublicKey(poolInfo.tokenMintB);
   const tokenMintA = await getTokenMintInfo(ctx, mintAPub);
