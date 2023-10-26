@@ -9,7 +9,7 @@ import {
 } from "./utils";
 import Decimal from "decimal.js";
 import deployed from "./deployed.json";
-import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";
+import { getPoolInfo } from "./utils/pool";
 
 async function main() {
   let poolIndex = parseInt(process.argv[2]);
@@ -35,7 +35,6 @@ async function main() {
 
   // Get pool info
   let poolInfo = getPoolInfo(poolIndex);
-  await askToConfirmPoolInfo(poolInfo);
 
   const mintAPub = new PublicKey(poolInfo.tokenMintA);
   const mintBPub = new PublicKey(poolInfo.tokenMintB);

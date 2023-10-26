@@ -9,7 +9,7 @@ import {
 import {} from "@renec/redex-sdk/src";
 import { loadProvider, getTokenMintInfo, loadWallets, ROLES } from "./utils";
 import deployed from "./deployed.json";
-import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";
+import { getPoolInfo } from "./utils/pool";
 import { FEE_DISCOUNT_DENOMINATOR } from "./utils/consts";
 import { DecimalUtil, Instruction } from "@orca-so/common-sdk";
 
@@ -39,7 +39,6 @@ async function main() {
   const client = buildWhirlpoolClient(ctx);
 
   let poolInfo = getPoolInfo(poolIndex);
-  await askToConfirmPoolInfo(poolInfo);
 
   if (
     !poolInfo.discountTokenMint ||
