@@ -9,7 +9,7 @@ async function main() {
   // Create a dummy wallet
   const dummyWallet = Keypair.generate();
 
-  const { ctx } = loadProvider(dummyWallet, false);
+  const { ctx } = loadProvider(dummyWallet);
   const client = buildWhirlpoolClient(ctx);
   const whirlpool = await client.getPool(poolAddress);
   const whirlpoolData = whirlpool.getData();

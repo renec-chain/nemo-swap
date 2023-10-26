@@ -18,9 +18,9 @@ export const loadProvider = function (payerKeypair: Keypair) {
     provider,
     new PublicKey(config.REDEX_PROGRAM_ID)
   );
-  console.log("endpoint:", ctx.connection.rpcEndpoint);
-  console.log("wallet pubkey:", ctx.wallet.publicKey.toBase58());
 
+  console.log("endpoint:", ctx.connection.rpcEndpoint);
+  console.log("program id: ", config.REDEX_PROGRAM_ID);
   return {
     provider,
     ctx,
