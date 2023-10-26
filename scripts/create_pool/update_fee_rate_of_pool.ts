@@ -8,13 +8,13 @@ const poolAddress = new PublicKey(process.argv[2]);
 
 const newFeeRate = parseInt(process.argv[3]);
 if (Number.isNaN(newFeeRate)) {
-  console.error('Invalid integer:', process.argv[3]);
+  console.error("Invalid integer:", process.argv[3]);
 } else {
-  console.log('Valid integer:', newFeeRate);
+  console.log("Valid integer:", newFeeRate);
 }
 
 async function main() {
-  const wallets = loadWallets();
+  const wallets = loadWallets([]);
 
   // Check required roles
   if (!wallets.feeAuthKeypair) {
@@ -32,7 +32,7 @@ async function main() {
   const { ctx } = loadProvider(wallets.feeAuthKeypair);
   const client = buildWhirlpoolClient(ctx);
   const whirlpool = await client.getPool(poolAddress);
-  const whirlpoolData = whirlpool.getData()
+  const whirlpoolData = whirlpool.getData();
   console.log("=========== Pool info ============");
   console.log("Pool address: ", poolAddress.toBase58());
   console.log("\x1b[32m%s\x1b[0m", `Fee Rate: ${whirlpoolData.feeRate}`);
@@ -50,9 +50,11 @@ async function main() {
     })
   )
     .addSigner(wallets.feeAuthKeypair)
-    .buildAndExecute()
+    .buildAndExecute();
 
-  console.log(`The new feeRate of ${newFeeRate} has been updated successfully at txid: ${txid}`);
+  console.log(
+    `The new feeRate of ${newFeeRate} has been updated successfully at txid: ${txid}`
+  );
 }
 
 main().catch((reason) => {

@@ -7,9 +7,7 @@ import {
   getRateOverToken,
 } from "@renec/redex-sdk";
 import {} from "@renec/redex-sdk/src";
-import { loadProvider, getTokenMintInfo, loadWallets, ROLES } from "./utils";
-import deployed from "./deployed.json";
-import { getPoolInfo } from "./utils/pool";
+import { loadProvider, loadWallets, ROLES } from "./utils";
 import { FEE_DISCOUNT_DENOMINATOR } from "./utils/consts";
 import { DecimalUtil, Instruction } from "@orca-so/common-sdk";
 import { Decimal } from "decimal.js";
@@ -58,6 +56,22 @@ async function main() {
       "Discount token rate over token a expo should be an unsigned integer"
     );
   }
+
+  // log all the fields from praams
+  console.log("===================================================");
+  console.log("Pool address: ", poolAddressStr);
+  console.log("Discount token: ", discountTokenMintStr);
+  console.log("Token conversion rate: ", tokenConversionRate);
+  console.log("Discount fee rate: ", discountFeeRate);
+  console.log(
+    "Discount token rate over token a: ",
+    discountTokenRateOverTokenA
+  );
+  console.log(
+    "Discount token rate over token a expo: ",
+    discountTokenRateOverTokenAExpo
+  );
+  console.log("===================================================");
 
   // Convert strings to appropriate data types or objects
   const poolAddress = new PublicKey(poolAddressStr);
