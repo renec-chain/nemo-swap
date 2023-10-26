@@ -21,6 +21,9 @@ import { executeGaslessTx } from "./utils";
 
 async function main() {
   const poolIndex = parseInt(process.argv[2]);
+  const discountTokenMintStr = process.argv[3];
+
+  const discountTokenMint = new PublicKey(discountTokenMintStr);
 
   if (isNaN(poolIndex)) {
     console.error("Please provide a valid pool index.");
@@ -35,13 +38,6 @@ async function main() {
   const { ctx } = loadProvider(userKeypair);
   const REDEX_CONFIG_PUB = new PublicKey(deployed.REDEX_CONFIG_PUB);
   const client = buildWhirlpoolClient(ctx);
-
-  if (!poolInfo.discountTokenMint) {
-    console.log("Discount token mint is not found.");
-    return;
-  }
-
-  const discountTokenMint = new PublicKey(poolInfo.discountTokenMint);
 
   const mintAPub = new PublicKey(poolInfo.tokenMintA);
   const mintBPub = new PublicKey(poolInfo.tokenMintB);
