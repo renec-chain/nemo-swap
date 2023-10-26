@@ -9,7 +9,7 @@ export const ONE_SOL = 1000000000;
 
 export const loadProvider = function (payerKeypair: Keypair) {
   const config = getConfig();
-  const wallets = loadWallets();
+  const wallets = loadWallets([]);
   const commitment: Commitment = "confirmed";
 
   const connection = new Connection(config.RPC_ENDPOINT_URL, { commitment });
@@ -41,9 +41,7 @@ export const ROLES = {
 type RoleType = (typeof ROLES)[keyof typeof ROLES];
 export type Account = { [key in RoleType]?: Keypair };
 
-export const loadWallets = (
-  requiredRoles: RoleType[] = Object.values(ROLES) as RoleType[]
-): Account => {
+export const loadWallets = (requiredRoles: RoleType[]): Account => {
   return requiredRoles.reduce<Account>((acc, role) => {
     try {
       const walletData = require(`../../.wallets/${role}.json`);

@@ -1,22 +1,7 @@
 import { PublicKey, Keypair } from "@solana/web3.js";
-import {
-  PDAUtil,
-  buildWhirlpoolClient,
-  PriceMath,
-  PoolUtil,
-} from "@renec/redex-sdk";
-import {
-  loadProvider,
-  getTokenMintInfo,
-  loadWallets,
-  getConfig,
-  ROLES,
-  TickSpacing,
-} from "../create_pool/utils";
-import Decimal from "decimal.js";
+import { PDAUtil, buildWhirlpoolClient, PoolUtil } from "@renec/redex-sdk";
+import { loadProvider, TickSpacing } from "../create_pool/utils";
 import deployed from "../create_pool/deployed.json";
-import { getPoolInfo } from "../create_pool/utils/pool";
-import { token } from "@project-serum/anchor/dist/cjs/utils";
 
 async function main() {
   const tokenA = new PublicKey(process.argv[2]);
