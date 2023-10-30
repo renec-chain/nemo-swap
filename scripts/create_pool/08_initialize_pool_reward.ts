@@ -8,6 +8,7 @@ import {
 } from "@renec/redex-sdk";
 import { Whirlpool } from "@renec/redex-sdk/src";
 import { loadProvider, loadWallets, ROLES } from "./utils";
+import { deriveATA } from "@orca-so/common-sdk";
 
 //usage: yarn set_pool_reward <pool_address> <reward_token_mint> <reward_index?>
 async function main() {
@@ -47,9 +48,7 @@ async function main() {
   try {
     whirlpool = await client.getPool(poolAddress);
 
-    // assert if vault is initialized
     const rewardInfo = whirlpool.getData().rewardInfos[rewardIndex];
-
     if (!rewardInfo.mint.equals(new PublicKey(0))) {
       if (!rewardInfo.mint.equals(rewardTokenMint)) {
         throw new Error(
