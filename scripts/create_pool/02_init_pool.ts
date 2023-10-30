@@ -9,7 +9,7 @@ import {
 } from "./utils";
 import Decimal from "decimal.js";
 import deployed from "./deployed.json";
-import { askToConfirmPoolInfo, getPoolInfo } from "./utils/pool";
+import { getPoolInfo } from "./utils/pool";
 
 async function main() {
   let poolIndex = parseInt(process.argv[2]);
@@ -19,10 +19,10 @@ async function main() {
     console.error("Using default pool index 0");
   }
 
-  const wallets = loadWallets([ROLES.POOL_CREATOR_AUTH]);
-  const poolCreatorAuthKeypair = wallets[ROLES.POOL_CREATOR_AUTH];
+  const wallets = loadWallets([ROLES.POOL_CREATOR_AUTH, ROLES.USER]);
+  const userKeypair = wallets[ROLES.USER];
 
-  const { ctx } = loadProvider(poolCreatorAuthKeypair);
+  const { ctx } = loadProvider(userKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(
@@ -35,7 +35,6 @@ async function main() {
 
   // Get pool info
   let poolInfo = getPoolInfo(poolIndex);
-  await askToConfirmPoolInfo(poolInfo);
 
   const mintAPub = new PublicKey(poolInfo.tokenMintA);
   const mintBPub = new PublicKey(poolInfo.tokenMintB);

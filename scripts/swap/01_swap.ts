@@ -12,7 +12,7 @@ import {
   ROLES,
 } from "../create_pool/utils";
 import deployed from "../create_pool/deployed.json";
-import { askToConfirmPoolInfo, getPoolInfo } from "../create_pool/utils/pool";
+import { getPoolInfo } from "../create_pool/utils/pool";
 import { u64 } from "@solana/spl-token";
 import { GaslessDapp, GaslessTransaction } from "@renec-foundation/gasless-sdk";
 import { Wallet } from "@project-serum/anchor";
@@ -42,7 +42,6 @@ async function main() {
   const REDEX_CONFIG_PUB = new PublicKey(deployed.REDEX_CONFIG_PUB);
   const client = buildWhirlpoolClient(ctx);
 
-  await askToConfirmPoolInfo(poolInfo);
   const mintAPub = new PublicKey(poolInfo.tokenMintA);
   const mintBPub = new PublicKey(poolInfo.tokenMintB);
   const tokenMintA = await getTokenMintInfo(ctx, mintAPub);

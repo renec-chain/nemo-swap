@@ -7,9 +7,9 @@
     "02_init_pool": "ts-node ./create_pool/02_init_pool.ts",
     "03_open_position": "ts-node ./create_pool/03_open_position.ts",
     "05_close_position": "ts-node ./create_pool/05_close_position.ts",
-    "07_swap": "ts-node ./create_pool/07_swap.ts",
-    "08_two_hop_swap": "ts-node ./create_pool/08_two_hop_swap.ts",
-    "update_fee_rate_of_pool": "ts-node ./create_pool/update_fee_rate_of_pool.ts"
+    "set_pool_discount_info": "ts-node ./create_pool/07_set_pool_discount_info.ts",
+    "update_fee_rate_of_pool": "ts-node ./create_pool/update_fee_rate_of_pool.ts",
+    "get_pool_info": "ts-node ./helper/00_get_pool_info.ts"
   },
   "dependencies": {
     "@project-serum/anchor": "~0.25.0",

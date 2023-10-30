@@ -9,7 +9,7 @@ export const ONE_SOL = 1000000000;
 
 export const loadProvider = function (payerKeypair: Keypair) {
   const config = getConfig();
-  const wallets = loadWallets();
+  const wallets = loadWallets([]);
   const commitment: Commitment = "confirmed";
 
   const connection = new Connection(config.RPC_ENDPOINT_URL, { commitment });
@@ -19,9 +19,9 @@ export const loadProvider = function (payerKeypair: Keypair) {
     provider,
     new PublicKey(config.REDEX_PROGRAM_ID)
   );
-  console.log("endpoint:", ctx.connection.rpcEndpoint);
-  console.log("wallet pubkey:", ctx.wallet.publicKey.toBase58());
 
+  console.log("endpoint:", ctx.connection.rpcEndpoint);
+  console.log("program id: ", config.REDEX_PROGRAM_ID);
   return {
     provider,
     ctx,
@@ -35,16 +35,13 @@ export const ROLES = {
   FEE_AUTH: "fee_authority_wallet",
   REWARD_EMISSIONS_SUPPER_AUTH: "reward_emissions_supper_authority_wallet",
   POOL_CREATOR_AUTH: "pool_creator_authority_wallet",
-  TOKEN_MINT_AUTH: "token_mint_authority_wallet",
   USER: "user_wallet",
 };
 
 type RoleType = (typeof ROLES)[keyof typeof ROLES];
 export type Account = { [key in RoleType]?: Keypair };
 
-export const loadWallets = (
-  requiredRoles: RoleType[] = Object.values(ROLES) as RoleType[]
-): Account => {
+export const loadWallets = (requiredRoles: RoleType[]): Account => {
   return requiredRoles.reduce<Account>((acc, role) => {
     try {
       const walletData = require(`../../.wallets/${role}.json`);
@@ -103,7 +100,7 @@ export enum TickSpacing {
 }
 
 export const getConfig = () => {
-  if (process.env.IS_TESTNET === "true") {
+  if (process.env.TESTNET === "1") {
     return require("../config-testnet.json");
   } else {
     return require("../config.json");
