@@ -12,42 +12,54 @@ import { FEE_DISCOUNT_DENOMINATOR } from "./utils/consts";
 import { DecimalUtil, Instruction } from "@orca-so/common-sdk";
 import { Decimal } from "decimal.js";
 
-//usage: yarn set_pool_discount_info <pool_address> <discount_token_mint> <token_conversion_rate> <discount-fee-rate> <discount_token_rate_over_token_a> <discount_token_rate_over_token_a_expo>
+//usage: yarn set_pool_discount_info
+/**
+ * @ENV_Variables
+ *  POOL_ADDRESS: string
+ *  DISCOUNT_TOKEN_MINT: string
+ *  TOKEN_CONVERSION_RATE: float
+ *  DISCOUNT_FEE_RATE: float
+ *  DISCOUNT_TOKEN_RATE_OVER_TOKEN_A: float
+ *  DISCOUNT_TOKEN_RATE_OVER_TOKEN_A_EXPO: unsigned integer
+ *
+ */
 async function main() {
-  const poolAddressStr = process.argv[2];
+  const poolAddressStr = process.env.POOL_ADDRESS;
   if (!poolAddressStr) {
-    throw new Error("Please provide a pool address as the first argument");
+    throw new Error("Environment variable POOL_ADDRESS is not set");
   }
 
-  const discountTokenMintStr = process.argv[3];
+  const discountTokenMintStr = process.env.DISCOUNT_TOKEN_MINT;
   if (!discountTokenMintStr) {
-    throw new Error(
-      "Please provide a discount token mint as the second argument"
-    );
+    throw new Error("Environment variable DISCOUNT_TOKEN_MINT is not set");
   }
 
-  const tokenConversionRate = parseFloat(process.argv[4]);
+  const tokenConversionRate = parseFloat(process.env.TOKEN_CONVERSION_RATE);
   if (
     isNaN(tokenConversionRate) ||
     tokenConversionRate < 0 ||
     tokenConversionRate >= 1
   ) {
     throw new Error(
-      "Token conversion rate should be a greater or equal to 0 and less than 1"
+      "TOKEN_CONVERSION_RATE should be a float greater or equal to 0 and less than 1"
     );
   }
 
-  const discountFeeRate = parseFloat(process.argv[5]);
+  const discountFeeRate = parseFloat(process.env.DISCOUNT_FEE_RATE);
   if (isNaN(discountFeeRate) || discountFeeRate < 0 || discountFeeRate > 1) {
-    throw new Error("Discount fee rate should be a float between 0 and 1");
+    throw new Error("DISCOUNT_FEE_RATE should be a float between 0 and 1");
   }
 
-  const discountTokenRateOverTokenA = parseFloat(process.argv[6]);
+  const discountTokenRateOverTokenA = parseFloat(
+    process.env.DISCOUNT_TOKEN_RATE_OVER_TOKEN_A
+  );
   if (isNaN(discountTokenRateOverTokenA)) {
-    throw new Error("Discount token rate over token a should be a float");
+    throw new Error("DISCOUNT_TOKEN_RATE_OVER_TOKEN_A should be a float");
   }
 
-  const discountTokenRateOverTokenAExpo = parseInt(process.argv[7]);
+  const discountTokenRateOverTokenAExpo = parseInt(
+    process.env.DISCOUNT_TOKEN_RATE_OVER_TOKEN_A_EXPO
+  );
   if (
     isNaN(discountTokenRateOverTokenAExpo) ||
     discountTokenRateOverTokenAExpo < 0
