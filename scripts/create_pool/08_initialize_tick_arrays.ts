@@ -7,7 +7,11 @@ import {
   Whirlpool,
   TickUtil,
   TICK_ARRAY_SIZE,
+  TickArrayUtil,
+  WhirlpoolClient,
+  WhirlpoolContext,
 } from "@renec/redex-sdk";
+
 import { DecimalUtil, Percentage } from "@orca-so/common-sdk";
 import {
   loadProvider,
@@ -20,6 +24,10 @@ import Decimal from "decimal.js";
 import deployed from "./deployed.json";
 import { getPoolInfo } from "./utils/pool";
 import { u64 } from "@solana/spl-token";
+import { TransactionBuilder, PDA } from "@orca-so/common-sdk";
+import { initTickArrayIx } from "@renec/redex-sdk/dist/instructions";
+
+const MAX_INIT_TICK_ARRAYS_IX = 5;
 
 async function main() {
   let poolIndex = parseInt(process.argv[2]);
@@ -74,6 +82,10 @@ async function main() {
       console.log("slippage:", slippageTolerance.toString());
       console.log("input_mint:", poolInfo.inputMint);
       console.log("input_amount:", poolInfo.inputAmount);
+      console.log("token mint A: ", mintAPub.toString());
+      console.log("token mint B: ", mintBPub.toString());
+
+      console.log("===================================================");
 
       const inputTokenMint = new PublicKey(poolInfo.inputMint);
 
@@ -95,57 +107,259 @@ async function main() {
       console.log("input token amount: ", inputTokenAmount.toString());
 
       // ================================================
+      const { initTickTx, tickLowerIndex, tickUpperIndex } =
+        await getInitializableTickArrays(
+          client,
+          whirlpool,
+          lowerPrice,
+          upperPrice
+        );
 
-      getInitializableTickArrays(whirlpool, lowerPrice, upperPrice);
+      const quote = increaseLiquidityQuoteByInputTokenWithParams({
+        tokenMintA: mintAPub,
+        tokenMintB: mintBPub,
+        sqrtPrice: whirlpoolData.sqrtPrice,
+        tickCurrentIndex: whirlpoolData.tickCurrentIndex,
+        tickLowerIndex,
+        tickUpperIndex,
+        inputTokenMint,
+        inputTokenAmount,
+        slippageTolerance,
+      });
+
+      console.log("quote: ", quote.liquidityAmount.toString());
+
+      const { tx } = await whirlpool.openPosition(
+        tickLowerIndex,
+        tickUpperIndex,
+        quote
+      );
+      if (initTickTx) {
+        tx.prependInstruction(initTickTx.compressIx(false));
+      }
+      const txid = await tx.buildAndExecute();
+      console.log("Tx hash:", txid);
     }
   }
 }
 
 const getInitializableTickArrays = async (
+  client: WhirlpoolClient,
   whirlpool: Whirlpool,
   lowerPrice: Decimal,
-  upperPrice: Decimal
-) => {
-  // Get current tick
-  const price = whirlpool.getData().sqrtPrice;
-  const currentTick = PriceMath.sqrtPriceX64ToTickIndex(price);
-
-  getAllStartTicksInRange(whirlpool, lowerPrice, upperPrice);
-};
-
-const getAllStartTicksInRange = (
-  whirlpool: Whirlpool,
-  lowerPrice: Decimal,
-  upperPrice: Decimal
-) => {
+  upperPrice: Decimal,
+  funder?: PublicKey
+): Promise<{
+  initTickTx: TransactionBuilder;
+  tickLowerIndex: number;
+  tickUpperIndex: number;
+}> => {
   const tokenMintA = whirlpool.getTokenAInfo();
   const tokenMintB = whirlpool.getTokenBInfo();
   const tickSpacing = whirlpool.getData().tickSpacing;
 
-  const tickLower = PriceMath.priceToInitializableTickIndex(
+  const tickLowerIndex = PriceMath.priceToInitializableTickIndex(
     lowerPrice,
     tokenMintA.decimals,
     tokenMintB.decimals,
     tickSpacing
   );
 
-  const tickUpper = PriceMath.priceToInitializableTickIndex(
+  const tickUpperIndex = PriceMath.priceToInitializableTickIndex(
     upperPrice,
     tokenMintA.decimals,
     tokenMintB.decimals,
     tickSpacing
   );
 
+  const allSurroundingTicksArray = getallSurroundingTicksArrayInRange(
+    tickLowerIndex,
+    tickUpperIndex,
+    tickSpacing
+  );
+
+  const edgesUninitializedTickArrays =
+    await TickArrayUtil.getUninitializedArraysPDAs(
+      [tickLowerIndex, tickUpperIndex],
+      client.getContext().program.programId,
+      whirlpool.getAddress(),
+      tickSpacing,
+      client.getFetcher(),
+      true
+    );
+
+  // pick closet uninitalized tick array to the current tick due to tx size limit
+  const surroundingUninitializedTickArrays =
+    await getClosestUninitializedTickArray(
+      client,
+      whirlpool,
+      allSurroundingTicksArray,
+      tickSpacing,
+      MAX_INIT_TICK_ARRAYS_IX - edgesUninitializedTickArrays.length
+    );
+
+  if (!surroundingUninitializedTickArrays.length) {
+    return null;
+  }
+
+  // Construct the init tick array tx
+  const initTickTx = constructTheInitTickArrayTx(
+    client.getContext(),
+    whirlpool.getAddress(),
+    surroundingUninitializedTickArrays,
+    edgesUninitializedTickArrays,
+    funder
+  );
+
+  return {
+    initTickTx,
+    tickLowerIndex,
+    tickUpperIndex,
+  };
+};
+
+const getallSurroundingTicksArrayInRange = (
+  tickLower: number,
+  tickUpper: number,
+  tickSpacing: number
+): number[] => {
   const startTickLower = TickUtil.getStartTickIndex(tickLower, tickSpacing);
   const startTickUpper = TickUtil.getStartTickIndex(tickUpper, tickSpacing);
 
   // Get all start ticks in range
   const startTicks = [];
   const increment = TICK_ARRAY_SIZE * tickSpacing;
-  for (let i = startTickLower; i <= startTickUpper; i += increment) {
+  // start tick lower and upper are exclusive
+  for (let i = startTickLower + increment; i < startTickUpper; i += increment) {
     startTicks.push(i);
   }
   return startTicks;
+};
+
+const getClosestUninitializedTickArray = async (
+  client: WhirlpoolClient,
+  whirlpool: Whirlpool,
+  allSurroundingTicksArray: number[],
+  tickSpacing: number,
+  maxIxs: number
+): Promise<
+  {
+    startIndex: number;
+    pda: PDA;
+  }[]
+> => {
+  // Get all uninitialized ticks
+  const initTickArrayStartPdas = await TickArrayUtil.getUninitializedArraysPDAs(
+    allSurroundingTicksArray,
+    client.getContext().program.programId,
+    whirlpool.getAddress(),
+    tickSpacing,
+    client.getFetcher(),
+    true
+  );
+
+  if (initTickArrayStartPdas.length <= maxIxs) {
+    return initTickArrayStartPdas;
+  }
+
+  // sort ascending by start index
+  initTickArrayStartPdas.sort((a, b) => a.startIndex - b.startIndex);
+  const currentTickIndex = whirlpool.getData().tickCurrentIndex;
+
+  // Get the start tick index that passes the current tick
+  let index = -1;
+  for (let i = 0; i < initTickArrayStartPdas.length; i++) {
+    if (currentTickIndex < initTickArrayStartPdas[i].startIndex) {
+      index = i;
+      break;
+    } else if (currentTickIndex === initTickArrayStartPdas[i].startIndex) {
+      index = i + 1; // index of the next tick array
+      break;
+    }
+  }
+
+  if (index === -1 || index >= initTickArrayStartPdas.length) {
+    throw new Error("Cannot find the closest uninitialized tick array");
+  }
+
+  const leftAvailable = index; // Elements available to the left of the index
+  const rightAvailable = initTickArrayStartPdas.length - index; // Elements available to the right of the index
+
+  const leftCount = Math.floor(maxIxs / 2);
+  const rightCount = maxIxs - leftCount;
+
+  // Adjust if not enough elements on either side
+  const actualLeftCount = Math.min(leftAvailable, leftCount);
+  const actualRightCount = Math.min(rightAvailable, rightCount);
+
+  const start = Math.max(index - actualLeftCount, 0);
+  const end =
+    Math.min(index + actualRightCount, initTickArrayStartPdas.length) - 1;
+
+  if (!initTickArrayStartPdas.length) {
+    return null;
+  }
+
+  return initTickArrayStartPdas.slice(start, end + 1);
+};
+
+const constructTheInitTickArrayTx = (
+  context: WhirlpoolContext,
+  whirlpoolPubkey: PublicKey,
+  surroundingUninitializedTickArrays: {
+    startIndex: number;
+    pda: PDA;
+  }[],
+  edgesUninitializedTickArrays: {
+    startIndex: number;
+    pda: PDA;
+  }[],
+  funder?: PublicKey
+): TransactionBuilder => {
+  const provider = context.provider;
+  const program = context.program;
+  const txBuilder = new TransactionBuilder(
+    provider.connection,
+    provider.wallet
+  );
+
+  for (let i = 0; i < surroundingUninitializedTickArrays.length; i++) {
+    console.log(
+      "surroundingUninitializedTickArrays",
+      surroundingUninitializedTickArrays[i].startIndex
+    );
+  }
+
+  for (let i = 0; i < edgesUninitializedTickArrays.length; i++) {
+    console.log(
+      "edgesUninitializedTickArrays",
+      edgesUninitializedTickArrays[i].startIndex
+    );
+  }
+
+  surroundingUninitializedTickArrays.forEach((initTickArrayInfo) => {
+    txBuilder.addInstruction(
+      initTickArrayIx(context.program, {
+        startTick: initTickArrayInfo.startIndex,
+        tickArrayPda: initTickArrayInfo.pda,
+        whirlpool: whirlpoolPubkey,
+        funder: !!funder ? funder : provider.wallet.publicKey,
+      })
+    );
+  });
+
+  edgesUninitializedTickArrays.forEach((initTickArrayInfo) => {
+    txBuilder.addInstruction(
+      initTickArrayIx(context.program, {
+        startTick: initTickArrayInfo.startIndex,
+        tickArrayPda: initTickArrayInfo.pda,
+        whirlpool: whirlpoolPubkey,
+        funder: !!funder ? funder : provider.wallet.publicKey,
+      })
+    );
+  });
+
+  return txBuilder;
 };
 
 main().catch((reason) => {
