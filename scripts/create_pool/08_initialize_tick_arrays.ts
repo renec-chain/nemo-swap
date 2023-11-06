@@ -26,8 +26,14 @@ import { getPoolInfo } from "./utils/pool";
 import { u64 } from "@solana/spl-token";
 import { TransactionBuilder, PDA } from "@orca-so/common-sdk";
 import { initTickArrayIx } from "@renec/redex-sdk/dist/instructions";
+import {
+  GaslessDapp,
+  GaslessTransaction,
+  Wallet,
+} from "@renec-foundation/gasless-sdk";
+import { executeGaslessTx } from "../swap/utils";
 
-const MAX_INIT_TICK_ARRAYS_IX = 5;
+const MAX_INIT_TICK_ARRAYS_IX = 7;
 
 async function main() {
   let poolIndex = parseInt(process.argv[2]);
@@ -135,10 +141,20 @@ async function main() {
         quote
       );
       if (initTickTx) {
-        tx.prependInstruction(initTickTx.compressIx(false));
+        tx.prependInstruction(initTickTx.compressIx(true));
       }
-      const txid = await tx.buildAndExecute();
+      const txid = await tx.txnSize();
       console.log("Tx hash:", txid);
+
+      const dappUtil = await GaslessDapp.new(client.getContext().connection);
+      const gaslessTxn = GaslessTransaction.fromTransactionBuilder(
+        client.getContext().connection,
+        new Wallet(userKeypair),
+        tx.compressIx(true),
+        dappUtil
+      );
+
+      await executeGaslessTx(gaslessTxn, false);
     }
   }
 }
@@ -172,7 +188,7 @@ const getInitializableTickArrays = async (
     tickSpacing
   );
 
-  const allSurroundingTicksArray = getallSurroundingTicksArrayInRange(
+  const allSurroundingTicksArray = getAllSurroundingTicksArrayInRange(
     tickLowerIndex,
     tickUpperIndex,
     tickSpacing
@@ -198,10 +214,6 @@ const getInitializableTickArrays = async (
       MAX_INIT_TICK_ARRAYS_IX - edgesUninitializedTickArrays.length
     );
 
-  if (!surroundingUninitializedTickArrays.length) {
-    return null;
-  }
-
   // Construct the init tick array tx
   const initTickTx = constructTheInitTickArrayTx(
     client.getContext(),
@@ -218,7 +230,7 @@ const getInitializableTickArrays = async (
   };
 };
 
-const getallSurroundingTicksArrayInRange = (
+const getAllSurroundingTicksArrayInRange = (
   tickLower: number,
   tickUpper: number,
   tickSpacing: number
@@ -339,7 +351,7 @@ const constructTheInitTickArrayTx = (
 
   surroundingUninitializedTickArrays.forEach((initTickArrayInfo) => {
     txBuilder.addInstruction(
-      initTickArrayIx(context.program, {
+      initTickArrayIx(program, {
         startTick: initTickArrayInfo.startIndex,
         tickArrayPda: initTickArrayInfo.pda,
         whirlpool: whirlpoolPubkey,
@@ -350,7 +362,7 @@ const constructTheInitTickArrayTx = (
 
   edgesUninitializedTickArrays.forEach((initTickArrayInfo) => {
     txBuilder.addInstruction(
-      initTickArrayIx(context.program, {
+      initTickArrayIx(program, {
         startTick: initTickArrayInfo.startIndex,
         tickArrayPda: initTickArrayInfo.pda,
         whirlpool: whirlpoolPubkey,
