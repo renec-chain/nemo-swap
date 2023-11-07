@@ -13,27 +13,15 @@ import {
 } from "@renec/redex-sdk";
 
 import { DecimalUtil, Percentage } from "@orca-so/common-sdk";
-import {
-  loadProvider,
-  getTokenMintInfo,
-  loadWallets,
-  getConfig,
-  ROLES,
-} from "./utils";
+import { loadProvider, getTokenMintInfo, loadWallets, ROLES } from "./utils";
 import Decimal from "decimal.js";
 import deployed from "./deployed.json";
 import { getPoolInfo } from "./utils/pool";
-import { u64 } from "@solana/spl-token";
+import { NATIVE_MINT, u64 } from "@solana/spl-token";
 import { TransactionBuilder, PDA } from "@orca-so/common-sdk";
 import { initTickArrayIx } from "@renec/redex-sdk/dist/instructions";
-import {
-  GaslessDapp,
-  GaslessTransaction,
-  Wallet,
-} from "@renec-foundation/gasless-sdk";
-import { executeGaslessTx } from "../swap/utils";
 
-const MAX_INIT_TICK_ARRAYS_IX = 7;
+const MAX_INIT_TICK_ARRAYS_IX = 2;
 
 async function main() {
   let poolIndex = parseInt(process.argv[2]);
@@ -143,18 +131,10 @@ async function main() {
       if (initTickTx) {
         tx.prependInstruction(initTickTx.compressIx(true));
       }
-      const txid = await tx.txnSize();
-      console.log("Tx hash:", txid);
 
-      const dappUtil = await GaslessDapp.new(client.getContext().connection);
-      const gaslessTxn = GaslessTransaction.fromTransactionBuilder(
-        client.getContext().connection,
-        new Wallet(userKeypair),
-        tx.compressIx(true),
-        dappUtil
-      );
-
-      await executeGaslessTx(gaslessTxn, false);
+      console.time("Execution Time");
+      console.log("Tx size:", await tx.txnSize());
+      console.timeEnd("Execution Time");
     }
   }
 }
@@ -372,6 +352,53 @@ const constructTheInitTickArrayTx = (
   });
 
   return txBuilder;
+};
+
+// Do this, since the simulate to calculation the tx size is slow
+const calculateMaxNumberOfSurroundingTickArraysIx = (
+  whirlpool: Whirlpool,
+  numOfEdgesArrayInitialized: number
+) => {
+  const txSizeLimit = 1232;
+  const addtionalCostOfNotInitTickAtEdge = 32;
+  const bytesPerTickArrayIx = 51;
+
+  type NumTickArray = {
+    numOfTickArrays: number;
+    txSize: number;
+  };
+
+  const tokenAndToken: NumTickArray = {
+    numOfTickArrays: 10,
+    txSize: 1208,
+  };
+  const tokenAndRenec: NumTickArray = {
+    numOfTickArrays: 7,
+    txSize: 1223,
+  };
+
+  let numTickArray: NumTickArray;
+  if (isWhirlpoolContainRenec(whirlpool)) {
+    numTickArray = tokenAndToken;
+  } else {
+    numTickArray = tokenAndRenec;
+  }
+
+  // For one edge initialzed, cost more 32 bytes. For a numOfTickArrays left, cost less 51 bytes
+  numTickArray.txSize =
+    numTickArray.txSize +
+    addtionalCostOfNotInitTickAtEdge * numOfEdgesArrayInitialized;
+  while (numTickArray.txSize > txSizeLimit) {
+    numTickArray.numOfTickArrays--;
+    numTickArray.txSize = numTickArray.txSize - bytesPerTickArrayIx;
+  }
+  return numTickArray.txSize;
+};
+
+const isWhirlpoolContainRenec = (whirlpool: Whirlpool): boolean => {
+  const tokenMintA = whirlpool.getData().tokenMintA;
+  const tokenMintB = whirlpool.getData().tokenMintB;
+  return tokenMintA.equals(NATIVE_MINT) || tokenMintB.equals(NATIVE_MINT);
 };
 
 main().catch((reason) => {
