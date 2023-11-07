@@ -2,23 +2,16 @@ import { PublicKey } from "@solana/web3.js";
 import {
   PDAUtil,
   buildWhirlpoolClient,
-  PriceMath,
   increaseLiquidityQuoteByInputTokenWithParams,
 } from "@renec/redex-sdk";
+
 import { DecimalUtil, Percentage } from "@orca-so/common-sdk";
-import {
-  loadProvider,
-  getTokenMintInfo,
-  loadWallets,
-  getConfig,
-  ROLES,
-} from "./utils";
+import { loadProvider, getTokenMintInfo, loadWallets, ROLES } from "./utils";
 import Decimal from "decimal.js";
 import deployed from "./deployed.json";
 import { getPoolInfo } from "./utils/pool";
+import { getInitializableTickArrays } from "./utils/tickArrays";
 import { u64 } from "@solana/spl-token";
-const config = getConfig();
-
 async function main() {
   let poolIndex = parseInt(process.argv[2]);
 
@@ -72,22 +65,11 @@ async function main() {
       console.log("slippage:", slippageTolerance.toString());
       console.log("input_mint:", poolInfo.inputMint);
       console.log("input_amount:", poolInfo.inputAmount);
+      console.log("token mint A: ", mintAPub.toString());
+      console.log("token mint B: ", mintBPub.toString());
+      console.log("tick current index: ", whirlpoolData.tickCurrentIndex);
 
-      const tickLowerIndex = PriceMath.priceToInitializableTickIndex(
-        lowerPrice,
-        tokenMintA.decimals,
-        tokenMintB.decimals,
-        poolInfo.tickSpacing
-      );
-      console.log("tick lower index: ", tickLowerIndex);
-      const tickUpperIndex = PriceMath.priceToInitializableTickIndex(
-        upperPrice,
-        tokenMintA.decimals,
-        tokenMintB.decimals,
-        poolInfo.tickSpacing
-      );
-
-      console.log("tick upper index: ", tickUpperIndex);
+      console.log("===================================================");
 
       const inputTokenMint = new PublicKey(poolInfo.inputMint);
 
@@ -106,12 +88,17 @@ async function main() {
       } else {
         throw new Error("Input token is not matched");
       }
-
-      const initTickTx = await whirlpool.initTickArrayForTicks([
-        tickLowerIndex,
-        tickUpperIndex,
-      ]);
       console.log("input token amount: ", inputTokenAmount.toString());
+
+      // ================================================
+      const { initTickTx, tickLowerIndex, tickUpperIndex } =
+        await getInitializableTickArrays(
+          client,
+          whirlpool,
+          lowerPrice,
+          upperPrice
+        );
+
       const quote = increaseLiquidityQuoteByInputTokenWithParams({
         tokenMintA: mintAPub,
         tokenMintB: mintBPub,
@@ -124,18 +111,16 @@ async function main() {
         slippageTolerance,
       });
 
-      console.log("quote: ", quote.liquidityAmount.toString());
-
       const { tx } = await whirlpool.openPosition(
         tickLowerIndex,
         tickUpperIndex,
         quote
       );
       if (initTickTx) {
-        tx.prependInstruction(initTickTx.compressIx(false));
+        tx.prependInstruction(initTickTx.compressIx(true));
       }
-      const txid = await tx.buildAndExecute();
-      console.log("open a new position at txid:", txid);
+
+      console.log("Tx size:", await tx.buildAndExecute());
     }
   }
 }
