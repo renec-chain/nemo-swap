@@ -21,8 +21,6 @@ import { NATIVE_MINT, u64 } from "@solana/spl-token";
 import { TransactionBuilder, PDA } from "@orca-so/common-sdk";
 import { initTickArrayIx } from "@renec/redex-sdk/dist/instructions";
 
-const MAX_INIT_TICK_ARRAYS_IX = 2;
-
 async function main() {
   let poolIndex = parseInt(process.argv[2]);
 
@@ -132,9 +130,7 @@ async function main() {
         tx.prependInstruction(initTickTx.compressIx(true));
       }
 
-      console.time("Execution Time");
       console.log("Tx size:", await tx.txnSize());
-      console.timeEnd("Execution Time");
     }
   }
 }
@@ -184,6 +180,11 @@ const getInitializableTickArrays = async (
       true
     );
 
+  const totalInitTickArraysIxs = calculateTotalNumberOfInitTickArrayIxs(
+    whirlpool,
+    2 - edgesUninitializedTickArrays.length
+  );
+
   // pick closet uninitalized tick array to the current tick due to tx size limit
   const surroundingUninitializedTickArrays =
     await getClosestUninitializedTickArray(
@@ -191,7 +192,7 @@ const getInitializableTickArrays = async (
       whirlpool,
       allSurroundingTicksArray,
       tickSpacing,
-      MAX_INIT_TICK_ARRAYS_IX - edgesUninitializedTickArrays.length
+      totalInitTickArraysIxs - edgesUninitializedTickArrays.length
     );
 
   // Construct the init tick array tx
@@ -274,25 +275,38 @@ const getClosestUninitializedTickArray = async (
     throw new Error("Cannot find the closest uninitialized tick array");
   }
 
-  const leftAvailable = index; // Elements available to the left of the index
-  const rightAvailable = initTickArrayStartPdas.length - index; // Elements available to the right of the index
+  // Distribute uninitializedIxs surrounding the current tick
+  let availableIxs = maxIxs;
+  let maxLeft = index - 1;
+  let maxRight = index;
+  let pickFromLeft = true;
 
-  const leftCount = Math.floor(maxIxs / 2);
-  const rightCount = maxIxs - leftCount;
+  const resultIndices = [];
+  while (
+    availableIxs > 0 &&
+    (maxLeft >= 0 || maxRight < initTickArrayStartPdas.length)
+  ) {
+    if (pickFromLeft && availableIxs > 0 && maxLeft >= 0) {
+      resultIndices.push(maxLeft);
+      maxLeft--;
+      availableIxs--;
+    } else if (
+      !pickFromLeft &&
+      availableIxs > 0 &&
+      maxRight < initTickArrayStartPdas.length
+    ) {
+      resultIndices.push(maxRight);
+      maxRight++;
+      availableIxs--;
+    }
 
-  // Adjust if not enough elements on either side
-  const actualLeftCount = Math.min(leftAvailable, leftCount);
-  const actualRightCount = Math.min(rightAvailable, rightCount);
-
-  const start = Math.max(index - actualLeftCount, 0);
-  const end =
-    Math.min(index + actualRightCount, initTickArrayStartPdas.length) - 1;
-
-  if (!initTickArrayStartPdas.length) {
-    return null;
+    pickFromLeft = !pickFromLeft;
   }
+  const selectedPDAs = resultIndices.map(
+    (index) => initTickArrayStartPdas[index]
+  );
 
-  return initTickArrayStartPdas.slice(start, end + 1);
+  return selectedPDAs;
 };
 
 const constructTheInitTickArrayTx = (
@@ -355,10 +369,14 @@ const constructTheInitTickArrayTx = (
 };
 
 // Do this, since the simulate to calculation the tx size is slow
-const calculateMaxNumberOfSurroundingTickArraysIx = (
+const calculateTotalNumberOfInitTickArrayIxs = (
   whirlpool: Whirlpool,
   numOfEdgesArrayInitialized: number
 ) => {
+  if (numOfEdgesArrayInitialized < 0) {
+    throw new Error("numOfEdgesArrayInitialized cannot be negative");
+  }
+
   const txSizeLimit = 1232;
   const addtionalCostOfNotInitTickAtEdge = 32;
   const bytesPerTickArrayIx = 51;
@@ -379,9 +397,9 @@ const calculateMaxNumberOfSurroundingTickArraysIx = (
 
   let numTickArray: NumTickArray;
   if (isWhirlpoolContainRenec(whirlpool)) {
-    numTickArray = tokenAndToken;
-  } else {
     numTickArray = tokenAndRenec;
+  } else {
+    numTickArray = tokenAndToken;
   }
 
   // For one edge initialzed, cost more 32 bytes. For a numOfTickArrays left, cost less 51 bytes
@@ -392,7 +410,9 @@ const calculateMaxNumberOfSurroundingTickArraysIx = (
     numTickArray.numOfTickArrays--;
     numTickArray.txSize = numTickArray.txSize - bytesPerTickArrayIx;
   }
-  return numTickArray.txSize;
+
+  console.log("numOfTickArrays: ", numTickArray);
+  return numTickArray.numOfTickArrays;
 };
 
 const isWhirlpoolContainRenec = (whirlpool: Whirlpool): boolean => {
