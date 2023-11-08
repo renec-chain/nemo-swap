@@ -264,7 +264,7 @@ export const calculateTotalNumberOfInitTickArrayIxs = (
   }
 
   const txSizeLimit = 1232;
-  const addtionalCostOfNotInitTickAtEdge = 32;
+  const additionalCostOfNotInitTickAtEdge = 32;
   const bytesPerTickArrayIx = 51;
 
   type NumTickArray = {
@@ -288,10 +288,10 @@ export const calculateTotalNumberOfInitTickArrayIxs = (
     numTickArray = tokenAndToken;
   }
 
-  // For one edge initialzed, cost more 32 bytes. For a numOfTickArrays left, cost less 51 bytes
+  // For one edge initialzed, cost more 32 bytes. For a numOfTickArrays less, cost less 51 bytes
   numTickArray.txSize =
     numTickArray.txSize +
-    addtionalCostOfNotInitTickAtEdge * numOfEdgesArrayInitialized;
+    additionalCostOfNotInitTickAtEdge * numOfEdgesArrayInitialized;
   while (numTickArray.txSize > txSizeLimit) {
     numTickArray.numOfTickArrays--;
     numTickArray.txSize = numTickArray.txSize - bytesPerTickArrayIx;
