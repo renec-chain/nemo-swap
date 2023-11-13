@@ -6,6 +6,10 @@
     {
       "TICK_SPACING": 32,
       "DEFAULT_FEE_RATE": 100
+    },
+    {
+      "TICK_SPACING": 64,
+      "DEFAULT_FEE_RATE": 10000
     }
   ],
   "POOLS": [
