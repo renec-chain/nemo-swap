@@ -11,7 +11,6 @@ export const loadProvider = function (payerKeypair: Keypair) {
   const config = getConfig();
   const wallets = loadWallets();
   const commitment: Commitment = "confirmed";
-
   const connection = new Connection(config.RPC_ENDPOINT_URL, { commitment });
   const wallet = new Wallet(payerKeypair);
   const provider = new AnchorProvider(connection, wallet, {});

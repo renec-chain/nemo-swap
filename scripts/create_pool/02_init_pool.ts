@@ -20,10 +20,16 @@ async function main() {
     console.error("Using default pool index 0");
   }
 
-  const wallets = loadWallets([ROLES.POOL_CREATOR_AUTH, ROLES.USER]);
-  const userKeypair = wallets[ROLES.USER];
+  if (!wallets.userKeypair) {
+    throw new Error("Please provide user_wallet wallet");
+  }
 
-  const { ctx } = loadProvider(userKeypair);
+  console.log(
+    "pool creator: ",
+    wallets.poolCreatorAuthKeypair.publicKey.toString()
+  );
+
+  const { ctx } = loadProvider(wallets.userKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(
