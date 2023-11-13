@@ -20,8 +20,14 @@ async function main() {
   if (!wallets.feeAuthKeypair) {
     throw new Error("Please provide fee_authority_wallet wallet");
   }
+
+  if (!wallets.userKeypair) {
+    throw new Error("Please provide user_wallet wallet");
+  }
+
   console.log("fee auth: ", wallets.feeAuthKeypair.publicKey.toString());
-  const { ctx } = loadProvider(wallets.feeAuthKeypair);
+
+  const { ctx } = loadProvider(wallets.userKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(
@@ -64,6 +70,11 @@ async function main() {
       ).addSigner(wallets.feeAuthKeypair);
       const txid = await tx.buildAndExecute();
       console.log("fee tier account deployed at txid:", txid);
+      feeTierAccount = (await ctx.fetcher.getFeeTier(
+        feeTierPda.publicKey,
+        true
+      )) as FeeTierData;
+      printFeeTier(feeTierPda.publicKey, feeTierAccount);
     }
   }
 }
