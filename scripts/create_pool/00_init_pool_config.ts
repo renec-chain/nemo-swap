@@ -40,7 +40,11 @@ async function main() {
     throw new Error("Please provide pool_creator_authority_wallet wallet");
   }
 
-  const { ctx } = loadProvider(wallets.deployerKeypair);
+  if (!wallets.userKeypair) {
+    throw new Error("Please provide user_wallet wallet");
+  }
+
+  const { ctx } = loadProvider(wallets.userKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log("deploying redex pool config...");
