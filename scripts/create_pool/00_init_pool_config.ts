@@ -30,7 +30,31 @@ async function main() {
   const poolCreatorAuthKeypair = wallets[ROLES.POOL_CREATOR_AUTH];
   const userKeypair = wallets[ROLES.USER]; // in vault scripts, user acts as payer
 
-  const { ctx } = loadProvider(userKeypair);
+  if (!wallets.collectProtocolFeesAuthKeypair) {
+    throw new Error(
+      "Please provide collect_protocol_fees_authority_wallet wallet"
+    );
+  }
+
+  if (!wallets.feeAuthKeypair) {
+    throw new Error("Please provide fee_authority_wallet wallet");
+  }
+
+  if (!wallets.rewardEmissionSupperAuthKeypair) {
+    throw new Error(
+      "Please provide reward_emissions_supper_authority_wallet wallet"
+    );
+  }
+
+  if (!wallets.poolCreatorAuthKeypair) {
+    throw new Error("Please provide pool_creator_authority_wallet wallet");
+  }
+
+  if (!wallets.userKeypair) {
+    throw new Error("Please provide user_wallet wallet");
+  }
+
+  const { ctx } = loadProvider(wallets.userKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log("deploying redex pool config...");

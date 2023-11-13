@@ -10,7 +10,6 @@ export const ONE_SOL = 1000000000;
 export const loadProvider = function (payerKeypair: Keypair) {
   const wallets = loadWallets();
   const commitment: Commitment = "confirmed";
-
   const connection = new Connection(config.RPC_ENDPOINT_URL, { commitment });
   const wallet = new Wallet(payerKeypair);
   const provider = new AnchorProvider(connection, wallet, {});
