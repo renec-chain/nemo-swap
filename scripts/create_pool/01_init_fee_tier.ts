@@ -10,8 +10,7 @@ import {
 import { loadProvider, delay, loadWallets } from "./utils";
 import config from "./config.json";
 import deployed from "./deployed.json";
-const fs = require("fs");
-const deployedPath = "./create_pool/deployed.json";
+const MAX_FEE_RATE = 1000000;
 
 async function main() {
   const wallets = loadWallets();
@@ -20,8 +19,14 @@ async function main() {
   if (!wallets.feeAuthKeypair) {
     throw new Error("Please provide fee_authority_wallet wallet");
   }
+
+  if (!wallets.userKeypair) {
+    throw new Error("Please provide user_wallet wallet");
+  }
+
   console.log("fee auth: ", wallets.feeAuthKeypair.publicKey.toString());
-  const { ctx } = loadProvider(wallets.feeAuthKeypair);
+
+  const { ctx } = loadProvider(wallets.userKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(
@@ -49,6 +54,7 @@ async function main() {
         printFeeTier(feeTierPda.publicKey, feeTierAccount);
         continue;
       }
+      console.log("------------");
       console.log("deploying fee tier account...");
       const params: InitFeeTierParams = {
         feeTierPda,
@@ -64,6 +70,11 @@ async function main() {
       ).addSigner(wallets.feeAuthKeypair);
       const txid = await tx.buildAndExecute();
       console.log("fee tier account deployed at txid:", txid);
+      feeTierAccount = (await ctx.fetcher.getFeeTier(
+        feeTierPda.publicKey,
+        true
+      )) as FeeTierData;
+      printFeeTier(feeTierPda.publicKey, feeTierAccount);
     }
   }
 }
@@ -73,8 +84,9 @@ function printFeeTier(publicKey: PublicKey, feeTierAccount: FeeTierData) {
   console.log("Fee Tier Account Info:");
   console.log("public_key:", publicKey.toBase58());
   console.log("tick_spacing:", feeTierAccount.tickSpacing);
-  console.log("default_fee_rate:", feeTierAccount.defaultFeeRate);
-  console.log("===================================================");
+  console.log(
+    `default_fee_rate: ${(feeTierAccount.defaultFeeRate / MAX_FEE_RATE) * 100}%`
+  );
 }
 
 main().catch((reason) => {

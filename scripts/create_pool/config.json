@@ -1,11 +1,31 @@
 {
   "RPC_ENDPOINT_URL": "https://api-mainnet-beta.renec.foundation:8899",
-  "REDEX_PROGRAM_ID": "__PROGRAM_ID__",
+  "REDEX_PROGRAM_ID": "7rh7ZtPzHqdY82RWjHf1Q8NaQiWnyNqkC48vSixcBvad",
   "PROTOCOL_FEE_RATE": 300,
   "FEE_TIERS": [
     {
       "TICK_SPACING": 32,
       "DEFAULT_FEE_RATE": 100
+    },
+    {
+      "TICK_SPACING": 1,
+      "DEFAULT_FEE_RATE": 100
+    },
+    {
+      "TICK_SPACING": 8,
+      "DEFAULT_FEE_RATE": 500
+    },
+    {
+      "TICK_SPACING": 16,
+      "DEFAULT_FEE_RATE": 3000
+    },
+    {
+      "TICK_SPACING": 24,
+      "DEFAULT_FEE_RATE": 10000
+    },
+    {
+      "TICK_SPACING": 128,
+      "DEFAULT_FEE_RATE": 10000
     }
   ],
   "POOLS": [

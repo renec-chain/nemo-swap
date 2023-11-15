@@ -12,12 +12,17 @@ async function main() {
   if (!wallets.poolCreatorAuthKeypair) {
     throw new Error("Please provide pool_creator_authority_wallet wallet");
   }
+
+  if (!wallets.userKeypair) {
+    throw new Error("Please provide user_wallet wallet");
+  }
+
   console.log(
     "pool creator: ",
     wallets.poolCreatorAuthKeypair.publicKey.toString()
   );
 
-  const { ctx } = loadProvider(wallets.poolCreatorAuthKeypair);
+  const { ctx } = loadProvider(wallets.userKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(
