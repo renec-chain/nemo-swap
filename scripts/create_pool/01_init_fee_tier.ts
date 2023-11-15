@@ -54,6 +54,7 @@ async function main() {
         printFeeTier(feeTierPda.publicKey, feeTierAccount);
         continue;
       }
+      console.log("------------");
       console.log("deploying fee tier account...");
       const params: InitFeeTierParams = {
         feeTierPda,
