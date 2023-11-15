@@ -8,7 +8,23 @@
       "DEFAULT_FEE_RATE": 100
     },
     {
-      "TICK_SPACING": 64,
+      "TICK_SPACING": 1,
+      "DEFAULT_FEE_RATE": 100
+    },
+    {
+      "TICK_SPACING": 8,
+      "DEFAULT_FEE_RATE": 500
+    },
+    {
+      "TICK_SPACING": 16,
+      "DEFAULT_FEE_RATE": 3000
+    },
+    {
+      "TICK_SPACING": 24,
+      "DEFAULT_FEE_RATE": 10000
+    },
+    {
+      "TICK_SPACING": 128,
       "DEFAULT_FEE_RATE": 10000
     }
   ],

@@ -10,8 +10,7 @@ import {
 import { loadProvider, delay, loadWallets } from "./utils";
 import config from "./config.json";
 import deployed from "./deployed.json";
-const fs = require("fs");
-const deployedPath = "./create_pool/deployed.json";
+const MAX_FEE_RATE = 1000000;
 
 async function main() {
   const wallets = loadWallets();
@@ -84,8 +83,9 @@ function printFeeTier(publicKey: PublicKey, feeTierAccount: FeeTierData) {
   console.log("Fee Tier Account Info:");
   console.log("public_key:", publicKey.toBase58());
   console.log("tick_spacing:", feeTierAccount.tickSpacing);
-  console.log("default_fee_rate:", feeTierAccount.defaultFeeRate);
-  console.log("===================================================");
+  console.log(
+    `default_fee_rate: ${(feeTierAccount.defaultFeeRate / MAX_FEE_RATE) * 100}%`
+  );
 }
 
 main().catch((reason) => {
