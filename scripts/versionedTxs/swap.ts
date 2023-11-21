@@ -13,20 +13,8 @@ import {
 import deployed from "../create_pool/deployed.json";
 import { getPoolInfo } from "../create_pool/utils/pool";
 import { u64 } from "@solana/spl-token";
-import { GaslessDapp } from "@renec-foundation/gasless-sdk";
 import { createAndSendV0Tx } from "./";
-import {
-  AddressLookupTableProgram,
-  Connection,
-  Keypair,
-  LAMPORTS_PER_SOL,
-  PublicKey,
-  SystemProgram,
-  Transaction,
-  TransactionInstruction,
-  TransactionMessage,
-  VersionedTransaction,
-} from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 
 async function main() {
   const poolIndex = parseInt(process.argv[2]);
@@ -95,7 +83,8 @@ async function main() {
     createAndSendV0Tx(
       ctx.connection,
       userKeypair,
-      ixs.instructions.concat(ixs.cleanupInstructions)
+      ixs.instructions.concat(ixs.cleanupInstructions),
+      ixs.signers
     );
   }
 }

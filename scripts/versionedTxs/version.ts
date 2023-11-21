@@ -9,6 +9,7 @@ import {
   TransactionInstruction,
   TransactionMessage,
   VersionedTransaction,
+  Signer,
 } from "@solana/web3.js";
 import { ROLES, loadProvider, loadWallets } from "../create_pool/utils";
 
@@ -19,7 +20,8 @@ const { ctx } = loadProvider(userKeypair);
 export async function createAndSendV0Tx(
   connection: Connection,
   keypair: Keypair,
-  txInstructions: TransactionInstruction[]
+  txInstructions: TransactionInstruction[],
+  signers?: Signer[]
 ) {
   // Step 1 - Fetch Latest Blockhash
   let latestBlockhash = await connection.getLatestBlockhash("finalized");
@@ -38,6 +40,11 @@ export async function createAndSendV0Tx(
   const transaction = new VersionedTransaction(messageV0);
 
   // Step 3 - Sign your transaction with the required `Signers`
+  // loop signers
+  if (signers) {
+    transaction.sign(signers);
+  }
+
   transaction.sign([keypair]);
   console.log("   ✅ - Transaction Signed");
 
