@@ -136,7 +136,8 @@ export async function compareTxSize(
   connection: Connection,
   keypair: Keypair,
   transactionInstruction: TransactionInstruction[],
-  lookupTableAddresses: PublicKey[]
+  lookupTableAddresses: PublicKey[],
+  signers?: Signer[]
 ) {
   // Step 1 - Fetch the lookup table
   // Fetch the lookup tables
@@ -169,32 +170,52 @@ export async function compareTxSize(
   const transactionWithLookupTable = new VersionedTransaction(
     messageWithLookupTable
   );
+
+  if (signers) {
+    transactionWithLookupTable.sign(signers);
+  }
   transactionWithLookupTable.sign([keypair]);
 
-  // Step 5 - Generate and sign a transaction that DOES NOT use a lookup table
-  const messageWithoutLookupTable = new TransactionMessage({
-    payerKey: keypair.publicKey,
-    recentBlockhash: latestBlockhash.blockhash,
-    instructions: transactionInstruction,
-  }).compileToV0Message(); // 👈 NOTE: We do NOT include the lookup table
-  const transactionWithoutLookupTable = new VersionedTransaction(
-    messageWithoutLookupTable
-  );
-  transactionWithoutLookupTable.sign([keypair]);
+  // // Step 5 - Generate and sign a transaction that DOES NOT use a lookup table
+  // const messageWithoutLookupTable = new TransactionMessage({
+  //   payerKey: keypair.publicKey,
+  //   recentBlockhash: latestBlockhash.blockhash,
+  //   instructions: transactionInstruction,
+  // }).compileToV0Message(); // 👈 NOTE: We do NOT include the lookup table
+  // const transactionWithoutLookupTable = new VersionedTransaction(
+  //   messageWithoutLookupTable
+  // );
+  // transactionWithoutLookupTable.sign([keypair]);
 
   console.log("   ✅ - Compiled transactions");
 
   // Step 6 - Log our transaction size
-  console.log(
-    "Transaction size without address lookup table: ",
-    transactionWithoutLookupTable.serialize().length,
-    "bytes"
-  );
+  // console.log(
+  //   "Transaction size without address lookup table: ",
+  //   transactionWithoutLookupTable.serialize().length,
+  //   "bytes"
+  // );
   console.log(
     "Transaction size with address lookup table:    ",
     transactionWithLookupTable.serialize().length,
     "bytes"
   );
+  // Step 4 - Send our v0 transaction to the cluster
+  const txid = await connection.sendTransaction(transactionWithLookupTable, {
+    maxRetries: 5,
+  });
+
+  // Step 5 - Confirm Transaction
+  const confirmation = await connection.confirmTransaction({
+    signature: txid,
+    blockhash: latestBlockhash.blockhash,
+    lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+  });
+  if (confirmation.value.err) {
+    throw new Error("   ❌ - Transaction not confirmed.");
+  }
+
+  console.log("tx id: ", txid);
 }
 
 export async function createV0Tx(
