@@ -95,23 +95,19 @@ const LOOKUP_TABLE_ADDRESS = new PublicKey(
 
 export async function addAddressesToTable(
   connection: Connection,
-  keypair: Keypair
+  authority: Keypair,
+  lookupTable: PublicKey,
+  addresses: PublicKey[]
 ) {
   // Step 1 - Create Transaction Instruction
   const addAddressesInstruction = AddressLookupTableProgram.extendLookupTable({
-    payer: keypair.publicKey,
-    authority: keypair.publicKey,
-    lookupTable: LOOKUP_TABLE_ADDRESS,
-    addresses: [
-      Keypair.generate().publicKey,
-      Keypair.generate().publicKey,
-      Keypair.generate().publicKey,
-      Keypair.generate().publicKey,
-      Keypair.generate().publicKey,
-    ],
+    payer: authority.publicKey,
+    authority: authority.publicKey,
+    lookupTable,
+    addresses,
   });
   // Step 2 - Generate a transaction and send it to the network
-  await createAndSendV0Tx(connection, keypair, [addAddressesInstruction]);
+  await createAndSendV0Tx(connection, authority, [addAddressesInstruction]);
   console.log(
     `Lookup Table Entries: `,
     `https://explorer.solana.com/address/${LOOKUP_TABLE_ADDRESS.toString()}/entries?cluster=devnet`
@@ -120,11 +116,11 @@ export async function addAddressesToTable(
 
 export async function findAddressesInTable(
   connection: Connection,
-  Keypair: Keypair
+  lookupTableAddress: PublicKey
 ) {
   // Step 1 - Fetch our address lookup table
   const lookupTableAccount = await connection.getAddressLookupTable(
-    LOOKUP_TABLE_ADDRESS
+    lookupTableAddress
   );
   console.log(
     `Successfully found lookup table: `,

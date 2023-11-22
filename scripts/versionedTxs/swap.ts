@@ -14,7 +14,11 @@ import deployed from "../create_pool/deployed.json";
 import { getPoolInfo } from "../create_pool/utils/pool";
 import { u64 } from "@solana/spl-token";
 import { createAndSendV0Tx } from "./";
-import { PublicKey } from "@solana/web3.js";
+import {
+  PublicKey,
+  TransactionMessage,
+  VersionedTransaction,
+} from "@solana/web3.js";
 
 async function main() {
   const poolIndex = parseInt(process.argv[2]);
@@ -78,13 +82,64 @@ async function main() {
     // const hash = await tx.buildAndExecute();
 
     const ixs = tx.compressIx(true);
-    console.log("ixs: ", ixs);
 
-    createAndSendV0Tx(
-      ctx.connection,
-      userKeypair,
-      ixs.instructions.concat(ixs.cleanupInstructions),
-      ixs.signers
+    const instructions = ixs.instructions.concat(ixs.cleanupInstructions);
+    for (const instruction of instructions) {
+      console.log(
+        "Instruction:",
+        instruction.keys.map((k) => k.pubkey.toBase58())
+      );
+    }
+
+    const lookupTableAddress = new PublicKey(
+      "4Aqor8a9DJtVarvHWGVzHUn8PkXNWCLeFXWRpdXQb3NE"
+    );
+
+    const lookupTable = (
+      await ctx.connection.getAddressLookupTable(lookupTableAddress)
+    ).value;
+    if (!lookupTable) return;
+    console.log("   ✅ - Fetched lookup table:", lookupTable.key.toString());
+
+    const txIxs = ixs.instructions.concat(ixs.cleanupInstructions);
+
+    const latestBlockhash = await ctx.connection.getRecentBlockhash();
+
+    // generate and sign a tranasaction that uses a lookup table
+    const messageWithLookupTable = new TransactionMessage({
+      payerKey: userKeypair.publicKey,
+      recentBlockhash: latestBlockhash.blockhash,
+      instructions: txIxs,
+    }).compileToV0Message([lookupTable]);
+
+    const transactionWithLookupTable = new VersionedTransaction(
+      messageWithLookupTable
+    );
+    transactionWithLookupTable.sign([userKeypair]);
+
+    // Step 5 - Generate and sign a transaction that DOES NOT use a lookup table
+    const messageWithoutLookupTable = new TransactionMessage({
+      payerKey: userKeypair.publicKey,
+      recentBlockhash: latestBlockhash.blockhash,
+      instructions: txIxs,
+    }).compileToV0Message(); // 👈 NOTE: We do NOT include the lookup table
+    const transactionWithoutLookupTable = new VersionedTransaction(
+      messageWithoutLookupTable
+    );
+    transactionWithoutLookupTable.sign([userKeypair]);
+
+    console.log("   ✅ - Compiled transactions");
+
+    // Step 6 - Log our transaction size
+    console.log(
+      "Transaction size without address lookup table: ",
+      transactionWithoutLookupTable.serialize().length,
+      "bytes"
+    );
+    console.log(
+      "Transaction size with address lookup table:    ",
+      transactionWithLookupTable.serialize().length,
+      "bytes"
     );
   }
 }
