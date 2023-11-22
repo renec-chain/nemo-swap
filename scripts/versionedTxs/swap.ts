@@ -13,7 +13,7 @@ import {
 import deployed from "../create_pool/deployed.json";
 import { getPoolInfo } from "../create_pool/utils/pool";
 import { u64 } from "@solana/spl-token";
-import { createAndSendV0Tx } from "./";
+import { compareTxSize, createAndSendV0Tx } from "./";
 import {
   PublicKey,
   TransactionMessage,
@@ -95,52 +95,9 @@ async function main() {
       "Gr7i5MRRRhBQ9Wxf7oNRqKaKY4fAapk8WhDgkMH1u6nU"
     );
 
-    const lookupTable = (
-      await ctx.connection.getAddressLookupTable(lookupTableAddress)
-    ).value;
-    if (!lookupTable) return;
-    console.log("   ✅ - Fetched lookup table:", lookupTable.key.toString());
-
-    const txIxs = ixs.instructions.concat(ixs.cleanupInstructions);
-
-    const latestBlockhash = await ctx.connection.getRecentBlockhash();
-
-    // generate and sign a tranasaction that uses a lookup table
-    const messageWithLookupTable = new TransactionMessage({
-      payerKey: userKeypair.publicKey,
-      recentBlockhash: latestBlockhash.blockhash,
-      instructions: txIxs,
-    }).compileToV0Message([lookupTable]);
-
-    const transactionWithLookupTable = new VersionedTransaction(
-      messageWithLookupTable
-    );
-    transactionWithLookupTable.sign([userKeypair]);
-
-    // Step 5 - Generate and sign a transaction that DOES NOT use a lookup table
-    const messageWithoutLookupTable = new TransactionMessage({
-      payerKey: userKeypair.publicKey,
-      recentBlockhash: latestBlockhash.blockhash,
-      instructions: txIxs,
-    }).compileToV0Message(); // 👈 NOTE: We do NOT include the lookup table
-    const transactionWithoutLookupTable = new VersionedTransaction(
-      messageWithoutLookupTable
-    );
-    transactionWithoutLookupTable.sign([userKeypair]);
-
-    console.log("   ✅ - Compiled transactions");
-
-    // Step 6 - Log our transaction size
-    console.log(
-      "Transaction size without address lookup table: ",
-      transactionWithoutLookupTable.serialize().length,
-      "bytes"
-    );
-    console.log(
-      "Transaction size with address lookup table:    ",
-      transactionWithLookupTable.serialize().length,
-      "bytes"
-    );
+    await compareTxSize(ctx.connection, userKeypair, instructions, [
+      lookupTableAddress,
+    ]);
   }
 }
 

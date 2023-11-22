@@ -135,29 +135,25 @@ export async function findAddressesInTable(
 export async function compareTxSize(
   connection: Connection,
   keypair: Keypair,
-  lookupTableAddress: PublicKey
+  transactionInstruction: TransactionInstruction[],
+  lookupTableAddresses: PublicKey[]
 ) {
   // Step 1 - Fetch the lookup table
-  const lookupTable = (
-    await connection.getAddressLookupTable(lookupTableAddress)
-  ).value;
-  if (!lookupTable) return;
-  console.log("   ✅ - Fetched lookup table:", lookupTable.key.toString());
+  // Fetch the lookup tables
+  const lookupTables = await Promise.all(
+    lookupTableAddresses.map(async (addr) => {
+      try {
+        return (await connection.getAddressLookupTable(addr)).value;
+      } catch (error) {
+        console.error(
+          "Error fetching lookup table for address:",
+          addr.toBase58()
+        );
+        return null;
+      }
+    })
+  );
 
-  // Step 2 - Generate an array of Solana transfer instruction to each address in our lookup table
-  const txInstructions: TransactionInstruction[] = [];
-  for (let i = 0; i < lookupTable.state.addresses.length; i++) {
-    const address = lookupTable.state.addresses[i];
-    txInstructions.push(
-      SystemProgram.transfer({
-        fromPubkey: keypair.publicKey,
-        toPubkey: address,
-        lamports: 0.01 * LAMPORTS_PER_SOL,
-      })
-    );
-  }
-
-  // Step 3 - Fetch the latest Blockhash
   let latestBlockhash = await connection.getLatestBlockhash("finalized");
   console.log(
     "   ✅ - Fetched latest blockhash. Last valid height:",
@@ -168,8 +164,8 @@ export async function compareTxSize(
   const messageWithLookupTable = new TransactionMessage({
     payerKey: keypair.publicKey,
     recentBlockhash: latestBlockhash.blockhash,
-    instructions: txInstructions,
-  }).compileToV0Message([lookupTable]); // 👈 NOTE: We DO include the lookup table
+    instructions: transactionInstruction,
+  }).compileToV0Message(lookupTables); // 👈 NOTE: We DO include the lookup table
   const transactionWithLookupTable = new VersionedTransaction(
     messageWithLookupTable
   );
@@ -179,7 +175,7 @@ export async function compareTxSize(
   const messageWithoutLookupTable = new TransactionMessage({
     payerKey: keypair.publicKey,
     recentBlockhash: latestBlockhash.blockhash,
-    instructions: txInstructions,
+    instructions: transactionInstruction,
   }).compileToV0Message(); // 👈 NOTE: We do NOT include the lookup table
   const transactionWithoutLookupTable = new VersionedTransaction(
     messageWithoutLookupTable
