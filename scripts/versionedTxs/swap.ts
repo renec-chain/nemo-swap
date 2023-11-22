@@ -92,7 +92,7 @@ async function main() {
     }
 
     const lookupTableAddress = new PublicKey(
-      "4Aqor8a9DJtVarvHWGVzHUn8PkXNWCLeFXWRpdXQb3NE"
+      "Gr7i5MRRRhBQ9Wxf7oNRqKaKY4fAapk8WhDgkMH1u6nU"
     );
 
     const lookupTable = (

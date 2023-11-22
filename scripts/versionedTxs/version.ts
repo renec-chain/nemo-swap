@@ -12,17 +12,22 @@ import {
   Signer,
 } from "@solana/web3.js";
 import { ROLES, loadProvider, loadWallets } from "../create_pool/utils";
-
-const wallets = loadWallets([ROLES.USER]);
-const userKeypair = wallets[ROLES.USER];
-const { ctx } = loadProvider(userKeypair);
+import {
+  PDAUtil,
+  TickArrayUtil,
+  Whirlpool,
+  WhirlpoolContext,
+} from "@renec/redex-sdk";
+import { Wallet } from "@project-serum/anchor";
+import { lookup } from "mz/dns";
+import { getStartTicksWithOffset } from "../create_pool/utils/tickArrays";
 
 export async function createAndSendV0Tx(
   connection: Connection,
   keypair: Keypair,
   txInstructions: TransactionInstruction[],
   signers?: Signer[]
-) {
+): Promise<string> {
   // Step 1 - Fetch Latest Blockhash
   let latestBlockhash = await connection.getLatestBlockhash("finalized");
   console.log(
@@ -36,7 +41,6 @@ export async function createAndSendV0Tx(
     recentBlockhash: latestBlockhash.blockhash,
     instructions: txInstructions,
   }).compileToV0Message();
-  console.log("   ✅ - Compiled transaction message");
   const transaction = new VersionedTransaction(messageV0);
 
   // Step 3 - Sign your transaction with the required `Signers`
@@ -46,13 +50,11 @@ export async function createAndSendV0Tx(
   }
 
   transaction.sign([keypair]);
-  console.log("   ✅ - Transaction Signed");
 
   // Step 4 - Send our v0 transaction to the cluster
   const txid = await connection.sendTransaction(transaction, {
     maxRetries: 5,
   });
-  console.log("   ✅ - Transaction sent to network");
 
   // Step 5 - Confirm Transaction
   const confirmation = await connection.confirmTransaction({
@@ -63,17 +65,14 @@ export async function createAndSendV0Tx(
   if (confirmation.value.err) {
     throw new Error("   ❌ - Transaction not confirmed.");
   }
-  console.log(
-    "🎉 Transaction succesfully confirmed!",
-    "\n",
-    `https://explorer.solana.com/tx/${txid}?cluster=devnet`
-  );
+
+  return txid;
 }
 
 export async function createLookupTable(
   connection: Connection,
   keypair: Keypair
-) {
+): Promise<PublicKey> {
   // Step 1 - Get a lookup table address and create lookup table instruction
   const [lookupTableInst, lookupTableAddress] =
     AddressLookupTableProgram.createLookupTable({
@@ -87,18 +86,16 @@ export async function createLookupTable(
 
   // Step 3 - Generate a transaction and send it to the network
   createAndSendV0Tx(connection, keypair, [lookupTableInst]);
-}
 
-const LOOKUP_TABLE_ADDRESS = new PublicKey(
-  "johff1f3q1Bv9kpG8D9KDfPcUARwFtCYLyXeEsDooW1"
-);
+  return lookupTableAddress;
+}
 
 export async function addAddressesToTable(
   connection: Connection,
   authority: Keypair,
   lookupTable: PublicKey,
   addresses: PublicKey[]
-) {
+): Promise<string> {
   // Step 1 - Create Transaction Instruction
   const addAddressesInstruction = AddressLookupTableProgram.extendLookupTable({
     payer: authority.publicKey,
@@ -107,11 +104,9 @@ export async function addAddressesToTable(
     addresses,
   });
   // Step 2 - Generate a transaction and send it to the network
-  await createAndSendV0Tx(connection, authority, [addAddressesInstruction]);
-  console.log(
-    `Lookup Table Entries: `,
-    `https://explorer.solana.com/address/${LOOKUP_TABLE_ADDRESS.toString()}/entries?cluster=devnet`
-  );
+  return await createAndSendV0Tx(connection, authority, [
+    addAddressesInstruction,
+  ]);
 }
 
 export async function findAddressesInTable(
@@ -137,10 +132,14 @@ export async function findAddressesInTable(
   }
 }
 
-export async function compareTxSize(connection: Connection, keypair: Keypair) {
+export async function compareTxSize(
+  connection: Connection,
+  keypair: Keypair,
+  lookupTableAddress: PublicKey
+) {
   // Step 1 - Fetch the lookup table
   const lookupTable = (
-    await connection.getAddressLookupTable(LOOKUP_TABLE_ADDRESS)
+    await connection.getAddressLookupTable(lookupTableAddress)
   ).value;
   if (!lookupTable) return;
   console.log("   ✅ - Fetched lookup table:", lookupTable.key.toString());
@@ -200,4 +199,122 @@ export async function compareTxSize(connection: Connection, keypair: Keypair) {
     transactionWithLookupTable.serialize().length,
     "bytes"
   );
+}
+
+export async function createV0Tx(
+  connection: Connection,
+  wallet: Wallet,
+  txInstructions: TransactionInstruction[],
+  signers?: Signer[]
+): Promise<VersionedTransaction> {
+  // Step 1 - Fetch Latest Blockhash
+  let latestBlockhash = await connection.getLatestBlockhash("finalized");
+  console.log(
+    "   ✅ - Fetched latest blockhash. Last valid height:",
+    latestBlockhash.lastValidBlockHeight
+  );
+
+  // Step 2 - Generate Transaction Message
+  const messageV0 = new TransactionMessage({
+    payerKey: wallet.publicKey,
+    recentBlockhash: latestBlockhash.blockhash,
+    instructions: txInstructions,
+  }).compileToV0Message();
+  console.log("   ✅ - Compiled transaction message");
+  const transaction = new VersionedTransaction(messageV0);
+
+  // Step 3 - Sign your transaction with the required `Signers`
+  // loop signers
+  if (signers) {
+    transaction.sign(signers);
+  }
+
+  return transaction;
+}
+
+export class WhirlpoolLookupTable {
+  public static async createWhirlpoolLookupTable(
+    whirlpool: Whirlpool,
+    ctx: WhirlpoolContext,
+    keypair: Keypair
+  ): Promise<PublicKey> {
+    const numOfSurroundingTickArrays = 5;
+    const lut = await createLookupTable(ctx.connection, keypair);
+
+    const poolData = whirlpool.getData();
+
+    // What can be cached?
+    const whirlpoolAddr = whirlpool.getAddress();
+
+    const oraclePda = PDAUtil.getOracle(ctx.program.programId, whirlpoolAddr);
+    let addresses = [
+      whirlpool.getAddress(),
+      poolData.tokenVaultA,
+      poolData.tokenVaultB,
+      oraclePda.publicKey,
+    ];
+
+    // all tick arrays
+    const rightTickArrayStartTicks = getStartTicksWithOffset(
+      poolData.tickCurrentIndex,
+      poolData.tickSpacing,
+      numOfSurroundingTickArrays,
+      true
+    );
+
+    const leftTickArrayStartTicks = getStartTicksWithOffset(
+      poolData.tickCurrentIndex + poolData.tickSpacing * 88,
+      poolData.tickSpacing,
+      numOfSurroundingTickArrays,
+      false
+    );
+
+    const allStartTicks = leftTickArrayStartTicks.concat(
+      rightTickArrayStartTicks
+    );
+
+    const initializedTickArrays = await getTickArrays(
+      allStartTicks,
+      ctx,
+      whirlpoolAddr
+    );
+
+    initializedTickArrays.map((tickArray) =>
+      console.log("tickArray: ", tickArray.address.toBase58())
+    );
+
+    addresses = addresses.concat(
+      initializedTickArrays.map((tickArray) => tickArray.address)
+    );
+
+    addresses.map((address) => console.log("address: ", address.toBase58()));
+
+    // Add addresses to lut
+    const hash = await addAddressesToTable(
+      ctx.connection,
+      keypair,
+      lut,
+      addresses
+    );
+
+    return lut;
+  }
+}
+
+export async function getTickArrays(
+  startIndices: number[],
+  ctx: WhirlpoolContext,
+  whirlpoolKey: PublicKey
+) {
+  const tickArrayPdas = await startIndices.map((value) =>
+    PDAUtil.getTickArray(ctx.program.programId, whirlpoolKey, value)
+  );
+  const tickArrayAddresses = tickArrayPdas.map((pda) => pda.publicKey);
+  const tickArrays = await ctx.fetcher.listTickArrays(tickArrayAddresses, true);
+  return tickArrayAddresses.map((addr, index) => {
+    return {
+      address: addr,
+      data: tickArrays[index],
+    };
+  });
 }

@@ -109,6 +109,23 @@ export const getAllSurroundingTicksArrayInRange = (
   return startTicks;
 };
 
+export const getStartTicksWithOffset = (
+  currentTick: number,
+  tickSpacing: number,
+  offset: number,
+  aToB: boolean
+): number[] => {
+  let arrayIndexList = [...Array(offset).keys()];
+  if (aToB) {
+    arrayIndexList = arrayIndexList.map((value) => -value);
+  }
+
+  const startTicks = arrayIndexList.map((value) =>
+    TickUtil.getStartTickIndex(currentTick, tickSpacing, value)
+  );
+  return startTicks;
+};
+
 export const getClosestUninitializedTickArray = async (
   client: WhirlpoolClient,
   whirlpool: Whirlpool,
