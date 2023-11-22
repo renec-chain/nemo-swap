@@ -84,13 +84,6 @@ async function main() {
     const ixs = tx.compressIx(true);
 
     const instructions = ixs.instructions.concat(ixs.cleanupInstructions);
-    for (const instruction of instructions) {
-      console.log(
-        "Instruction:",
-        instruction.keys.map((k) => k.pubkey.toBase58())
-      );
-    }
-
     const lookupTableAddress = new PublicKey(
       "Gr7i5MRRRhBQ9Wxf7oNRqKaKY4fAapk8WhDgkMH1u6nU"
     );
