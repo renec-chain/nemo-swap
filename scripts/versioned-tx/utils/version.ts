@@ -16,14 +16,10 @@ export async function createAndSendV0Tx(
   txInstructions: TransactionInstruction[],
   signers?: Signer[]
 ): Promise<string> {
-  // Step 1 - Fetch Latest Blockhash
+  // Fetch Latest Blockhash
   let latestBlockhash = await connection.getLatestBlockhash("finalized");
-  console.log(
-    "   ✅ - Fetched latest blockhash. Last valid height:",
-    latestBlockhash.lastValidBlockHeight
-  );
 
-  // Step 2 - Generate Transaction Message
+  // Generate Transaction Message
   const messageV0 = new TransactionMessage({
     payerKey: keypair.publicKey,
     recentBlockhash: latestBlockhash.blockhash,
@@ -31,20 +27,19 @@ export async function createAndSendV0Tx(
   }).compileToV0Message();
   const transaction = new VersionedTransaction(messageV0);
 
-  // Step 3 - Sign your transaction with the required `Signers`
-  // loop signers
+  // Sign your transaction with the required `Signers`
   if (signers) {
     transaction.sign(signers);
   }
 
   transaction.sign([keypair]);
 
-  // Step 4 - Send our v0 transaction to the cluster
+  // Send our v0 transaction to the cluster
   const txid = await connection.sendTransaction(transaction, {
     maxRetries: 5,
   });
 
-  // Step 5 - Confirm Transaction
+  // Confirm Transaction
   const confirmation = await connection.confirmTransaction({
     signature: txid,
     blockhash: latestBlockhash.blockhash,
@@ -69,13 +64,11 @@ export async function createLookupTable(
       recentSlot: await connection.getSlot(),
     });
 
-  // poolA -> lookupTableAddress
-
-  // Step 2 - Log Lookup Table Address
   console.log("Lookup Table Address:", lookupTableAddress.toBase58());
 
   // Step 3 - Generate a transaction and send it to the network
-  createAndSendV0Tx(connection, keypair, [lookupTableInst]);
+  const tx = await createAndSendV0Tx(connection, keypair, [lookupTableInst]);
+  console.log("tx success: ", tx);
 
   return lookupTableAddress;
 }
@@ -103,19 +96,20 @@ export async function findAddressesInTable(
   connection: Connection,
   lookupTableAddress: PublicKey
 ) {
-  // Step 1 - Fetch our address lookup table
+  // Fetch our address lookup table
   const lookupTableAccount = await connection.getAddressLookupTable(
     lookupTableAddress
   );
+
   console.log(
     `Successfully found lookup table: `,
     lookupTableAccount.value?.key.toString()
   );
 
-  // Step 2 - Make sure our search returns a valid table
+  // Make sure our search returns a valid table
   if (!lookupTableAccount.value) return;
 
-  // Step 3 - Log each table address to console
+  // Log each table address to console
   for (let i = 0; i < lookupTableAccount.value.state.addresses.length; i++) {
     const address = lookupTableAccount.value.state.addresses[i];
     console.log(`   Address ${i + 1}: ${address.toBase58()}`);
@@ -147,58 +141,68 @@ export async function compareTxSize(
   let latestBlockhash = await connection.getLatestBlockhash("finalized");
 
   // Generate and sign a transaction that uses a lookup table
-  const messageWithLookupTable = new TransactionMessage({
-    payerKey: keypair.publicKey,
-    recentBlockhash: latestBlockhash.blockhash,
-    instructions: transactionInstruction,
-  }).compileToV0Message(lookupTables); // 👈 NOTE: We DO include the lookup table
-  const transactionWithLookupTable = new VersionedTransaction(
-    messageWithLookupTable
-  );
+  try {
+    const messageWithLookupTable = new TransactionMessage({
+      payerKey: keypair.publicKey,
+      recentBlockhash: latestBlockhash.blockhash,
+      instructions: transactionInstruction,
+    }).compileToV0Message(lookupTables); // 👈 NOTE: We DO include the lookup table
+    const transactionWithLookupTable = new VersionedTransaction(
+      messageWithLookupTable
+    );
 
-  if (signers) {
-    transactionWithLookupTable.sign(signers);
-  }
-  transactionWithLookupTable.sign([keypair]);
+    if (signers) {
+      transactionWithLookupTable.sign(signers);
+    }
+    transactionWithLookupTable.sign([keypair]);
 
-  // Generate and sign a transaction that DOES NOT use a lookup table
-  const messageWithoutLookupTable = new TransactionMessage({
-    payerKey: keypair.publicKey,
-    recentBlockhash: latestBlockhash.blockhash,
-    instructions: transactionInstruction,
-  }).compileToV0Message(); // 👈 NOTE: We do NOT include the lookup table
-  const transactionWithoutLookupTable = new VersionedTransaction(
-    messageWithoutLookupTable
-  );
-  transactionWithoutLookupTable.sign([keypair]);
+    console.log(
+      "Transaction size with address lookup table:    ",
+      transactionWithLookupTable.serialize().length,
+      "bytes"
+    );
 
-  console.log("   ✅ - Compiled transactions");
-  console.log(
-    "Transaction size without address lookup table: ",
-    transactionWithoutLookupTable.serialize().length,
-    "bytes"
-  );
-  console.log(
-    "Transaction size with address lookup table:    ",
-    transactionWithLookupTable.serialize().length,
-    "bytes"
-  );
-  // Step 4 - Send our v0 transaction to the cluster
-  const txid = await connection.sendTransaction(transactionWithLookupTable, {
-    maxRetries: 5,
-  });
+    // Step 4 - Send our v0 transaction to the cluster
+    const txid = await connection.sendTransaction(transactionWithLookupTable, {
+      maxRetries: 5,
+    });
 
-  // Step 5 - Confirm Transaction
-  const confirmation = await connection.confirmTransaction({
-    signature: txid,
-    blockhash: latestBlockhash.blockhash,
-    lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
-  });
-  if (confirmation.value.err) {
-    throw new Error("   ❌ - Transaction not confirmed.");
+    // Step 5 - Confirm Transaction
+    const confirmation = await connection.confirmTransaction({
+      signature: txid,
+      blockhash: latestBlockhash.blockhash,
+      lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+    });
+    if (confirmation.value.err) {
+      throw new Error("   ❌ - Transaction not confirmed.");
+    }
+
+    console.log("tx id: ", txid);
+  } catch (error) {
+    console.error("Error creating transaction with lookup table: ", error);
+    return;
   }
 
-  console.log("tx id: ", txid);
+  try {
+    // Generate and sign a transaction that DOES NOT use a lookup table
+    const messageWithoutLookupTable = new TransactionMessage({
+      payerKey: keypair.publicKey,
+      recentBlockhash: latestBlockhash.blockhash,
+      instructions: transactionInstruction,
+    }).compileToV0Message(); // 👈 NOTE: We do NOT include the lookup table
+    const transactionWithoutLookupTable = new VersionedTransaction(
+      messageWithoutLookupTable
+    );
+    transactionWithoutLookupTable.sign([keypair]);
+    console.log(
+      "Transaction size without address lookup table: ",
+      transactionWithoutLookupTable.serialize().length,
+      "bytes"
+    );
+  } catch (error) {
+    console.error("Error creating transaction without lookup table: ", error);
+    return;
+  }
 }
 
 export async function createV0Tx(

@@ -12,13 +12,10 @@ import {
 } from "../create_pool/utils";
 import deployed from "../create_pool/deployed.json";
 import { getPoolInfo } from "../create_pool/utils/pool";
-import { u64 } from "@solana/spl-token";
-import { compareTxSize, createAndSendV0Tx } from "./utils";
-import {
-  PublicKey,
-  TransactionMessage,
-  VersionedTransaction,
-} from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
+import { WhirlpoolLookupTable } from "./utils/";
+import * as fs from "fs";
+import { loadLookupTable, saveDataToLookupTable } from "./utils/helper";
 
 async function main() {
   const poolIndex = parseInt(process.argv[2]);
@@ -63,34 +60,22 @@ async function main() {
       poolInfo.tickSpacing
     );
     const whirlpool = await client.getPool(whirlpoolPda.publicKey);
-    const whirlpoolData = whirlpool.getData();
 
-    console.log("Token mint a: ", whirlpoolData.tokenMintA.toString());
-    console.log("Token mint b: ", whirlpoolData.tokenMintB.toString());
-
-    const quote = await swapQuoteByInputToken(
+    const lookupTable = await WhirlpoolLookupTable.createWhirlpoolLookupTable(
       whirlpool,
-      whirlpoolData.tokenMintB,
-      new u64(100000),
-      Percentage.fromFraction(1, 100),
-      ctx.program.programId,
-      ctx.fetcher,
-      true
-    );
-    const tx = await whirlpool.swap(quote, userKeypair.publicKey);
-
-    // const hash = await tx.buildAndExecute();
-
-    const ixs = tx.compressIx(true);
-
-    const instructions = ixs.instructions.concat(ixs.cleanupInstructions);
-    const lookupTableAddress = new PublicKey(
-      "Gr7i5MRRRhBQ9Wxf7oNRqKaKY4fAapk8WhDgkMH1u6nU"
+      ctx,
+      userKeypair
     );
 
-    await compareTxSize(ctx.connection, userKeypair, instructions, [
-      lookupTableAddress,
-    ]);
+    console.log("Lookup table created:", lookupTable.toBase58());
+    console.log("Saving lookup table to file...");
+
+    const lookupTableData = loadLookupTable();
+    saveDataToLookupTable(
+      lookupTableData,
+      whirlpoolPda.publicKey.toString(),
+      lookupTable.toString()
+    );
   }
 }
 

@@ -42,6 +42,8 @@ import {
 } from "@renec-foundation/gasless-sdk";
 import { Address, BN } from "@project-serum/anchor";
 import { compareTxSize } from "../utils/version";
+import { loadLookupTable } from "../utils/helper";
+import { getTwoHopSwapIx } from "./utils";
 
 const SLIPPAGE = Percentage.fromFraction(1, 100);
 
@@ -76,15 +78,16 @@ async function main() {
   const pool1 = await getWhirlPool(client, getPoolInfo(poolIdx1));
   const pool2 = await getWhirlPool(client, getPoolInfo(poolIdx2));
 
+  const swapAmount = new BN(100000);
   await swapThreeHops(
-    "two hops ",
+    "three hops ",
     client,
     pool0,
     pool1,
     pool2,
-    [0, 1, 2],
-    [100, 0, 0],
-    new BN(100000),
+    [0],
+    [swapAmount.toNumber()],
+    swapAmount,
     newWallet,
     discountTokenMint,
     true
@@ -116,6 +119,7 @@ const swapThreeHops = async (
   console.log(
     `Swap routes: ${twoHopsSwapToken.pool1OtherToken.toString()} -> ${twoHopsSwapToken.intermidaryToken.toString()} -> ${twoHopsSwapToken.pool2OtherToken.toString()}}`
   );
+
   await createTokenAccounts(
     client,
     [
@@ -138,39 +142,60 @@ const swapThreeHops = async (
   }
 
   // Swap three hops
-  const { tx, quote1, quote2 } = await getTwoHopSwapIx(
+  const { tx, quote2 } = await getTwoHopSwapIx(
     client,
     pool0,
     pool1,
     wallet,
+    swapAmount,
     feeDiscountToken
   );
 
   // Get swap ix
-  const thirdQuote = await swapQuoteByInputToken(
-    pool2,
-    twoHopsSwapToken.pool2OtherToken,
-    quote2.estimatedAmountOut,
-    SLIPPAGE,
-    client.getContext().program.programId,
-    client.getContext().fetcher,
-    true
-  );
+  let thirdQuote;
+  if (feeDiscountToken) {
+    thirdQuote = await swapWithFeeDiscountQuoteByInputToken(
+      pool2,
+      feeDiscountToken,
+      twoHopsSwapToken.pool2OtherToken,
+      quote2.estimatedAmountOut,
+      SLIPPAGE,
+      client.getContext().program.programId,
+      client.getContext().fetcher,
+      true
+    );
+  } else {
+    thirdQuote = await swapQuoteByInputToken(
+      pool2,
+      twoHopsSwapToken.pool2OtherToken,
+      quote2.estimatedAmountOut,
+      SLIPPAGE,
+      client.getContext().program.programId,
+      client.getContext().fetcher,
+      true
+    );
+  }
 
   const thirdQuoteTx = await pool2.swap(thirdQuote, wallet.publicKey);
 
   tx.addInstruction(thirdQuoteTx.compressIx(true));
 
-  // process
-  // 1: 2jZmvaniEb9PKyz3NDx3JfZraS3FKkAUBmoQEosbb1Wg
-  // 2: B9kRWfqNmx7RfAe7MTogFebuKyyjUfsbhwpqrgBg63fn
-  // 3: PdjhUAZ3P5tJuqWaoS9zNBY4Yr2cp8GveoQPtEXgY4t
-  let lookUpTables = [
-    new PublicKey("2jZmvaniEb9PKyz3NDx3JfZraS3FKkAUBmoQEosbb1Wg"),
-    new PublicKey("B9kRWfqNmx7RfAe7MTogFebuKyyjUfsbhwpqrgBg63fn"),
-    new PublicKey("PdjhUAZ3P5tJuqWaoS9zNBY4Yr2cp8GveoQPtEXgY4t"),
-  ];
+  const lookupTableData = loadLookupTable();
+  const lookupTableAddress0 = lookupTableData[pool0.getAddress().toBase58()];
+  const lookupTableAddress1 = lookupTableData[pool1.getAddress().toBase58()];
+  const lookupTableAddress2 = lookupTableData[pool2.getAddress().toBase58()];
 
+  // Check if lookup table addresses are found, otherwise handle the error or fallback
+  if (!lookupTableAddress0 || !lookupTableAddress1 || !lookupTableAddress2) {
+    console.error("Lookup table addresses for pools not found.");
+    return;
+  }
+
+  let lookUpTables = [
+    new PublicKey(lookupTableAddress0),
+    new PublicKey(lookupTableAddress1),
+    new PublicKey(lookupTableAddress2),
+  ];
   const txIxs = tx.compressIx(true);
 
   await compareTxSize(
@@ -198,104 +223,6 @@ const swapThreeHops = async (
   );
 
   await executeGaslessTx(gaslessTxn, executeGasless);
-};
-
-// utils function
-const getTwoHopSwapIx = async (
-  client: WhirlpoolClient,
-  pool0: Whirlpool,
-  pool1: Whirlpool,
-  wallet: Wallet,
-  feeDiscountToken?: PublicKey
-): Promise<{
-  tx: TransactionBuilder;
-  quote1: SwapQuote;
-  quote2: SwapQuote;
-}> => {
-  const twoHopTokens = getTwoHopSwapTokens(pool0, pool1);
-
-  const amount = new u64(10000);
-  if (feeDiscountToken) {
-    console.log("\n----------\nDoing two hops swap with fee discount....");
-
-    const quote1 = await swapWithFeeDiscountQuoteByInputToken(
-      pool0,
-      feeDiscountToken,
-      twoHopTokens.pool1OtherToken,
-      amount,
-      SLIPPAGE,
-      client.getContext().program.programId,
-      client.getContext().fetcher,
-      true
-    );
-
-    const quote2 = await swapWithFeeDiscountQuoteByInputToken(
-      pool1,
-      feeDiscountToken,
-      twoHopTokens.intermidaryToken,
-      quote1.estimatedAmountOut,
-      SLIPPAGE,
-      client.getContext().program.programId,
-      client.getContext().fetcher,
-      true
-    );
-
-    // two hop swap
-    const twoHopTx = await client.twoHopSwapWithFeeDiscount(
-      quote1,
-      pool0,
-      quote2,
-      pool1,
-      feeDiscountToken,
-      wallet
-    );
-
-    console.log(
-      "Estimated Burn Amount: ",
-      twoHopTx.estimatedBurnAmount.toNumber()
-    );
-    return {
-      tx: twoHopTx.tx,
-      quote1,
-      quote2,
-    };
-  } else {
-    console.log("\n----------\nDoing two hops swap ....");
-    const quote1 = await swapQuoteByInputToken(
-      pool0,
-      twoHopTokens.pool1OtherToken,
-      amount,
-      SLIPPAGE,
-      client.getContext().program.programId,
-      client.getContext().fetcher,
-      true
-    );
-
-    const quote2 = await swapQuoteByInputToken(
-      pool1,
-      twoHopTokens.intermidaryToken,
-      quote1.estimatedAmountOut,
-      SLIPPAGE,
-      client.getContext().program.programId,
-      client.getContext().fetcher,
-      true
-    );
-
-    // two hop swap
-    let twoHopTx = await client.twoHopSwap(
-      quote1,
-      pool0,
-      quote2,
-      pool1,
-      wallet
-    );
-
-    return {
-      tx: twoHopTx,
-      quote1,
-      quote2,
-    };
-  }
 };
 
 const createTokenAccounts = async (
