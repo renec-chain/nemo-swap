@@ -40,7 +40,7 @@ import {
   Wallet,
 } from "@renec-foundation/gasless-sdk";
 import { Address, BN } from "@project-serum/anchor";
-import { compareTxSize } from "../version";
+import { compareTxSize } from "../utils/version";
 
 const SLIPPAGE = Percentage.fromFraction(1, 100);
 

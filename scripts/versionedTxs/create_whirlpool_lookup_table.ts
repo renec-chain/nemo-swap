@@ -12,9 +12,8 @@ import {
 } from "../create_pool/utils";
 import deployed from "../create_pool/deployed.json";
 import { getPoolInfo } from "../create_pool/utils/pool";
-import { u64 } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
-import { WhirlpoolLookupTable } from "./version";
+import { WhirlpoolLookupTable } from "./utils/";
 
 async function main() {
   const poolIndex = parseInt(process.argv[2]);

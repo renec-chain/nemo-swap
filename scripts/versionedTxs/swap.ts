@@ -13,7 +13,7 @@ import {
 import deployed from "../create_pool/deployed.json";
 import { getPoolInfo } from "../create_pool/utils/pool";
 import { u64 } from "@solana/spl-token";
-import { compareTxSize, createAndSendV0Tx } from "./";
+import { compareTxSize, createAndSendV0Tx } from "./utils";
 import {
   PublicKey,
   TransactionMessage,

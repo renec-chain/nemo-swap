@@ -2,25 +2,13 @@ import {
   AddressLookupTableProgram,
   Connection,
   Keypair,
-  LAMPORTS_PER_SOL,
   PublicKey,
-  SystemProgram,
-  Transaction,
   TransactionInstruction,
   TransactionMessage,
   VersionedTransaction,
   Signer,
 } from "@solana/web3.js";
-import { ROLES, loadProvider, loadWallets } from "../create_pool/utils";
-import {
-  PDAUtil,
-  TickArrayUtil,
-  Whirlpool,
-  WhirlpoolContext,
-} from "@renec/redex-sdk";
 import { Wallet } from "@project-serum/anchor";
-import { lookup } from "mz/dns";
-import { getStartTicksWithOffset } from "../create_pool/utils/tickArrays";
 
 export async function createAndSendV0Tx(
   connection: Connection,
@@ -81,6 +69,8 @@ export async function createLookupTable(
       recentSlot: await connection.getSlot(),
     });
 
+  // poolA -> lookupTableAddress
+
   // Step 2 - Log Lookup Table Address
   console.log("Lookup Table Address:", lookupTableAddress.toBase58());
 
@@ -139,7 +129,6 @@ export async function compareTxSize(
   lookupTableAddresses: PublicKey[],
   signers?: Signer[]
 ) {
-  // Step 1 - Fetch the lookup table
   // Fetch the lookup tables
   const lookupTables = await Promise.all(
     lookupTableAddresses.map(async (addr) => {
@@ -156,12 +145,8 @@ export async function compareTxSize(
   );
 
   let latestBlockhash = await connection.getLatestBlockhash("finalized");
-  console.log(
-    "   ✅ - Fetched latest blockhash. Last valid height:",
-    latestBlockhash.lastValidBlockHeight
-  );
 
-  // Step 4 - Generate and sign a transaction that uses a lookup table
+  // Generate and sign a transaction that uses a lookup table
   const messageWithLookupTable = new TransactionMessage({
     payerKey: keypair.publicKey,
     recentBlockhash: latestBlockhash.blockhash,
@@ -176,25 +161,23 @@ export async function compareTxSize(
   }
   transactionWithLookupTable.sign([keypair]);
 
-  // // Step 5 - Generate and sign a transaction that DOES NOT use a lookup table
-  // const messageWithoutLookupTable = new TransactionMessage({
-  //   payerKey: keypair.publicKey,
-  //   recentBlockhash: latestBlockhash.blockhash,
-  //   instructions: transactionInstruction,
-  // }).compileToV0Message(); // 👈 NOTE: We do NOT include the lookup table
-  // const transactionWithoutLookupTable = new VersionedTransaction(
-  //   messageWithoutLookupTable
-  // );
-  // transactionWithoutLookupTable.sign([keypair]);
+  // Generate and sign a transaction that DOES NOT use a lookup table
+  const messageWithoutLookupTable = new TransactionMessage({
+    payerKey: keypair.publicKey,
+    recentBlockhash: latestBlockhash.blockhash,
+    instructions: transactionInstruction,
+  }).compileToV0Message(); // 👈 NOTE: We do NOT include the lookup table
+  const transactionWithoutLookupTable = new VersionedTransaction(
+    messageWithoutLookupTable
+  );
+  transactionWithoutLookupTable.sign([keypair]);
 
   console.log("   ✅ - Compiled transactions");
-
-  // Step 6 - Log our transaction size
-  // console.log(
-  //   "Transaction size without address lookup table: ",
-  //   transactionWithoutLookupTable.serialize().length,
-  //   "bytes"
-  // );
+  console.log(
+    "Transaction size without address lookup table: ",
+    transactionWithoutLookupTable.serialize().length,
+    "bytes"
+  );
   console.log(
     "Transaction size with address lookup table:    ",
     transactionWithLookupTable.serialize().length,
@@ -247,91 +230,4 @@ export async function createV0Tx(
   }
 
   return transaction;
-}
-
-export class WhirlpoolLookupTable {
-  public static async createWhirlpoolLookupTable(
-    whirlpool: Whirlpool,
-    ctx: WhirlpoolContext,
-    keypair: Keypair
-  ): Promise<PublicKey> {
-    const numOfSurroundingTickArrays = 5;
-    const lut = await createLookupTable(ctx.connection, keypair);
-
-    const poolData = whirlpool.getData();
-
-    // What can be cached?
-    const whirlpoolAddr = whirlpool.getAddress();
-
-    const oraclePda = PDAUtil.getOracle(ctx.program.programId, whirlpoolAddr);
-    let addresses = [
-      whirlpool.getAddress(),
-      poolData.tokenVaultA,
-      poolData.tokenVaultB,
-      oraclePda.publicKey,
-    ];
-
-    // all tick arrays
-    const rightTickArrayStartTicks = getStartTicksWithOffset(
-      poolData.tickCurrentIndex,
-      poolData.tickSpacing,
-      numOfSurroundingTickArrays,
-      true
-    );
-
-    const leftTickArrayStartTicks = getStartTicksWithOffset(
-      poolData.tickCurrentIndex + poolData.tickSpacing * 88,
-      poolData.tickSpacing,
-      numOfSurroundingTickArrays,
-      false
-    );
-
-    const allStartTicks = leftTickArrayStartTicks.concat(
-      rightTickArrayStartTicks
-    );
-
-    const initializedTickArrays = await getTickArrays(
-      allStartTicks,
-      ctx,
-      whirlpoolAddr
-    );
-
-    initializedTickArrays.map((tickArray) =>
-      console.log("tickArray: ", tickArray.address.toBase58())
-    );
-
-    addresses = addresses.concat(
-      initializedTickArrays.map((tickArray) => tickArray.address)
-    );
-
-    addresses.map((address) => console.log("address: ", address.toBase58()));
-
-    // Add addresses to lut
-    const hash = await addAddressesToTable(
-      ctx.connection,
-      keypair,
-      lut,
-      addresses
-    );
-
-    return lut;
-  }
-}
-
-export async function getTickArrays(
-  startIndices: number[],
-  ctx: WhirlpoolContext,
-  whirlpoolKey: PublicKey
-) {
-  const tickArrayPdas = await startIndices.map((value) =>
-    PDAUtil.getTickArray(ctx.program.programId, whirlpoolKey, value)
-  );
-  const tickArrayAddresses = tickArrayPdas.map((pda) => pda.publicKey);
-  const tickArrays = await ctx.fetcher.listTickArrays(tickArrayAddresses, true);
-  return tickArrayAddresses.map((addr, index) => {
-    return {
-      address: addr,
-      data: tickArrays[index],
-    };
-  });
 }
