@@ -10,12 +10,11 @@ import { loadProvider, loadWallets } from "./utils";
 import { BN } from "@project-serum/anchor";
 import Decimal from "decimal.js";
 import { DecimalUtil } from "@orca-so/common-sdk";
-import { token } from "@project-serum/anchor/dist/cjs/utils";
 import { MintInfo } from "@solana/spl-token";
 
 const DAY_IN_SECONDS = 60 * 60 * 24;
 
-//usage: yarn set_pool_reward <pool_address> <reward_token_mint> <emission_per_second> <reward_index?>
+//usage: yarn set_pool_reward <pool_address> <reward_token_mint> <emission_per_day> <reward_index?>
 async function main() {
   // Load env variables
   const poolAddressStr = process.argv[2];
@@ -32,13 +31,13 @@ async function main() {
   }
   const rewardTokenMint = new PublicKey(rewardTokenMintStr);
 
-  const emmissionPerSecondStr = process.argv[4];
-  if (!emmissionPerSecondStr) {
+  const emissionPerDayStr = process.argv[4];
+  if (!emissionPerDayStr) {
     throw new Error(
       "Please provide a reward token mint as the second argument"
     );
   }
-  const emmissionPerSecond = new BN(emmissionPerSecondStr);
+  const emissionPerDayDecimal = new Decimal(emissionPerDayStr);
 
   const rewardIndexStr = process.argv[5];
   let rewardIndex = 0; // Default value
@@ -52,6 +51,12 @@ async function main() {
   const { ctx } = loadProvider(rewardAuth);
 
   // get reward info
+  const rewardTokenInfo = await ctx.fetcher.getMintInfo(rewardTokenMint, true);
+  const emissionPerDay = DecimalUtil.toU64(
+    emissionPerDayDecimal,
+    rewardTokenInfo.decimals
+  );
+
   const client = buildWhirlpoolClient(ctx);
   let whirlpool: Whirlpool;
   try {
@@ -69,12 +74,11 @@ async function main() {
   }
 
   // assert vault balance
-  const tokenMintInfo = await ctx.fetcher.getMintInfo(rewardTokenMint, true);
   await assertVaultBalance(
     ctx,
-    tokenMintInfo,
+    rewardTokenInfo,
     whirlpool.getData().rewardInfos[rewardIndex].vault,
-    emmissionPerSecond
+    emissionPerDayDecimal
   );
 
   // set reward emission
@@ -86,7 +90,7 @@ async function main() {
       whirlpool: poolAddress,
       rewardIndex,
       rewardVaultKey: whirlpool.getData().rewardInfos[rewardIndex].vault,
-      emissionsPerSecondX64: emmissionPerSecond.shln(64),
+      emissionsPerSecondX64: emissionPerDay.shln(64).divn(DAY_IN_SECONDS),
     })
   ).addSigner(rewardAuth);
 
@@ -99,29 +103,28 @@ async function assertVaultBalance(
   ctx: WhirlpoolContext,
   mintInfo: MintInfo,
   rewardVaultAddress: PublicKey,
-  emissionsPerSecond: BN
+  emissionPerDayDecimal: Decimal
 ) {
   const vaultBalance = await ctx.connection.getTokenAccountBalance(
     rewardVaultAddress
   );
 
-  const rewardEmissionPerDay = emissionsPerSecond.muln(DAY_IN_SECONDS);
-  const rewardEmissionPer5Mins = emissionsPerSecond.muln(5 * 60); // 5 mins to handle transaction delay time
-
   console.log("--------------------");
   console.log("REWARD VAULT: ", rewardVaultAddress.toString());
   console.log(`VAULT TOKEN BALANCE: ${vaultBalance.value.uiAmount}`);
-  console.log(`EMISSION PER DAY: ${rewardEmissionPerDay.toString()}`);
+  console.log(`EMISSION PER DAY: ${emissionPerDayDecimal}`);
   console.log("--------------------");
 
-  if (
-    new BN(vaultBalance.value.amount).lt(
-      rewardEmissionPerDay.add(rewardEmissionPer5Mins)
-    )
-  ) {
-    const amountToTransfer = rewardEmissionPerDay
-      .add(rewardEmissionPer5Mins.muln(2))
-      .sub(new BN(vaultBalance.value.amount));
+  const emissionPerDay = DecimalUtil.toU64(
+    emissionPerDayDecimal,
+    mintInfo.decimals
+  );
+
+  if (new BN(vaultBalance.value.amount).lt(emissionPerDay)) {
+    const amountToTransfer = emissionPerDay.sub(
+      new BN(vaultBalance.value.amount)
+    );
+
     const amomuntToTransferDecimal = DecimalUtil.fromU64(
       amountToTransfer,
       mintInfo.decimals
