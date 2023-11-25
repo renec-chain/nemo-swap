@@ -1,6 +1,6 @@
 {
-  "RPC_ENDPOINT_URL": "https://api-mainnet-beta.renec.foundation:8899",
-  "REDEX_PROGRAM_ID": "7rh7ZtPzHqdY82RWjHf1Q8NaQiWnyNqkC48vSixcBvad",
+  "RPC_ENDPOINT_URL": "https://api-testnet.renec.foundation:8899",
+  "REDEX_PROGRAM_ID": "9c4tufJhzmfToyqFDv7hj3qnbfM7X1yQ2dUb34RQcW9r",
   "PROTOCOL_FEE_RATE": 300,
   "FEE_TIERS": [
     {
@@ -31,7 +31,7 @@
   "POOLS": [
     {
       "TOKEN_MINT_A": "So11111111111111111111111111111111111111112",
-      "TOKEN_MINT_B": "4Q89182juiadeFgGw3fupnrwnnDmBhf7e7fHWxnUP3S3",
+      "TOKEN_MINT_B": "9NB1vaGCPUnt6H2EXQUXt5xqXKubWHUis4xmz7eVd4nH",
       "TICK_SPACING": 32,
       "OPEN_POSITION": true,
       "INIT_AMOUNT_B_PER_A": "1.0",
