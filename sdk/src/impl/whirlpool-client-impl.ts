@@ -367,17 +367,20 @@ export class WhirlpoolClientImpl implements WhirlpoolClient {
       },
     ];
 
-    const resolveAllAtas = [];
+    
+    const resolveAllAtasPromise = []
     for (const req of requests) {
-      const instruction = await resolveOrCreateATA(
+      const instruction = resolveOrCreateATA(
         this.ctx.connection,
         sourceWallet.publicKey,
         req.tokenMint,
         () => this.ctx.fetcher.getAccountRentExempt(),
         req.wrappedSolAmountIn
       );
-      resolveAllAtas.push(instruction);
+      resolveAllAtasPromise.push(instruction);
     }
+
+    const resolveAllAtas = await Promise.all(resolveAllAtasPromise);
 
     const createATAInstructions = [];
     // make a set of unique address
