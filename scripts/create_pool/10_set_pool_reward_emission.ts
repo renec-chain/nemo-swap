@@ -131,7 +131,7 @@ async function assertVaultBalance(
     );
 
     throw new Error(
-      `Expected Vault balance is less than the reward emission per day. Please tranfer at least an amount of ${amomuntToTransferDecimal}.`
+      `Expected Vault balance is less than the reward emission per day. Please tranfer at least an amount of ${amomuntToTransferDecimal} to the VAULT TOKEN ACCOUNT: ${rewardVaultAddress.toString()}`
     );
   }
 }
