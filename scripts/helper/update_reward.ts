@@ -1,6 +1,17 @@
-import { buildWhirlpoolClient, PriceMath } from "@renec/redex-sdk";
-import { loadProvider, delay, getTokenMintInfo, loadWallets } from "./utils";
-import deployed from "./deployed.json";
+import {
+  buildWhirlpoolClient,
+  PriceMath,
+  TickArrayUtil,
+  toTx,
+  WhirlpoolIx,
+} from "@renec/redex-sdk";
+import {
+  loadProvider,
+  delay,
+  getTokenMintInfo,
+  loadWallets,
+} from "../create_pool/utils";
+import deployed from "../create_pool/deployed.json";
 
 async function main() {
   const wallets = loadWallets();
@@ -35,6 +46,33 @@ async function main() {
     );
 
     console.log(position.rewardInfos);
+
+    console.group("tick lower index: ", position.tickLowerIndex);
+
+    const hash = await toTx(
+      ctx,
+      WhirlpoolIx.updateFeesAndRewardsIx(ctx.program, {
+        whirlpool: position.whirlpool,
+        position: positions[0].getAddress(),
+        tickArrayLower: TickArrayUtil.getTickArrayPDAs(
+          position.tickLowerIndex,
+          32,
+          1,
+          ctx.program.programId,
+          position.whirlpool,
+          true
+        )[0].publicKey,
+        tickArrayUpper: TickArrayUtil.getTickArrayPDAs(
+          position.tickUpperIndex,
+          32,
+          1,
+          ctx.program.programId,
+          position.whirlpool,
+          true
+        )[0].publicKey,
+      })
+    ).buildAndExecute();
+    console.log("hash: ", hash);
   }
 }
 
