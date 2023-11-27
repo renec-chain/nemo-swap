@@ -33,6 +33,8 @@ async function main() {
       "Upper Price ",
       PriceMath.tickIndexToPrice(position.tickUpperIndex, 9, 9)
     );
+
+    console.log(position.rewardInfos);
   }
 }
 

@@ -11,6 +11,7 @@ import { BN } from "@project-serum/anchor";
 import Decimal from "decimal.js";
 import { DecimalUtil } from "@orca-so/common-sdk";
 import { MintInfo } from "@solana/spl-token";
+import { deriveATA } from "@orca-so/common-sdk";
 
 const DAY_IN_SECONDS = 60 * 60 * 24;
 
@@ -76,6 +77,8 @@ async function main() {
   // assert vault balance
   await assertVaultBalance(
     ctx,
+    rewardAuth,
+    rewardTokenMint,
     rewardTokenInfo,
     whirlpool.getData().rewardInfos[rewardIndex].vault,
     emissionPerDayDecimal
@@ -101,6 +104,8 @@ async function main() {
 
 async function assertVaultBalance(
   ctx: WhirlpoolContext,
+  rewardAuth: Keypair,
+  rewardTokenMint: PublicKey,
   mintInfo: MintInfo,
   rewardVaultAddress: PublicKey,
   emissionPerDayDecimal: Decimal
@@ -120,19 +125,36 @@ async function assertVaultBalance(
     mintInfo.decimals
   );
 
+  // if vault balance is less than emission per day
   if (new BN(vaultBalance.value.amount).lt(emissionPerDay)) {
     const amountToTransfer = emissionPerDay.sub(
       new BN(vaultBalance.value.amount)
     );
 
-    const amomuntToTransferDecimal = DecimalUtil.fromU64(
-      amountToTransfer,
-      mintInfo.decimals
+    const rewardAuthTokenAccount = await deriveATA(
+      rewardAuth.publicKey,
+      rewardTokenMint
     );
 
-    throw new Error(
-      `Expected Vault balance is less than the reward emission per day. Please tranfer at least an amount of ${amomuntToTransferDecimal} to the VAULT TOKEN ACCOUNT: ${rewardVaultAddress.toString()}`
+    const rewardAuthBalance = await ctx.connection.getTokenAccountBalance(
+      rewardAuthTokenAccount
     );
+
+    // if reward vault balacne is lesser than amount to transfer => error
+    if (new BN(rewardAuthBalance.value.amount).lt(amountToTransfer)) {
+      const amountTransferToRewardAuth = amountToTransfer.sub(
+        new BN(rewardAuthBalance.value.amount)
+      );
+
+      const amountTransferToRewardAuthDecimal = DecimalUtil.fromU64(
+        amountToTransfer,
+        mintInfo.decimals
+      );
+
+      throw new Error(
+        `Reward Vault Balance is less than token's emission per day amount. Please tranfer at least an amount of ${amountTransferToRewardAuthDecimal} to the reward authority ${rewardAuth.publicKey.toString()}`
+      );
+    }
   }
 }
 
