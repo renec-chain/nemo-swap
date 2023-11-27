@@ -44,6 +44,9 @@ async function main() {
       console.log("===================================================");
       console.log("POOL PUBKEY:", whirlpoolPda.publicKey.toBase58());
 
+      console.log("-------------------------------------");
+      console.log("reward info: ", whirlpool.getData().rewardInfos);
+
       return;
     }
   } catch (e) {
