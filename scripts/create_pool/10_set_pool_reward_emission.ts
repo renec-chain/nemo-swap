@@ -12,6 +12,7 @@ import Decimal from "decimal.js";
 import { DecimalUtil } from "@orca-so/common-sdk";
 import { MintInfo } from "@solana/spl-token";
 import { deriveATA } from "@orca-so/common-sdk";
+import { transfer } from "./utils/token";
 
 const DAY_IN_SECONDS = 60 * 60 * 24;
 
@@ -136,18 +137,31 @@ async function assertVaultBalance(
       rewardTokenMint
     );
 
-    const rewardAuthBalance = await ctx.connection.getTokenAccountBalance(
-      rewardAuthTokenAccount
+    let rewardAuthBalance = new BN(0);
+    try {
+      rewardAuthBalance = new BN(
+        (
+          await ctx.connection.getTokenAccountBalance(rewardAuthTokenAccount)
+        ).value.amount
+      );
+    } catch {
+      rewardAuthBalance = new BN(0);
+    }
+    console.log(
+      "\n-----> Vault balance is lesser than token's emission per day amount"
+    );
+    console.log(
+      "Reward Auth Token Balance: ",
+      DecimalUtil.fromU64(rewardAuthBalance, mintInfo.decimals)
     );
 
     // if reward vault balacne is lesser than amount to transfer => error
-    if (new BN(rewardAuthBalance.value.amount).lt(amountToTransfer)) {
-      const amountTransferToRewardAuth = amountToTransfer.sub(
-        new BN(rewardAuthBalance.value.amount)
-      );
+    if (rewardAuthBalance.lt(amountToTransfer)) {
+      const amountTransferToRewardAuth =
+        amountToTransfer.sub(rewardAuthBalance);
 
       const amountTransferToRewardAuthDecimal = DecimalUtil.fromU64(
-        amountToTransfer,
+        amountTransferToRewardAuth,
         mintInfo.decimals
       );
 
@@ -155,6 +169,28 @@ async function assertVaultBalance(
         `Reward Vault Balance is less than token's emission per day amount. Please tranfer at least an amount of ${amountTransferToRewardAuthDecimal} to the reward authority ${rewardAuth.publicKey.toString()}`
       );
     }
+
+    // transfer neccissary amount to vault
+    const amountToTransferDecimal = DecimalUtil.fromU64(
+      amountToTransfer,
+      mintInfo.decimals
+    );
+    console.log(
+      `------- \n -->Transfering ${amountToTransferDecimal} from ${rewardAuth.publicKey.toString()} to reward vault ${rewardVaultAddress.toString()}`
+    );
+
+    // convert amount to transfer to u64
+    const amountToTransferU64 = DecimalUtil.toU64(
+      amountToTransferDecimal,
+      mintInfo.decimals
+    );
+
+    await transfer(
+      ctx.provider,
+      rewardAuthTokenAccount,
+      rewardVaultAddress,
+      amountToTransferU64
+    );
   }
 }
 
