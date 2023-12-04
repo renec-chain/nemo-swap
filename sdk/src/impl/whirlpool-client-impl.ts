@@ -5,6 +5,7 @@ import {
   resolveOrCreateATAs,
   ZERO,
   resolveOrCreateATA,
+  deriveATA,
 } from "@orca-so/common-sdk";
 import { Address, BN } from "@project-serum/anchor";
 import { Keypair, PublicKey } from "@solana/web3.js";
