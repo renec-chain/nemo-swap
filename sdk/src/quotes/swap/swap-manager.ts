@@ -1,11 +1,16 @@
 import { ZERO } from "@orca-so/common-sdk";
 import { u64 } from "@solana/spl-token";
 import BN from "bn.js";
-import { PROTOCOL_FEE_RATE_MUL_VALUE, WhirlpoolData } from "../../types/public";
+import {
+  PROTOCOL_FEE_RATE_MUL_VALUE,
+  WhirlpoolData,
+  WhirlpoolDiscountInfoData,
+} from "../../types/public";
 import { PriceMath } from "../../utils/public";
 import { TickArraySequence } from "./tick-array-sequence";
-import { computeSwapStep } from "../../utils/math/swap-math";
+import { SwapStep, computeSwapStep } from "../../utils/math/swap-math";
 
+export const DISCOUNT_FEE_RATE_MUL_VALUE = 10000;
 export type SwapResult = {
   amountA: BN;
   amountB: BN;
@@ -106,6 +111,116 @@ export function computeSwap(
   };
 }
 
+export function computeSwapWithFeeDiscount(
+  whirlpoolData: WhirlpoolData,
+  whirlpooDiscountInfoData: WhirlpoolDiscountInfoData,
+  tickSequence: TickArraySequence,
+  tokenAmount: u64,
+  sqrtPriceLimit: BN,
+  amountSpecifiedIsInput: boolean,
+  aToB: boolean
+): { swapResults: SwapResult; discountFeeAccumulated: BN; burnFeeAccumulated: BN } {
+  let amountRemaining = tokenAmount;
+  let amountCalculated = ZERO;
+  let currSqrtPrice = whirlpoolData.sqrtPrice;
+  let currLiquidity = whirlpoolData.liquidity;
+  let currTickIndex = whirlpoolData.tickCurrentIndex;
+  let totalFeeAmount = ZERO;
+  let discountFeeAccumulated = ZERO;
+  let burnFeeAccumulated = ZERO;
+  const feeRate = whirlpoolData.feeRate;
+  const protocolFeeRate = whirlpoolData.protocolFeeRate;
+  let currProtocolFee = new u64(0);
+  let currFeeGrowthGlobalInput = aToB
+    ? whirlpoolData.feeGrowthGlobalA
+    : whirlpoolData.feeGrowthGlobalB;
+
+  while (amountRemaining.gt(ZERO) && !sqrtPriceLimit.eq(currSqrtPrice)) {
+    let { nextIndex: nextTickIndex } = tickSequence.findNextInitializedTickIndex(currTickIndex);
+
+    let { nextTickPrice, nextSqrtPriceLimit: targetSqrtPrice } = getNextSqrtPrices(
+      nextTickIndex,
+      sqrtPriceLimit,
+      aToB
+    );
+
+    let swapComputation = computeSwapStep(
+      amountRemaining,
+      feeRate,
+      currLiquidity,
+      currSqrtPrice,
+      targetSqrtPrice,
+      amountSpecifiedIsInput,
+      aToB
+    );
+
+    // Apply fee discount
+    let { feeBurnAmountAccumulated, feeDiscountAccumulated } = applyFeeDiscount(
+      swapComputation,
+      whirlpooDiscountInfoData,
+      discountFeeAccumulated,
+      burnFeeAccumulated
+    );
+
+    discountFeeAccumulated = feeDiscountAccumulated;
+    burnFeeAccumulated = feeBurnAmountAccumulated;
+
+    totalFeeAmount = totalFeeAmount.add(swapComputation.feeAmount);
+
+    if (amountSpecifiedIsInput) {
+      amountRemaining = amountRemaining.sub(swapComputation.amountIn);
+      amountRemaining = amountRemaining.sub(swapComputation.feeAmount);
+      amountCalculated = amountCalculated.add(swapComputation.amountOut);
+    } else {
+      amountRemaining = amountRemaining.sub(swapComputation.amountOut);
+      amountCalculated = amountCalculated.add(swapComputation.amountIn);
+      amountCalculated = amountCalculated.add(swapComputation.feeAmount);
+    }
+
+    let { nextProtocolFee, nextFeeGrowthGlobalInput } = calculateFees(
+      swapComputation.feeAmount,
+      protocolFeeRate,
+      currLiquidity,
+      currProtocolFee,
+      currFeeGrowthGlobalInput
+    );
+    currProtocolFee = nextProtocolFee;
+    currFeeGrowthGlobalInput = nextFeeGrowthGlobalInput;
+
+    if (swapComputation.nextPrice.eq(nextTickPrice)) {
+      const nextTick = tickSequence.getTick(nextTickIndex);
+      if (nextTick.initialized) {
+        currLiquidity = calculateNextLiquidity(nextTick.liquidityNet, currLiquidity, aToB);
+      }
+      currTickIndex = aToB ? nextTickIndex - 1 : nextTickIndex;
+    } else {
+      currTickIndex = PriceMath.sqrtPriceX64ToTickIndex(swapComputation.nextPrice);
+    }
+
+    currSqrtPrice = swapComputation.nextPrice;
+  }
+
+  let { amountA, amountB } = calculateEstTokens(
+    tokenAmount,
+    amountRemaining,
+    amountCalculated,
+    aToB,
+    amountSpecifiedIsInput
+  );
+
+  return {
+    swapResults: {
+      amountA,
+      amountB,
+      nextTickIndex: currTickIndex,
+      nextSqrtPrice: currSqrtPrice,
+      totalFeeAmount,
+    },
+    discountFeeAccumulated,
+    burnFeeAccumulated,
+  };
+}
+
 function getNextSqrtPrices(nextTick: number, sqrtPriceLimit: BN, aToB: boolean) {
   const nextTickPrice = PriceMath.tickIndexToSqrtPriceX64(nextTick);
   const nextSqrtPriceLimit = aToB
@@ -166,4 +281,37 @@ function calculateEstTokens(
 
 function calculateNextLiquidity(tickNetLiquidity: BN, currLiquidity: BN, aToB: boolean) {
   return aToB ? currLiquidity.sub(tickNetLiquidity) : currLiquidity.add(tickNetLiquidity);
+}
+
+function applyFeeDiscount(
+  swapComputation: SwapStep,
+  whirlpoolDiscountInfoData: WhirlpoolDiscountInfoData,
+  discountFeeAccumulated: BN,
+  burnFeeAccumulated: BN
+): { feeBurnAmountAccumulated: BN; feeDiscountAccumulated: BN } {
+  if (whirlpoolDiscountInfoData.tokenConversionFeeRate > DISCOUNT_FEE_RATE_MUL_VALUE) {
+    throw new Error("FeeRateMaxExceeded");
+  }
+
+  if (whirlpoolDiscountInfoData.discountFeeRate > DISCOUNT_FEE_RATE_MUL_VALUE) {
+    throw new Error("FeeRateMaxExceeded");
+  }
+
+  const tokenConversionAmount = swapComputation.feeAmount
+    .mul(new BN(whirlpoolDiscountInfoData.tokenConversionFeeRate))
+    .div(new BN(DISCOUNT_FEE_RATE_MUL_VALUE));
+  swapComputation.feeAmount = swapComputation.feeAmount.sub(tokenConversionAmount);
+
+  const discountAmount = tokenConversionAmount
+    .mul(new BN(whirlpoolDiscountInfoData.discountFeeRate))
+    .div(new BN(DISCOUNT_FEE_RATE_MUL_VALUE));
+  const burnAmount = tokenConversionAmount.sub(discountAmount);
+
+  const feeBurnAmountAccumulated = discountFeeAccumulated.add(discountAmount);
+  const feeDiscountAccumulated = burnFeeAccumulated.add(burnAmount);
+
+  return {
+    feeBurnAmountAccumulated,
+    feeDiscountAccumulated,
+  };
 }

@@ -1,5 +1,5 @@
 import BN from "bn.js";
-import { NATIVE_MINT } from "@solana/spl-token";
+import { MintInfo, NATIVE_MINT, u64 } from "@solana/spl-token";
 import { AccountFetcher, PoolUtil, TokenInfo } from "..";
 import {
   WhirlpoolData,
@@ -7,6 +7,8 @@ import {
   WhirlpoolRewardInfoData,
   TokenAccountInfo,
 } from "../types/public";
+import Decimal from "decimal.js";
+import { DecimalUtil } from "@orca-so/common-sdk";
 
 export async function getTokenMintInfos(
   fetcher: AccountFetcher,

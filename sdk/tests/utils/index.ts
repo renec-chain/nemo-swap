@@ -2,6 +2,7 @@ export * from "./test-consts";
 export * from "./token";
 export * from "./utils";
 export * from "./assert";
+export * from "./pool-discount-info";
 
 export enum TickSpacing {
   One = 1,

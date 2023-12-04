@@ -51,6 +51,20 @@ export class WhirlpoolIx {
     return ix.initializePoolIx(program, params);
   }
 
+  public static initializePoolDiscountInfoIx(
+    program: Program<Whirlpool>,
+    params: ix.InitPoolDiscountInfoParam
+  ) {
+    return ix.initPoolDiscountInfoIx(program, params);
+  }
+
+  public static setPoolDiscountInfoIx(
+    program: Program<Whirlpool>,
+    params: ix.SetPoolDiscountInfoParam
+  ) {
+    return ix.setPoolDiscountInfoIx(program, params);
+  }
+
   /**
    * Initialize reward for a Whirlpool. A pool can only support up to a set number of rewards.
    * The initial emissionsPerSecond is set to 0.
@@ -189,6 +203,13 @@ export class WhirlpoolIx {
     return ix.swapIx(program, params);
   }
 
+  public static swapWithFeeDiscountIx(
+    program: Program<Whirlpool>,
+    params: ix.SwapWithFeeDiscountParams
+  ) {
+    return ix.swapWithFeeDiscountIx(program, params);
+  }
+
   /**
    * Perform a two-hop-swap in this Whirlpool
    *
@@ -209,9 +230,16 @@ export class WhirlpoolIx {
    * @param params - TwoHopSwapParams object
    * @returns - Instruction to perform the action.
    */
-    public static twoHopSwapIx(program: Program<Whirlpool>, params: ix.TwoHopSwapParams) {
-      return ix.twoHopSwapIx(program, params);
-    }
+  public static twoHopSwapIx(program: Program<Whirlpool>, params: ix.TwoHopSwapParams) {
+    return ix.twoHopSwapIx(program, params);
+  }
+
+  public static twoHopSwapWithFeeDiscountIx(
+    program: Program<Whirlpool>,
+    params: ix.TwoHopSwapWithFeeDiscountParams
+  ) {
+    return ix.twoHopSwapWithFeeDiscountIx(program, params);
+  }
 
   /**
    * Update the accrued fees and rewards for a position.

@@ -4,12 +4,13 @@ import { u64 } from "@solana/spl-token";
 import invariant from "tiny-invariant";
 import { SwapInput } from "../../instructions";
 import { AccountFetcher } from "../../network/public";
-import { TickArray, WhirlpoolData } from "../../types/public";
+import { TickArray, WhirlpoolData, WhirlpoolDiscountInfoData } from "../../types/public";
 import { PoolUtil, SwapDirection, TokenType } from "../../utils/public";
 import { SwapUtils } from "../../utils/public/swap-utils";
 import { Whirlpool } from "../../whirlpool-client";
-import { simulateSwap } from "../swap/swap-quote-impl";
+import { simulateSwap, simulateSwapWithFeeDiscount } from "../swap/swap-quote-impl";
 import { DevFeeSwapQuote } from "./dev-fee-swap-quote";
+import { FeeDiscountSwapQuote } from "./swap-with-fee-discount-quote";
 
 /**
  * @category Quotes
@@ -38,7 +39,7 @@ export type SwapQuoteParam = {
  * @link {BaseSwapQuote}
  * @link {DevFeeSwapQuote}
  */
-export type SwapQuote = NormalSwapQuote | DevFeeSwapQuote;
+export type SwapQuote = NormalSwapQuote | DevFeeSwapQuote | FeeDiscountSwapQuote;
 
 /**
  * A collection of estimated values from quoting a swap.
@@ -55,7 +56,7 @@ export type SwapEstimates = {
   estimatedEndTickIndex: number;
   estimatedEndSqrtPrice: BN;
   estimatedFeeAmount: u64;
-}
+};
 
 export type NormalSwapQuote = SwapInput & SwapEstimates;
 
@@ -172,7 +173,9 @@ async function swapQuoteByToken(
   const swapTokenType = PoolUtil.getTokenType(whirlpoolData, swapMintKey);
   invariant(!!swapTokenType, "swapTokenMint does not match any tokens on this pool");
 
-  const aToB = SwapUtils.getSwapDirection(whirlpoolData, swapMintKey, amountSpecifiedIsInput) === SwapDirection.AtoB;
+  const aToB =
+    SwapUtils.getSwapDirection(whirlpoolData, swapMintKey, amountSpecifiedIsInput) ===
+    SwapDirection.AtoB;
 
   const tickArrays = await SwapUtils.getTickArrays(
     whirlpoolData.tickCurrentIndex,

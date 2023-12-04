@@ -7,26 +7,17 @@ import {
   PDAUtil,
   FeeTierData,
 } from "@renec/redex-sdk";
-import { loadProvider, delay, loadWallets } from "./utils";
-import config from "./config.json";
+import { loadProvider, delay, loadWallets, getConfig, ROLES } from "./utils";
 import deployed from "./deployed.json";
-const MAX_FEE_RATE = 1000000;
+const MAX_FEE_RATE = 10000;
+const config = getConfig();
 
 async function main() {
-  const wallets = loadWallets();
+  const wallets = loadWallets([ROLES.FEE_AUTH, ROLES.USER]);
+  const feeAuthKeypair = wallets[ROLES.FEE_AUTH];
+  const userKeypair = wallets[ROLES.USER];
 
-  // Check required roles
-  if (!wallets.feeAuthKeypair) {
-    throw new Error("Please provide fee_authority_wallet wallet");
-  }
-
-  if (!wallets.userKeypair) {
-    throw new Error("Please provide user_wallet wallet");
-  }
-
-  console.log("fee auth: ", wallets.feeAuthKeypair.publicKey.toString());
-
-  const { ctx } = loadProvider(wallets.userKeypair);
+  const { ctx } = loadProvider(userKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
     console.log(
@@ -67,7 +58,7 @@ async function main() {
       const tx = toTx(
         ctx,
         WhirlpoolIx.initializeFeeTierIx(ctx.program, params)
-      ).addSigner(wallets.feeAuthKeypair);
+      ).addSigner(feeAuthKeypair);
       const txid = await tx.buildAndExecute();
       console.log("fee tier account deployed at txid:", txid);
       feeTierAccount = (await ctx.fetcher.getFeeTier(

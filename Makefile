@@ -16,7 +16,7 @@ export CLUSTER_URL := $(if $(filter testnet,$(CLUSTER)),$(RENEC_TESTNET_URL),\
                  $(if $(filter localnet,$(CLUSTER)),$(RENEC_LOCALNET_URL),\
                  $(error Unknown cluster name: $(CLUSTER)))))
 
-export CLI_VERSION := $(if $(filter testnet,$(CLUSTER)),1.14.6,$(if $(filter mainnet,$(CLUSTER)),1.9.29,$(if $(filter localnet,$(CLUSTER)),1.9.29,$(error Unknown cluster name: $(CLUSTER)))))
+export CLI_VERSION := $(if $(filter testnet,$(CLUSTER)),1.14.6,$(if $(filter mainnet,$(CLUSTER)),1.13.6,$(if $(filter localnet,$(CLUSTER)),1.13.6,$(error Unknown cluster name: $(CLUSTER)))))
 
 show-network-config:
 	@echo "interacting with cluster: $(CLUSTER_URL), CLI_VERSION: $(CLI_VERSION)"
@@ -25,7 +25,7 @@ install-deps: show-network-config
 	@. ./dev-scripts/install-program-deps.sh
 
 localnet:
-	@$(MAKE) install-deps CLI_VERSION=1.9.29
+	@$(MAKE) install-deps CLI_VERSION=1.13.6
 	solana-test-validator --reset
 
 gen-wallet: install-deps
@@ -36,13 +36,18 @@ import-wallet: install-deps
 
 faucet: 
 	@$(MAKE) install-deps CLI_VERSION=$(CLI_VERSION)
-	@./dev-scripts/faucet.sh --name "$(name)" $(amount)
+	@./dev-scripts/faucet.sh --keypair_file_path "$(keypair_file_path)" $(amount)
 
 build: 
-	@$(MAKE) install-deps CLI_VERSION=$(CLI_VERSION) ANCHOR_VERSION=$(ANCHOR_VERSION)
+	@$(MAKE) install-deps CLI_VERSION=1.14.6 ANCHOR_VERSION=$(ANCHOR_VERSION)
 	@./dev-scripts/build.sh 
 
 deploy: set-cluster-url
 	@$(MAKE) install-deps CLI_VERSION=$(CLI_VERSION)
 	@./dev-scripts/deploy.sh "$(keypair_file_path)"
 	
+
+deploy-test: set-cluster-url
+	@$(MAKE) install-deps CLI_VERSION=$(CLI_VERSION)  
+	@$(MAKE) CLUSTER=localnet faucet keypair_file_path=$(keypair_file_path) amount=50 
+	@./dev-scripts/deploy.sh "$(keypair_file_path)"

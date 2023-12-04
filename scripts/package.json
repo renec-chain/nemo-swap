@@ -11,10 +11,12 @@
     "08_two_hop_swap": "ts-node ./create_pool/08_two_hop_swap.ts",
     "update_fee_rate_of_pool": "ts-node ./create_pool/update_fee_rate_of_pool.ts",
     "init_pool_reward": "ts-node ./create_pool/09_initialize_pool_reward.ts",
-    "set_pool_reward_emission": "ts-node ./create_pool/10_set_pool_reward_emission.ts"
+    "set_pool_reward_emission": "ts-node ./create_pool/10_set_pool_reward_emission.ts",
+    "get_pool_info": "ts-node ./helper/00_get_pool_info.ts"
   },
   "dependencies": {
     "@project-serum/anchor": "~0.25.0",
+    "@renec-foundation/gasless-sdk": "^0.2.7",
     "@renec/redex-sdk": "file:../sdk",
     "@solana/spl-token": "^0.1.8"
   },

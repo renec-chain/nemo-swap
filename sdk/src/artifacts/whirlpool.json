@@ -121,6 +121,59 @@
       ]
     },
     {
+      "name": "initializePoolDiscountInfo",
+      "accounts": [
+        {
+          "name": "config",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpool",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "discountToken",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpoolDiscountInfo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolCreatorAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "tokenConversionFeeRate",
+          "type": "u16"
+        },
+        {
+          "name": "discountFeeRate",
+          "type": "u16"
+        },
+        {
+          "name": "expo",
+          "type": "u8"
+        },
+        {
+          "name": "tokenRateOverWhirlpoolTokenA",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "initializeTickArray",
       "accounts": [
         {
@@ -829,6 +882,103 @@
       ]
     },
     {
+      "name": "swapWithFeeDiscount",
+      "accounts": [
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "whirlpool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenOwnerAccountA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenVaultA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenOwnerAccountB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenVaultB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArray0",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArray1",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArray2",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "oracle",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpoolDiscountInfo",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "discountToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "discountTokenOwnerAccount",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "otherAmountThreshold",
+          "type": "u64"
+        },
+        {
+          "name": "sqrtPriceLimit",
+          "type": "u128"
+        },
+        {
+          "name": "amountSpecifiedIsInput",
+          "type": "bool"
+        },
+        {
+          "name": "aToB",
+          "type": "bool"
+        }
+      ]
+    },
+    {
       "name": "closePosition",
       "accounts": [
         {
@@ -892,6 +1042,59 @@
         {
           "name": "defaultFeeRate",
           "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "setPoolDiscountInfo",
+      "accounts": [
+        {
+          "name": "config",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpool",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "discountToken",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpoolDiscountInfo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolCreatorAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "tokenConversionFeeRate",
+          "type": "u16"
+        },
+        {
+          "name": "discountFeeRate",
+          "type": "u16"
+        },
+        {
+          "name": "expo",
+          "type": "u8"
+        },
+        {
+          "name": "tokenRateOverWhirlpoolTokenA",
+          "type": "u64"
         }
       ]
     },
@@ -1269,6 +1472,161 @@
           "type": "u128"
         }
       ]
+    },
+    {
+      "name": "twoHopSwapWithFeeDiscount",
+      "accounts": [
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "whirlpoolOne",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpoolTwo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenOwnerAccountOneA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenVaultOneA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenOwnerAccountOneB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenVaultOneB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenOwnerAccountTwoA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenVaultTwoA",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenOwnerAccountTwoB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenVaultTwoB",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayOne0",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayOne1",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayOne2",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayTwo0",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayTwo1",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickArrayTwo2",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "oracleOne",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "oracleTwo",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "discountToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpoolDiscountInfoOne",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "whirlpoolDiscountInfoTwo",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "discountTokenOwnerAccount",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "otherAmountThreshold",
+          "type": "u64"
+        },
+        {
+          "name": "amountSpecifiedIsInput",
+          "type": "bool"
+        },
+        {
+          "name": "aToBOne",
+          "type": "bool"
+        },
+        {
+          "name": "aToBTwo",
+          "type": "bool"
+        },
+        {
+          "name": "sqrtPriceLimitOne",
+          "type": "u128"
+        },
+        {
+          "name": "sqrtPriceLimitTwo",
+          "type": "u128"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -1503,6 +1861,34 @@
                 3
               ]
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "WhirlpoolDiscountInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tokenDecimals",
+            "type": "u8"
+          },
+          {
+            "name": "tokenConversionFeeRate",
+            "type": "u16"
+          },
+          {
+            "name": "discountFeeRate",
+            "type": "u16"
+          },
+          {
+            "name": "expo",
+            "type": "u8"
+          },
+          {
+            "name": "discountTokenRateOverTokenA",
+            "type": "u64"
           }
         ]
       }

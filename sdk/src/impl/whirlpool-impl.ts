@@ -23,6 +23,7 @@ import {
   openPositionWithMetadataIx,
   swapAsync,
   SwapInput,
+  swapWithFeeDiscountAsync,
 } from "../instructions";
 import {
   collectFeesQuote,
@@ -41,6 +42,7 @@ import {
 import { Whirlpool } from "../whirlpool-client";
 import { PositionImpl } from "./position-impl";
 import { getRewardInfos, getTokenVaultAccountInfos } from "./util";
+import { publicKey } from "@project-serum/anchor/dist/cjs/utils";
 
 export class WhirlpoolImpl implements Whirlpool {
   private data: WhirlpoolData;
@@ -192,6 +194,26 @@ export class WhirlpoolImpl implements Whirlpool {
         whirlpool: this,
         wallet: sourceWalletKey,
       },
+      true
+    );
+  }
+
+  async swapWithFeeDiscount(
+    quote: SwapInput,
+    discountTokenMint: PublicKey,
+    sourceWallet?: Address
+  ): Promise<TransactionBuilder> {
+    const sourceWalletKey = sourceWallet
+      ? AddressUtil.toPubKey(sourceWallet)
+      : this.ctx.wallet.publicKey;
+    return swapWithFeeDiscountAsync(
+      this.ctx,
+      {
+        swapInput: quote,
+        whirlpool: this,
+        wallet: sourceWalletKey,
+      },
+      discountTokenMint,
       true
     );
   }

@@ -1,9 +1,9 @@
-import { AddressUtil, MathUtil, Percentage } from "@orca-so/common-sdk";
+import { AddressUtil, DecimalUtil, MathUtil, Percentage } from "@orca-so/common-sdk";
 import { Address, BN } from "@project-serum/anchor";
 import { u64, NATIVE_MINT } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
 import Decimal from "decimal.js";
-import { WhirlpoolData, WhirlpoolRewardInfoData } from "../../types/public";
+import { TokenInfo, WhirlpoolData, WhirlpoolRewardInfoData } from "../../types/public";
 import { PriceMath } from "./price-math";
 import { TokenType } from "./types";
 
@@ -246,4 +246,16 @@ function estLiquidityForTokenB(sqrtPrice1: BN, sqrtPrice2: BN, tokenAmount: u64)
   const delta = upperSqrtPriceX64.sub(lowerSqrtPriceX64);
 
   return tokenAmount.shln(64).div(delta);
+}
+
+export function getRateOverToken(
+  token: TokenInfo,
+  expo: number,
+  rawRate: Decimal // rate = rawRate * 10^dY * 10^expo
+): u64 {
+  if (expo < 0) {
+    throw new Error("expo should be positive");
+  }
+
+  return DecimalUtil.toU64(rawRate, expo + token.decimals);
 }

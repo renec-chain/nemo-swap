@@ -108,6 +108,12 @@ This script will initialize a new ReDEX protocol and create pools to swap.
      - `SLIPPAGE` (optional): the slippage which you accept when depositing liquidity to pool. E.g: = 1 ~ 1%.
      - `INPUT_MINT` (optional): `TOKEN_MINT_A` or `TOKEN_MINT_B` which you want to deposit.
      - `INPUT_AMOUNT` (optional): amount of `INPUT_MINT` which you want to deposit.
+       --- DISCOUNT INFO: (optional)
+     - `DISCOUNT_TOKEN_MINT`: uses to discount the swap fee. This is possible if the `pool_creator_authority_wallet` has using the `07_set_discount_token` command line to set the discount info for this pool with this token.
+     - `TOKEN_CONVERSION_RATE`: When swapping with fee discount, a `TOKEN_CONVERSION_RATE` is used to convert the fee to the discount token. E.g: 0.4 means for 40% value of fee will be converted to the discount token.
+     - `DISCOUNT_RATE_OVER_TOKEN_CONVERTED_AMOUNT`: over the converted amount, the discount rate will be applied. E.g: 0.5 means 50% of total converted token amount will be discounted.
+     - `DISCOUNT_TOKEN_RATE_OVER_TOKEN_A`: set the rate over the token A to calculate value of discount token. E.g: if `rate` = 1.2, means `1 discount token` = 1.2 `token A`.
+     - `EXPO` is used to handle the float number. E.g: if `expo` == 6, we will set the rate = `rate * 10^6` to handle the float number.
 
    ```json
    ...,
