@@ -64,8 +64,6 @@ export async function createLookupTable(
       recentSlot: await connection.getSlot(),
     });
 
-  console.log("Lookup Table Address:", lookupTableAddress.toBase58());
-
   // Step 3 - Generate a transaction and send it to the network
   const tx = await createAndSendV0Tx(connection, keypair, [lookupTableInst]);
   console.log("tx success: ", tx);
@@ -163,6 +161,8 @@ export async function compareTxSize(
     );
 
     // Step 4 - Send our v0 transaction to the cluster
+    console.log("--------------\n");
+    console.log("Sending transaction with lookup table...");
     const txid = await connection.sendTransaction(transactionWithLookupTable, {
       maxRetries: 5,
     });
@@ -178,6 +178,7 @@ export async function compareTxSize(
     }
 
     console.log("tx id: ", txid);
+    console.log("--------------\n");
   } catch (error) {
     console.error("Error creating transaction with lookup table: ", error);
     return;

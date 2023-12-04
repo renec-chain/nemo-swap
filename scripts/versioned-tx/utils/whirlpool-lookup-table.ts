@@ -14,7 +14,6 @@ export class WhirlpoolLookupTable {
     keypair: Keypair
   ): Promise<PublicKey> {
     const lookupTableAddress = await createLookupTable(ctx.connection, keypair);
-    console.log("Lookup Table Address: ", lookupTableAddress.toBase58());
 
     const poolData = whirlpool.getData();
     const whirlpoolAddr = whirlpool.getAddress();
