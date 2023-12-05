@@ -23,7 +23,7 @@ export async function swapAsync(
   refresh: boolean
 ): Promise<TransactionBuilder> {
   const { wallet, whirlpool, swapInput } = params;
-  const { aToB, amount } = swapInput;
+  const { aToB, amount, otherAmountThreshold, amountSpecifiedIsInput } = swapInput;
   const txBuilder = new TransactionBuilder(ctx.connection, ctx.wallet);
   const tickArrayAddresses = [swapInput.tickArray0, swapInput.tickArray1, swapInput.tickArray2];
 
@@ -37,12 +37,13 @@ export async function swapAsync(
   }
 
   const data = whirlpool.getData();
+  const nativeTokenAmount = amountSpecifiedIsInput ? amount : otherAmountThreshold;
   const [resolvedAtaA, resolvedAtaB] = await resolveOrCreateATAs(
     ctx.connection,
     wallet,
     [
-      { tokenMint: data.tokenMintA, wrappedSolAmountIn: aToB ? amount : ZERO },
-      { tokenMint: data.tokenMintB, wrappedSolAmountIn: !aToB ? amount : ZERO },
+      { tokenMint: data.tokenMintA, wrappedSolAmountIn: aToB ? nativeTokenAmount : ZERO },
+      { tokenMint: data.tokenMintB, wrappedSolAmountIn: !aToB ? nativeTokenAmount : ZERO },
     ],
     () => ctx.fetcher.getAccountRentExempt()
   );
