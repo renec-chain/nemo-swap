@@ -347,29 +347,42 @@ export class WhirlpoolClientImpl implements WhirlpoolClient {
     const whirlpoolData1 = whirlpool1.getData();
     const whirlpoolData2 = whirlpool2.getData();
 
-    const resolveAllAtas = await resolveOrCreateATAs(
-      this.ctx.connection,
-      sourceWallet.publicKey,
-      [
-        {
-          tokenMint: whirlpoolData1.tokenMintA,
-          wrappedSolAmountIn: swapQuote1.aToB ? swapQuote1.amount : ZERO,
-        },
-        {
-          tokenMint: whirlpoolData1.tokenMintB,
-          wrappedSolAmountIn: !swapQuote1.aToB ? swapQuote1.amount : ZERO,
-        },
-        {
-          tokenMint: whirlpoolData2.tokenMintA,
-          wrappedSolAmountIn: swapQuote2.aToB ? swapQuote2.amount : ZERO,
-        },
-        {
-          tokenMint: whirlpoolData2.tokenMintB,
-          wrappedSolAmountIn: !swapQuote2.aToB ? swapQuote2.amount : ZERO,
-        },
-      ],
-      () => this.ctx.fetcher.getAccountRentExempt()
-    );
+    const quote1NativeTokenAmount = swapQuote1.amountSpecifiedIsInput ? swapQuote1.amount : swapQuote1.otherAmountThreshold
+    const quote2NativeTokenAmount = swapQuote2.amountSpecifiedIsInput ? swapQuote2.amount : swapQuote2.otherAmountThreshold
+
+    const requests = [
+      {
+        tokenMint: whirlpoolData1.tokenMintA,
+        wrappedSolAmountIn: swapQuote1.aToB ? quote1NativeTokenAmount : ZERO,
+      },
+      {
+        tokenMint: whirlpoolData1.tokenMintB,
+        wrappedSolAmountIn: !swapQuote1.aToB ? quote1NativeTokenAmount : ZERO,
+      },
+      {
+        tokenMint: whirlpoolData2.tokenMintA,
+        wrappedSolAmountIn: swapQuote2.aToB ? quote2NativeTokenAmount : ZERO,
+      },
+      {
+        tokenMint: whirlpoolData2.tokenMintB,
+        wrappedSolAmountIn: !swapQuote2.aToB ? quote2NativeTokenAmount : ZERO,
+      },
+    ];
+
+    
+    const resolveAllAtasPromise = []
+    for (const req of requests) {
+      const instruction = resolveOrCreateATA(
+        this.ctx.connection,
+        sourceWallet.publicKey,
+        req.tokenMint,
+        () => this.ctx.fetcher.getAccountRentExempt(),
+        req.wrappedSolAmountIn
+      );
+      resolveAllAtasPromise.push(instruction);
+    }
+
+    const resolveAllAtas = await Promise.all(resolveAllAtasPromise);
 
     const createATAInstructions = [];
     // make a set of unique address
