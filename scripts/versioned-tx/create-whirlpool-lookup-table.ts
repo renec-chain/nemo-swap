@@ -13,20 +13,15 @@ import {
 import deployed from "../create_pool/deployed.json";
 import { getPoolInfo } from "../create_pool/utils/pool";
 import { PublicKey } from "@solana/web3.js";
-import { WhirlpoolLookupTable } from "./utils/";
+import { WhirlpoolLookupTable } from "./utils";
 import * as fs from "fs";
-import { loadLookupTable, saveDataToLookupTable } from "./utils/helper";
+import {
+  loadLookupTable,
+  saveDataToLookupTable,
+  loadNotCreatedLookupTable,
+} from "./utils/helper";
 
 async function main() {
-  const poolIndex = parseInt(process.argv[2]);
-
-  if (isNaN(poolIndex)) {
-    console.error("Please provide a valid pool index.");
-    return;
-  }
-
-  let poolInfo = getPoolInfo(poolIndex);
-
   const wallets = loadWallets([ROLES.USER]);
   const userKeypair = wallets[ROLES.USER];
 
@@ -43,40 +38,61 @@ async function main() {
     );
     return;
   }
-  const REDEX_CONFIG_PUB = new PublicKey(deployed.REDEX_CONFIG_PUB);
+
+  const poolPubkeys = [
+    "29FDB74ZayT1e6xLC8TCfVKNkaYUbJ6CXv1oumbq3zJD",
+    "GYhNgn31nGFF9DgHkcpNwKFYTNj2Hv15F8bQm3b5CFaq",
+  ];
   const client = buildWhirlpoolClient(ctx);
 
-  const mintAPub = new PublicKey(poolInfo.tokenMintA);
-  const mintBPub = new PublicKey(poolInfo.tokenMintB);
-  const tokenMintA = await getTokenMintInfo(ctx, mintAPub);
-  const tokenMintB = await getTokenMintInfo(ctx, mintBPub);
+  const notCreatedLookupTable = loadNotCreatedLookupTable();
+  let lookupTableData = loadLookupTable();
 
-  if (tokenMintA && tokenMintB) {
-    const whirlpoolPda = PDAUtil.getWhirlpool(
-      ctx.program.programId,
-      REDEX_CONFIG_PUB,
-      mintAPub,
-      mintBPub,
-      poolInfo.tickSpacing
-    );
-    const whirlpool = await client.getPool(whirlpoolPda.publicKey);
+  // TODO: loop in keys of notCreatedLookupTable data. If key exist in lookup table data, skip it
+  let failedPools = [];
+  for (const poolPubkey in notCreatedLookupTable) {
+    if (notCreatedLookupTable.hasOwnProperty(poolPubkey)) {
+      console.log("\n ------------------");
 
-    const lookupTable = await WhirlpoolLookupTable.createWhirlpoolLookupTable(
-      whirlpool,
-      ctx,
-      userKeypair
-    );
+      // Check if the key exists in lookupTableData
+      if (lookupTableData.hasOwnProperty(poolPubkey)) {
+        console.log(
+          `Lookup table already exists for pool: ${poolPubkey}, skipping...`
+        );
+        continue;
+      }
 
-    console.log("Lookup table created:", lookupTable.toBase58());
-    console.log("Saving lookup table to file...");
+      console.log("Creating lookup table for pool:", poolPubkey);
+      const poolAddr = new PublicKey(poolPubkey);
+      const whirlpool = await client.getPool(poolAddr);
 
-    const lookupTableData = loadLookupTable();
-    saveDataToLookupTable(
-      lookupTableData,
-      whirlpoolPda.publicKey.toString(),
-      lookupTable.toString()
-    );
+      try {
+        const lookupTable =
+          await WhirlpoolLookupTable.createWhirlpoolLookupTable(
+            whirlpool,
+            ctx,
+            userKeypair
+          );
+        console.log("Lookup table created:", lookupTable.toBase58());
+        console.log("Saving lookup table to file...");
+
+        // Reload lookupTableData in case it has been updated since the last load
+        lookupTableData = loadLookupTable();
+        saveDataToLookupTable(
+          lookupTableData,
+          poolPubkey,
+          lookupTable.toString()
+        );
+      } catch (error) {
+        console.log("ERROR:", error);
+        failedPools.push(poolPubkey);
+        continue;
+      }
+    }
   }
+
+  // Save failed pools to file
+  console.log("Fail pools:", failedPools);
 }
 
 main().catch((reason) => {

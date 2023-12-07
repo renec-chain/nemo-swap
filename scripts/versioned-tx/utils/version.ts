@@ -8,7 +8,6 @@ import {
   VersionedTransaction,
   Signer,
 } from "@solana/web3.js";
-import { Wallet } from "@project-serum/anchor";
 
 export async function createAndSendV0Tx(
   connection: Connection,
@@ -160,24 +159,24 @@ export async function compareTxSize(
       "bytes"
     );
 
-    // Step 4 - Send our v0 transaction to the cluster
-    console.log("--------------\n");
-    console.log("Sending transaction with lookup table...");
-    const txid = await connection.sendTransaction(transactionWithLookupTable, {
-      maxRetries: 5,
-    });
+    // // Step 4 - Send our v0 transaction to the cluster
+    // console.log("--------------\n");
+    // console.log("Sending transaction with lookup table...");
+    // const txid = await connection.sendTransaction(transactionWithLookupTable, {
+    //   maxRetries: 5,
+    // });
 
-    // Step 5 - Confirm Transaction
-    const confirmation = await connection.confirmTransaction({
-      signature: txid,
-      blockhash: latestBlockhash.blockhash,
-      lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
-    });
-    if (confirmation.value.err) {
-      throw new Error("   ❌ - Transaction not confirmed.");
-    }
+    // // Step 5 - Confirm Transaction
+    // const confirmation = await connection.confirmTransaction({
+    //   signature: txid,
+    //   blockhash: latestBlockhash.blockhash,
+    //   lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+    // });
+    // if (confirmation.value.err) {
+    //   throw new Error("   ❌ - Transaction not confirmed.");
+    // }
 
-    console.log("tx id: ", txid);
+    // console.log("tx id: ", txid);
     console.log("--------------\n");
   } catch (error) {
     console.error("Error creating transaction with lookup table: ", error);
@@ -208,7 +207,7 @@ export async function compareTxSize(
 
 export async function createV0Tx(
   connection: Connection,
-  wallet: Wallet,
+  keypair: Keypair,
   txInstructions: TransactionInstruction[],
   signers?: Signer[]
 ): Promise<VersionedTransaction> {
@@ -221,7 +220,7 @@ export async function createV0Tx(
 
   // Step 2 - Generate Transaction Message
   const messageV0 = new TransactionMessage({
-    payerKey: wallet.publicKey,
+    payerKey: keypair.publicKey,
     recentBlockhash: latestBlockhash.blockhash,
     instructions: txInstructions,
   }).compileToV0Message();
