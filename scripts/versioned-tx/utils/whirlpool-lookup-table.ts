@@ -10,12 +10,16 @@ import {
 } from "@solana/web3.js";
 import { PDAUtil, Whirlpool, WhirlpoolContext } from "@renec/redex-sdk";
 import { getStartTicksWithOffset } from "../../common/tick-array";
-import {
-  addAddressesToTable,
-  createAndSendV0Tx,
-  createLookupTable,
-} from "./version";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { createAndSendV0Tx } from "./version";
+import { NATIVE_MINT, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { ASSOCIATED_PROGRAM_ID } from "@project-serum/anchor/dist/cjs/utils/token";
+
+const GASLESS_PROGRAM_ID = new PublicKey(
+  "GasP6kcNpTdXA1M7ENyh5kCEvtHPgy71Habxe62gqHqH"
+);
+const GASLESS_FEE_PAYER = new PublicKey(
+  "GdBRoVNiLbLmYvoSYtN99kobQnJTTYd5KgYGxGKKAZvE"
+);
 
 export class WhirlpoolLookupTable {
   static numOfSurroundingTickArrays = 6;
@@ -40,12 +44,23 @@ export class WhirlpoolLookupTable {
     const oraclePda = PDAUtil.getOracle(ctx.program.programId, whirlpoolAddr);
 
     let addresses = [
+      // fix data in case of creating token account
       ctx.program.programId,
       TOKEN_PROGRAM_ID,
+      ASSOCIATED_PROGRAM_ID,
+      NATIVE_MINT,
+      poolData.tokenMintA,
+      poolData.tokenMintB,
+
+      // fix data for swap tx
       whirlpoolAddr,
       poolData.tokenVaultA,
       poolData.tokenVaultB,
       oraclePda.publicKey,
+
+      // fix data for gasless
+      GASLESS_PROGRAM_ID,
+      GASLESS_FEE_PAYER,
     ];
 
     const rightTickArrayStartTicks = getStartTicksWithOffset(
