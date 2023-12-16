@@ -185,7 +185,8 @@ const swapTwoHops = async (
     [walletKeypair]
   );
 
-  await executeGaslessTx(gaslessTx, true);
+  const txId = await gaslessTx.buildAndExecute();
+  console.log("Gasless tx id: ", txId);
 };
 
 // utils function

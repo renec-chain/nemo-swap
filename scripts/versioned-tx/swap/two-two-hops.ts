@@ -146,10 +146,11 @@ async function main() {
     new Wallet(userAuth),
     dappUtil,
     await versionedTx.build(),
-    []
+    [userAuth]
   );
 
-  await executeGaslessTx(gaslessTx, true);
+  const txId = await gaslessTx.buildAndExecute();
+  console.log("Gasless tx id: ", txId);
   // const { puzzle, estHandlingTime } =
   //   await gaslessTx.getPuzzleAndEstimateTime();
   // try {
