@@ -31,8 +31,8 @@ import { loadLookupTable } from "../utils/helper";
 
 //usage: 02_two_hop_swap <pool-idx-0> <pool-idx-1> <discount-token-mint | null>
 async function main() {
-  const wallets = loadWallets([ROLES.TEST]);
-  const userAuth = wallets[ROLES.TEST];
+  const wallets = loadWallets([ROLES.USER]);
+  const userAuth = wallets[ROLES.USER];
 
   // Generate new wallets for testing
   const { ctx } = loadProvider(userAuth);
@@ -185,9 +185,7 @@ const swapTwoHops = async (
     [walletKeypair]
   );
 
-  console.log("\n Executing gasless transaction...");
-  const txId = await gaslessTx.buildAndExecute();
-  console.log("Gasless tx id: ", txId);
+  await executeGaslessTx(gaslessTx, true);
 };
 
 // utils function
