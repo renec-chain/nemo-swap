@@ -149,6 +149,7 @@ async function main() {
     [userAuth]
   );
 
+  console.log("\n Execute gasless tx...");
   const txId = await gaslessTx.buildAndExecute();
   console.log("Gasless tx id: ", txId);
   // const { puzzle, estHandlingTime } =
