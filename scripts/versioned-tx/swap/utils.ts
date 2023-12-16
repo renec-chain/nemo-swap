@@ -106,6 +106,9 @@ export const getTwoHopSwapIx = async (
       createdWrenecPubkey: twoHopTx.createdWRenecAta,
     };
   } else {
+    console.log("swap amount: ", swapAmount.toString());
+    console.log("pool0: ", pool0.getAddress().toString());
+
     const quote1 = await swapQuoteByInputToken(
       pool0,
       twoHopTokens.pool1OtherToken,
@@ -115,6 +118,8 @@ export const getTwoHopSwapIx = async (
       client.getContext().fetcher,
       true
     );
+
+    console.log("estimate amount out: ", quote1.estimatedAmountOut.toString());
 
     const quote2 = await swapQuoteByInputToken(
       pool1,

@@ -31,8 +31,8 @@ import { loadLookupTable } from "../utils/helper";
 
 //usage: 02_two_hop_swap <pool-idx-0> <pool-idx-1> <discount-token-mint | null>
 async function main() {
-  const wallets = loadWallets([ROLES.USER]);
-  const userAuth = wallets[ROLES.USER];
+  const wallets = loadWallets([ROLES.TEST]);
+  const userAuth = wallets[ROLES.TEST];
 
   // Generate new wallets for testing
   const { ctx } = loadProvider(userAuth);
