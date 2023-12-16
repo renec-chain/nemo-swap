@@ -318,6 +318,42 @@ export class VersionedTransactionBuilder {
     );
   }
 
+  public async build(): Promise<VersionedTransaction> {
+    const latestBlockhash = await this.connection.getLatestBlockhash(
+      "finalized"
+    );
+
+    // Fetch the lookup tables
+    const lookupTables = await Promise.all(
+      this.lookupTableAddresses.map(async (addr) => {
+        try {
+          return (await this.connection.getAddressLookupTable(addr)).value;
+        } catch (error) {
+          console.error(
+            "Error fetching lookup table for address:",
+            addr.toBase58()
+          );
+          return null;
+        }
+      })
+    );
+
+    const message = new TransactionMessage({
+      payerKey: this.keypair.publicKey,
+      recentBlockhash: latestBlockhash.blockhash,
+      instructions: this.instructions,
+    }).compileToV0Message(lookupTables);
+
+    const transaction = new VersionedTransaction(message);
+    if (this.signers) {
+      transaction.sign(this.signers);
+    }
+
+    transaction.sign([this.keypair]);
+
+    return transaction;
+  }
+
   public async txSize() {
     const latestBlockhash = await this.connection.getLatestBlockhash(
       "finalized"

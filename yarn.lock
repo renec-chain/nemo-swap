@@ -688,10 +688,10 @@
     bn.js "^5.1.2"
     buffer-layout "^1.2.0"
 
-"@renec-foundation/gasless-sdk@^0.2.7":
-  version "0.2.7"
-  resolved "https://registry.yarnpkg.com/@renec-foundation/gasless-sdk/-/gasless-sdk-0.2.7.tgz#f25bcd567a437de25ff4e706e8b33de1dc342eea"
-  integrity sha512-2rHhyOyJgWmBgg8dHw5KjQAOmIrIYZXl81d+qKTAEs+qNMW+dxsqM+SXcWBIYyen/sN86lzPfolQk8TXPkl4xA==
+"@renec-foundation/gasless-sdk@0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@renec-foundation/gasless-sdk/-/gasless-sdk-0.3.0.tgz#798f18f1f33122cdb9fa50a3c5e7d374de76866d"
+  integrity sha512-Oco/lotsDEfk43XH2Jm/dKPq/bRHhEh/2ZMmRrS12gzGA80ZHdMwkJfTkY9NNEjq0arXjbymvKCpZ4DuZIz5xA==
   dependencies:
     "@project-serum/anchor" "0.25.0"
     "@renec-foundation/pegged-fiat-sdk" "^0.1.1"
