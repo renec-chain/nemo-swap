@@ -21,21 +21,24 @@ import {
   Wallet,
 } from "@renec-foundation/gasless-sdk";
 import { Address, BN } from "@project-serum/anchor";
-import { compareTxSize } from "../utils/version";
-import { createTokenAccounts, getTwoHopSwapIx } from "./utils";
+import { VersionedTransactionBuilder, compareTxSize } from "../utils/version";
+import {
+  createTokenAccounts,
+  getTwoHopSwapIx,
+  removeDuplicatedInstructions,
+} from "./utils";
 import { loadLookupTable } from "../utils/helper";
 
 //usage: 02_two_hop_swap <pool-idx-0> <pool-idx-1> <discount-token-mint | null>
 async function main() {
-  const wallets = loadWallets([ROLES.USER]);
-  const userAuth = wallets[ROLES.USER];
+  const wallets = loadWallets([ROLES.TEST]);
+  const userAuth = wallets[ROLES.TEST];
 
   // Generate new wallets for testing
   const { ctx } = loadProvider(userAuth);
   const client = buildWhirlpoolClient(ctx);
-  const newWallet = await genNewWallet(ctx.connection);
 
-  console.log("new wallet created:", newWallet.publicKey.toString());
+  const wallet = new Wallet(userAuth);
 
   // Get pool from terminal
   const poolIdx0 = parseInt(process.argv[2]);
@@ -59,10 +62,10 @@ async function main() {
     client,
     pool0,
     pool1,
-    [0],
-    [100],
+    [],
+    [],
     new BN(100000),
-    newWallet,
+    userAuth,
     discountTokenMint,
     true
   );
@@ -139,33 +142,32 @@ const swapTwoHops = async (
     new PublicKey(lookupTableAddress1),
   ];
 
-  const compressedTx = tx.compressIx(true);
-  const instructions = compressedTx.instructions;
-  await compareTxSize(
-    client.getContext().connection,
-    walletKeypair,
-    instructions,
-    lookUpTables,
-    compressedTx.signers
-  );
-
-  return;
-  try {
-    console.log("tx size: ", await tx.txnSize());
-  } catch (e) {
-    console.log("tx failed: ", e);
+  for (const lookupTable of lookUpTables) {
+    console.log("Lookup table:", lookupTable.toBase58());
   }
 
-  // Construct gasless txn
-  const dappUtil = await GaslessDapp.new(client.getContext().connection);
-  const gaslessTxn = GaslessTransaction.fromTransactionBuilder(
-    client.getContext().connection,
-    wallet,
-    tx.compressIx(true),
-    dappUtil
+  const connection = client.getContext().provider.connection;
+
+  const transaction = removeDuplicatedInstructions(
+    connection,
+    new Wallet(walletKeypair),
+    tx
   );
 
-  await executeGaslessTx(gaslessTxn, executeGasless);
+  const versionedTransaction =
+    VersionedTransactionBuilder.fromTransactionBuilder(
+      connection,
+      walletKeypair,
+      transaction,
+      lookUpTables
+    );
+
+  // Get size
+  const size = await versionedTransaction.txSize();
+  console.log("Transaction size:", size);
+
+  const txId = await versionedTransaction.buildAndExecute();
+  console.log("txId:", txId);
 };
 
 // utils function

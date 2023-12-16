@@ -123,8 +123,6 @@ export class TickArraySequence {
   findNextInitializedTickIndex(currIndex: number) {
     const searchIndex = this.aToB ? currIndex : currIndex + this.tickSpacing;
     let currTaIndex = TickArrayIndex.fromTickIndex(searchIndex, this.tickSpacing);
-    console.log("search index: ", searchIndex);
-    console.log("currTaIndex: ", currTaIndex.arrayIndex);
 
     // Throw error if the search attempted to search for an index out of bounds
     if (!this.isArrayIndexInBounds(currTaIndex, this.aToB)) {

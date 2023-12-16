@@ -8,6 +8,7 @@ import {
   VersionedTransaction,
   Signer,
 } from "@solana/web3.js";
+import { TransactionBuilder } from "@orca-so/common-sdk";
 
 export async function createAndSendV0Tx(
   connection: Connection,
@@ -234,4 +235,174 @@ export async function createV0Tx(
   }
 
   return transaction;
+}
+
+export async function createV0TxFromTransactionBuilder(
+  connection: Connection,
+  keypair: Keypair,
+  tx: TransactionBuilder,
+  lookupTableAddresses: PublicKey[]
+): Promise<VersionedTransaction> {
+  // Fetch the lookup tables
+  const lookupTables = await Promise.all(
+    lookupTableAddresses.map(async (addr) => {
+      try {
+        return (await connection.getAddressLookupTable(addr)).value;
+      } catch (error) {
+        console.error(
+          "Error fetching lookup table for address:",
+          addr.toBase58()
+        );
+        return null;
+      }
+    })
+  );
+
+  const txCompressed = tx.compressIx(true);
+  const instructions = txCompressed.instructions;
+  const signers = txCompressed.signers;
+
+  let latestBlockhash = await connection.getLatestBlockhash("finalized");
+  console.log(
+    "   ✅ - Fetched latest blockhash. Last valid height:",
+    latestBlockhash.lastValidBlockHeight
+  );
+
+  const message = new TransactionMessage({
+    payerKey: keypair.publicKey,
+    recentBlockhash: latestBlockhash.blockhash,
+    instructions: instructions,
+  }).compileToV0Message(lookupTables);
+  console.log("   ✅ - Compiled transaction message");
+  const transaction = new VersionedTransaction(message);
+
+  transaction.sign(signers);
+
+  return transaction;
+}
+
+export class VersionedTransactionBuilder {
+  connection: Connection;
+  private keypair: Keypair;
+  instructions: TransactionInstruction[] = [];
+  signers: Signer[] = [];
+  lookupTableAddresses: PublicKey[];
+
+  constructor(
+    connection: Connection,
+    keypair: Keypair,
+    instructions: TransactionInstruction[],
+    signers: Signer[],
+    lookupTableAddresses: PublicKey[]
+  ) {
+    this.connection = connection;
+    this.keypair = keypair;
+    this.lookupTableAddresses = lookupTableAddresses;
+    this.instructions = instructions;
+    this.signers = signers;
+  }
+
+  public static fromTransactionBuilder(
+    connection: Connection,
+    keypair: Keypair,
+    tx: TransactionBuilder,
+    lookupTableAddresses: PublicKey[]
+  ) {
+    const compressedTx = tx.compressIx(true);
+    return new VersionedTransactionBuilder(
+      connection,
+      keypair,
+      compressedTx.instructions,
+      compressedTx.signers,
+      lookupTableAddresses
+    );
+  }
+
+  public async txSize() {
+    const latestBlockhash = await this.connection.getLatestBlockhash(
+      "finalized"
+    );
+
+    // Fetch the lookup tables
+    const lookupTables = await Promise.all(
+      this.lookupTableAddresses.map(async (addr) => {
+        try {
+          return (await this.connection.getAddressLookupTable(addr)).value;
+        } catch (error) {
+          console.error(
+            "Error fetching lookup table for address:",
+            addr.toBase58()
+          );
+          return null;
+        }
+      })
+    );
+
+    const message = new TransactionMessage({
+      payerKey: this.keypair.publicKey,
+      recentBlockhash: latestBlockhash.blockhash,
+      instructions: this.instructions,
+    }).compileToV0Message(lookupTables);
+
+    const transaction = new VersionedTransaction(message);
+    if (this.signers) {
+      transaction.sign(this.signers);
+    }
+
+    transaction.sign([this.keypair]);
+
+    return transaction.serialize().length;
+  }
+
+  public async buildAndExecute() {
+    const latestBlockhash = await this.connection.getLatestBlockhash(
+      "finalized"
+    );
+
+    // Fetch the lookup tables
+    const lookupTables = await Promise.all(
+      this.lookupTableAddresses.map(async (addr) => {
+        try {
+          return (await this.connection.getAddressLookupTable(addr)).value;
+        } catch (error) {
+          console.error(
+            "Error fetching lookup table for address:",
+            addr.toBase58()
+          );
+          return null;
+        }
+      })
+    );
+
+    const message = new TransactionMessage({
+      payerKey: this.keypair.publicKey,
+      recentBlockhash: latestBlockhash.blockhash,
+      instructions: this.instructions,
+    }).compileToV0Message(lookupTables);
+
+    const transaction = new VersionedTransaction(message);
+    if (this.signers) {
+      transaction.sign(this.signers);
+    }
+
+    transaction.sign([this.keypair]);
+
+    // Send our v0 transaction to the cluster
+    const txid = await this.connection.sendTransaction(transaction, {
+      maxRetries: 5,
+    });
+
+    // Confirm Transaction
+    const confirmation = await this.connection.confirmTransaction({
+      signature: txid,
+      blockhash: latestBlockhash.blockhash,
+      lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+    });
+
+    if (confirmation.value.err) {
+      throw new Error("   ❌ - Transaction not confirmed.");
+    }
+
+    return txid;
+  }
 }
