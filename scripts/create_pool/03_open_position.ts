@@ -23,6 +23,9 @@ async function main() {
   const wallets = loadWallets([ROLES.USER]);
   const userKeypair = wallets[ROLES.USER];
 
+  console.log("------------------");
+  console.log("user wallet:", userKeypair.publicKey.toString());
+  console.log("------------------");
   const { ctx } = loadProvider(userKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
@@ -120,9 +123,13 @@ async function main() {
         tickUpperIndex,
         quote
       );
+
       if (initTickTx) {
         tx.prependInstruction(initTickTx.compressIx(true));
       }
+
+      const size = await tx.txnSize();
+      console.log("size:", size);
 
       console.log("Tx size:", await tx.buildAndExecute());
     }

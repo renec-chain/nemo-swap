@@ -165,10 +165,7 @@ export class TickArraySequence {
   private isArrayIndexInBounds(index: TickArrayIndex, aToB: boolean) {
     // a+0...a+n-1 array index is ok
     const localArrayIndex = this.getLocalArrayIndex(index.arrayIndex, aToB);
-    if (index.arrayIndex == 1) {
-      console.log("localArrayIndex: ", localArrayIndex);
-      console.log("this.sequence.length: ", this.sequence.length);
-    }
+
     const seqLength = this.sequence.length;
     return localArrayIndex >= 0 && localArrayIndex < seqLength;
   }

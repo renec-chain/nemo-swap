@@ -8,33 +8,28 @@ import {
 } from "@renec/redex-sdk";
 import { loadProvider, loadWallets, ROLES } from "../../create_pool/utils";
 import {
-  genNewWallet,
   getWhirlPool,
   createTokenAccountAndMintTo,
-  executeGaslessTx,
   getTwoHopSwapTokens,
+  executeGaslessTx,
 } from "../../swap/utils";
 import { getPoolInfo } from "../../create_pool/utils/pool";
 
-import { Wallet } from "@renec-foundation/gasless-sdk";
-import { Address, BN } from "@project-serum/anchor";
 import {
-  VersionedTransactionBuilder,
-  compareTxSize,
-  createV0TxFromTransactionBuilder,
-} from "../utils/version";
+  GaslessDapp,
+  GaslessTransaction,
+  Wallet,
+} from "@renec-foundation/gasless-sdk";
+import { BN } from "@project-serum/anchor";
+import { VersionedTransactionBuilder } from "../utils/version";
 import {
   createTokenAccounts,
   getTwoHopSwapIx,
   removeDuplicatedInstructions,
 } from "./utils";
 import { loadLookupTable } from "../utils/helper";
+import { exec } from "mz/child_process";
 
-//usage: 02_two_hop_swap <pool-idx-0> <pool-idx-1> <discount-token-mint | null>
-
-// TODO:
-// Add rent account to address lookup table
-//
 async function main() {
   const wallets = loadWallets([ROLES.TEST]);
   const userAuth = wallets[ROLES.TEST];
@@ -49,16 +44,12 @@ async function main() {
   const renecRevnd = await getWhirlPool(client, getPoolInfo(2));
   const asyReusd = await getWhirlPool(client, getPoolInfo(3));
   const revndReusd = await getWhirlPool(client, getPoolInfo(4));
-  const renecRengn = await getWhirlPool(client, getPoolInfo(5));
-  const rengnReusd = await getWhirlPool(client, getPoolInfo(6));
 
   console.log("renecUsdt:", renecUsdt.getAddress().toBase58());
   console.log("renecAsy:", renecAsy.getAddress().toBase58());
   console.log("renecRevnd:", renecRevnd.getAddress().toBase58());
   console.log("asyReusd:", asyReusd.getAddress().toBase58());
   console.log("revndReusd:", revndReusd.getAddress().toBase58());
-  console.log("renecRengn:", renecRengn.getAddress().toBase58());
-  console.log("rengnReusd:", rengnReusd.getAddress().toBase58());
 
   const tx1 = await swapTwoHops(
     "two hops ",
@@ -97,16 +88,12 @@ async function main() {
   const lookupTableAddressRevndReusd =
     lookupTableData[revndReusd.getAddress().toBase58()];
 
-  const lookupTableAddressRenecRengn =
-    lookupTableData[renecRengn.getAddress().toBase58()];
-
   // Check if lookup table addresses are found, otherwise handle the error or fallback
   if (
     !lookupTableAddressRenecAsy ||
     !lookupTableAddressAsyReusd ||
     !lookupTableAddressRenecRevnd ||
-    !lookupTableAddressRevndReusd ||
-    !lookupTableAddressRenecRengn
+    !lookupTableAddressRevndReusd
   ) {
     console.error("Lookup table addresses for pools not found.");
     return;
@@ -118,6 +105,10 @@ async function main() {
     new PublicKey(lookupTableAddressRenecRevnd),
     new PublicKey(lookupTableAddressRevndReusd),
   ];
+
+  for (const lookupTable of lookUpTables) {
+    console.log("Lookup table:", lookupTable.toBase58());
+  }
 
   // Create v0Tx
   const connection = client.getContext().provider.connection;
@@ -135,11 +126,38 @@ async function main() {
     lookUpTables
   );
 
-  const size = await versionedTx.txSize();
-  console.log("size:", size);
+  console.log("--------");
+  try {
+    const size = await tx.txnSize();
+    console.log("Legacy transaction size:", size);
+  } catch (e) {
+    console.log("Legacy transaction size error: ");
+    console.log(e);
+  }
+  console.log("--------");
 
-  // const txId = await versionedTx.buildAndExecute();
-  // console.log("txId:", txId);
+  const size = await versionedTx.txSize();
+  console.log("V0 transaction size:", size);
+
+  // Test gasless
+  const dappUtil = await GaslessDapp.new(client.getContext().connection);
+  const gaslessTx: GaslessTransaction = await GaslessTransaction.fromV0Tx(
+    client.getContext().connection,
+    new Wallet(userAuth),
+    dappUtil,
+    await versionedTx.build(),
+    []
+  );
+
+  await executeGaslessTx(gaslessTx, true);
+  // const { puzzle, estHandlingTime } =
+  //   await gaslessTx.getPuzzleAndEstimateTime();
+  // try {
+  //   const txId = await gaslessTx.solveAndSubmit(puzzle);
+  //   console.log("txId:", txId);
+  // } catch (e) {
+  //   console.log(e);
+  // }
 }
 
 main().catch((reason) => {
@@ -199,5 +217,3 @@ const swapTwoHops = async (
 
   return tx;
 };
-
-// utils function
