@@ -115,8 +115,6 @@ export const getTwoHopSwapIx = async (
       true
     );
 
-    console.log("estimate amount out: ", quote1.estimatedAmountOut.toString());
-
     const quote2 = await swapQuoteByInputToken(
       pool1,
       twoHopTokens.intermidaryToken,
