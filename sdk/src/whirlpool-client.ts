@@ -1,5 +1,5 @@
 import { Percentage, TransactionBuilder } from "@orca-so/common-sdk";
-import { Address, BN, Wallet } from "@project-serum/anchor";
+import { Address, BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { WhirlpoolContext } from "./context";
 import { WhirlpoolClientImpl } from "./impl/whirlpool-client-impl";
@@ -14,6 +14,7 @@ import {
 } from "./types/public";
 import { TokenAccountInfo, TokenInfo, WhirlpoolRewardInfo } from "./types/public/client-types";
 import { FeeDiscountSwapQuote, SwapQuote } from "./quotes/public";
+import { Wallet } from "@project-serum/anchor/dist/cjs/provider";
 
 /**
  * Helper class to help interact with Whirlpool Accounts with a simpler interface.

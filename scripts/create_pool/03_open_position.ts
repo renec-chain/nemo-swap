@@ -38,8 +38,12 @@ async function main() {
   let poolInfo = getPoolInfo(poolIndex);
   const mintAPub = new PublicKey(poolInfo.tokenMintA);
   const mintBPub = new PublicKey(poolInfo.tokenMintB);
+
   const tokenMintA = await getTokenMintInfo(ctx, mintAPub);
   const tokenMintB = await getTokenMintInfo(ctx, mintBPub);
+
+  console.log("mint a pub: ", mintAPub.toString());
+  console.log("mint b pub: ", mintBPub.toString());
 
   if (tokenMintA && tokenMintB) {
     const whirlpoolPda = PDAUtil.getWhirlpool(

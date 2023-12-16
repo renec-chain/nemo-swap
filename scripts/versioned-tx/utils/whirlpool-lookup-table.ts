@@ -7,6 +7,8 @@ import {
   TransactionMessage,
   VersionedTransaction,
   Signer,
+  SystemProgram,
+  SYSVAR_RENT_PUBKEY,
 } from "@solana/web3.js";
 import { PDAUtil, Whirlpool, WhirlpoolContext } from "@renec/redex-sdk";
 import { getStartTicksWithOffset } from "../../common/tick-array";
@@ -48,7 +50,9 @@ export class WhirlpoolLookupTable {
       ctx.program.programId,
       TOKEN_PROGRAM_ID,
       ASSOCIATED_PROGRAM_ID,
-      NATIVE_MINT,
+      SystemProgram.programId,
+      SYSVAR_RENT_PUBKEY,
+
       poolData.tokenMintA,
       poolData.tokenMintB,
 

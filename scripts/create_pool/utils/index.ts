@@ -35,6 +35,7 @@ export const ROLES = {
   REWARD_EMISSIONS_SUPPER_AUTH: "reward_emissions_supper_authority_wallet",
   POOL_CREATOR_AUTH: "pool_creator_authority_wallet",
   USER: "user_wallet",
+  TEST: "test_wallet",
 };
 
 type RoleType = (typeof ROLES)[keyof typeof ROLES];
