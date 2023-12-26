@@ -25,6 +25,8 @@ async function main() {
   const wallets = loadWallets([ROLES.USER]);
   const userKeypair = wallets[ROLES.USER];
 
+  console.log("User wallet:", userKeypair.publicKey.toBase58());
+
   if (!userKeypair) {
     console.error("Please provide a valid user wallet.");
     return;
