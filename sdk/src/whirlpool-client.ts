@@ -293,6 +293,11 @@ export interface Whirlpool {
    */
   swap: (input: SwapInput, wallet?: PublicKey) => Promise<TransactionBuilder>;
 
+  swapWithWRenecAta(
+    quote: SwapInput,
+    wRenecAta?: PublicKey
+  ): Promise<{ tx: TransactionBuilder; createdWRenecAta: PublicKey | undefined }>;
+
   swapWithFeeDiscount: (
     input: SwapInput,
     discountTokenMint: PublicKey,
