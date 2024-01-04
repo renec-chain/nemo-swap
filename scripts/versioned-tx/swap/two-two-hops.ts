@@ -39,26 +39,26 @@ async function main() {
   const client = buildWhirlpoolClient(ctx);
   console.log("wallet:", userAuth.publicKey.toBase58());
 
-  const renecUsdt = await getWhirlPool(client, getPoolInfo(0));
-  const renecAsy = await getWhirlPool(client, getPoolInfo(1));
-  const renecRevnd = await getWhirlPool(client, getPoolInfo(2));
+  const renecUsdt32 = await getWhirlPool(client, getPoolInfo(0));
+  const renecUsdt8 = await getWhirlPool(client, getPoolInfo(1));
+  const revndRenec = await getWhirlPool(client, getPoolInfo(2));
   const asyReusd = await getWhirlPool(client, getPoolInfo(3));
   const revndReusd = await getWhirlPool(client, getPoolInfo(4));
 
-  console.log("renecUsdt:", renecUsdt.getAddress().toBase58());
-  console.log("renecAsy:", renecAsy.getAddress().toBase58());
-  console.log("renecRevnd:", renecRevnd.getAddress().toBase58());
+  console.log("renecUsdt32:", renecUsdt32.getAddress().toBase58());
+  console.log("renecUsdt8:", renecUsdt8.getAddress().toBase58());
+  console.log("revndRenec:", revndRenec.getAddress().toBase58());
   console.log("asyReusd:", asyReusd.getAddress().toBase58());
   console.log("revndReusd:", revndReusd.getAddress().toBase58());
 
   const tx1 = await swapTwoHops(
     "two hops ",
     client,
-    renecAsy,
-    asyReusd,
+    revndRenec,
+    renecUsdt32,
     [],
     [],
-    new BN(10000000),
+    new BN(10000),
     userAuth,
     null,
     true
@@ -67,11 +67,11 @@ async function main() {
   const tx2 = await swapTwoHops(
     "two hops ",
     client,
-    renecRevnd,
-    revndReusd,
+    revndRenec,
+    renecUsdt8,
     [],
     [],
-    new BN(10000000),
+    new BN(10000),
     userAuth,
     null,
     true
@@ -79,20 +79,21 @@ async function main() {
 
   // Extract the relevant lookup table addresses using the pool addresses
   const lookupTableData = loadLookupTable();
-  const lookupTableAddressRenecAsy =
-    lookupTableData[renecAsy.getAddress().toBase58()];
-  const lookupTableAddressAsyReusd =
-    lookupTableData[asyReusd.getAddress().toBase58()];
-  const lookupTableAddressRenecRevnd =
-    lookupTableData[renecRevnd.getAddress().toBase58()];
+  const lookupTableAddressRenecUsdt32 =
+    lookupTableData[renecUsdt32.getAddress().toBase58()];
+  const lookupTableAddressRenecUsdt8 =
+    lookupTableData[renecUsdt8.getAddress().toBase58()];
   const lookupTableAddressRevndReusd =
     lookupTableData[revndReusd.getAddress().toBase58()];
 
+  console.log("lookupTableAddressRenecUsdt32:", lookupTableAddressRenecUsdt32);
+  console.log("lookupTableAddressRenecUsdt8:", lookupTableAddressRenecUsdt8);
+  console.log("lookupTableAddressRevndReusd:", lookupTableAddressRevndReusd);
+
   // Check if lookup table addresses are found, otherwise handle the error or fallback
   if (
-    !lookupTableAddressRenecAsy ||
-    !lookupTableAddressAsyReusd ||
-    !lookupTableAddressRenecRevnd ||
+    !lookupTableAddressRenecUsdt32 ||
+    !lookupTableAddressRenecUsdt8 ||
     !lookupTableAddressRevndReusd
   ) {
     console.error("Lookup table addresses for pools not found.");
@@ -100,9 +101,8 @@ async function main() {
   }
 
   let lookUpTables = [
-    new PublicKey(lookupTableAddressRenecAsy),
-    new PublicKey(lookupTableAddressAsyReusd),
-    new PublicKey(lookupTableAddressRenecRevnd),
+    new PublicKey(lookupTableAddressRenecUsdt32),
+    new PublicKey(lookupTableAddressRenecUsdt8),
     new PublicKey(lookupTableAddressRevndReusd),
   ];
 
@@ -139,6 +139,7 @@ async function main() {
   const size = await versionedTx.txSize();
   console.log("V0 transaction size:", size);
 
+  //process.exit(0);
   // Test gasless
   const dappUtil = await GaslessDapp.new(client.getContext().connection);
   const gaslessTx: GaslessTransaction = await GaslessTransaction.fromV0Tx(

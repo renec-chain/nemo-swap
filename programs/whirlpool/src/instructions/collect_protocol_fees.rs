@@ -1,6 +1,6 @@
-use crate::{state::*, util::transfer_from_vault_to_owner};
+use crate::{ state::*, util::transfer_from_vault_to_owner };
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount};
+use anchor_spl::token::{ self, Token, TokenAccount };
 
 #[derive(Accounts)]
 pub struct CollectProtocolFees<'info> {
@@ -36,7 +36,7 @@ pub fn handler(ctx: Context<CollectProtocolFees>) -> ProgramResult {
         &ctx.accounts.token_vault_a,
         &ctx.accounts.token_destination_a,
         &ctx.accounts.token_program,
-        whirlpool.protocol_fee_owed_a,
+        whirlpool.protocol_fee_owed_a
     )?;
 
     transfer_from_vault_to_owner(
@@ -44,7 +44,7 @@ pub fn handler(ctx: Context<CollectProtocolFees>) -> ProgramResult {
         &ctx.accounts.token_vault_b,
         &ctx.accounts.token_destination_b,
         &ctx.accounts.token_program,
-        whirlpool.protocol_fee_owed_b,
+        whirlpool.protocol_fee_owed_b
     )?;
 
     Ok(ctx.accounts.whirlpool.reset_protocol_fees_owed())

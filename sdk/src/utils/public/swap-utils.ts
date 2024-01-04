@@ -4,6 +4,7 @@ import {
   Percentage,
   U64_MAX,
   ZERO,
+  resolveOrCreateATA,
   resolveOrCreateATAs,
 } from "@orca-so/common-sdk";
 import { Address } from "@project-serum/anchor";
@@ -28,6 +29,7 @@ import { TickUtil } from "./tick-utils";
 import { SwapDirection, TokenType, TwoHopSwapPoolParams } from "./types";
 import { SwapWithFeeDiscountParams } from "../../instructions";
 import { Wallet } from "@project-serum/anchor/dist/cjs/provider";
+import { NATIVE_MINT } from "@solana/spl-token";
 
 /**
  * @category Whirlpool Utils
@@ -256,8 +258,13 @@ export class SwapUtils {
     whirlpool1: Whirlpool,
     swapQuote2: SwapQuote,
     whirlpool2: Whirlpool,
-    wallet: Wallet
-  ): Promise<{ createAtaIxs: Instruction[]; poolParams: TwoHopSwapPoolParams }> {
+    wallet: Wallet,
+    wrenecPubkeyAta?: PublicKey
+  ): Promise<{
+    createAtaIxs: Instruction[];
+    poolParams: TwoHopSwapPoolParams;
+    createdWRenecAta: PublicKey | undefined;
+  }> {
     const oracleOne = PDAUtil.getOracle(ctx.program.programId, whirlpool1.getAddress()).publicKey;
 
     const oracleTwo = PDAUtil.getOracle(ctx.program.programId, whirlpool2.getAddress()).publicKey;
@@ -265,81 +272,83 @@ export class SwapUtils {
     const whirlpoolData1 = whirlpool1.getData();
     const whirlpoolData2 = whirlpool2.getData();
 
-    const tokensWithIndex = [
+    const requests = [
       {
-        token: {
-          tokenMint: whirlpoolData1.tokenMintA,
-          wrappedSolAmountIn: swapQuote1.aToB ? swapQuote1.amount : ZERO,
-        },
-        index: 0,
+        tokenMint: whirlpoolData1.tokenMintA,
+        wrappedSolAmountIn: swapQuote1.aToB ? swapQuote1.amount : ZERO,
       },
       {
-        token: {
-          tokenMint: whirlpoolData1.tokenMintB,
-          wrappedSolAmountIn: !swapQuote1.aToB ? swapQuote1.amount : ZERO,
-        },
-        index: 1,
+        tokenMint: whirlpoolData1.tokenMintB,
+        wrappedSolAmountIn: !swapQuote1.aToB ? swapQuote1.amount : ZERO,
       },
       {
-        token: {
-          tokenMint: whirlpoolData2.tokenMintA,
-          wrappedSolAmountIn: swapQuote2.aToB ? swapQuote2.amount : ZERO,
-        },
-        index: 2,
+        tokenMint: whirlpoolData2.tokenMintA,
+        wrappedSolAmountIn: swapQuote2.aToB ? swapQuote2.amount : ZERO,
       },
       {
-        token: {
-          tokenMint: whirlpoolData2.tokenMintB,
-          wrappedSolAmountIn: !swapQuote2.aToB ? swapQuote2.amount : ZERO,
-        },
-        index: 3,
+        tokenMint: whirlpoolData2.tokenMintB,
+        wrappedSolAmountIn: !swapQuote2.aToB ? swapQuote2.amount : ZERO,
       },
     ];
 
-    // Filter the array to remove duplicate tokens
-    const seen = new Set<string>();
+    const resolveAllAtasPromise = [];
+    for (const req of requests) {
+      const instruction = resolveOrCreateATA(
+        ctx.connection,
+        wallet.publicKey,
+        req.tokenMint,
+        () => ctx.fetcher.getAccountRentExempt(),
+        req.wrappedSolAmountIn
+      );
+      resolveAllAtasPromise.push(instruction);
+    }
 
-    const indexMapping: { [key: number]: number } = {};
-    const filteredTokens: Array<{
-      token: (typeof tokensWithIndex)[0]["token"];
-      mappedIndex: number;
-    }> = [];
+    let resolveAllAtas = await Promise.all(resolveAllAtasPromise);
 
-    tokensWithIndex.forEach((t) => {
-      const key = t.token.tokenMint.toBase58();
-      if (!seen.has(key)) {
-        seen.add(key);
-        filteredTokens.push({ token: t.token, mappedIndex: t.index });
-        indexMapping[t.index] = filteredTokens.length - 1;
-      } else {
-        indexMapping[t.index] = filteredTokens.findIndex(
-          (ft) => ft.token.tokenMint.toBase58() === key
-        );
+    const createATAInstructions = [];
+    // make a set of unique address
+    const uniqueAddresses = new Set<string>();
+
+    let createdWRenecAta = undefined;
+    for (let i = 0; i < resolveAllAtas.length; i++) {
+      const resolveAta = resolveAllAtas[i];
+      const { address: ataAddress, ...instructions } = resolveAta;
+
+      // Check wrenecPubkeyAta is provide, and token mint is wrenec -> use that ATA and skip
+      if (requests[i].tokenMint.equals(NATIVE_MINT)) {
+        // if either wrenecPubkeyAta or createdWRenecAta is defined, use that
+        if (wrenecPubkeyAta || createdWRenecAta) {
+          if (wrenecPubkeyAta) {
+            createdWRenecAta = wrenecPubkeyAta; // set createdWRenecAta to wrenecPubkeyAta
+            resolveAllAtas[i].address = wrenecPubkeyAta;
+          } else if (createdWRenecAta) {
+            resolveAllAtas[i].address = createdWRenecAta;
+          }
+
+          continue;
+        } else {
+          // if both are undefined, create a new ATA
+          createdWRenecAta = ataAddress;
+        }
       }
-    });
 
-    const resolveAllAtas = await resolveOrCreateATAs(
-      ctx.connection,
-      wallet.publicKey,
-      filteredTokens.map((t) => t.token),
-      () => ctx.fetcher.getAccountRentExempt()
-    );
+      // Check if instruction has not been created
+      if (!uniqueAddresses.has(ataAddress.toBase58())) {
+        createATAInstructions.push(instructions);
+        uniqueAddresses.add(ataAddress.toBase58());
+      }
+    }
 
-    const createATAInstructions = filteredTokens.map((ft, idx) => {
-      const { address, ...instructions } = resolveAllAtas[idx];
-      return instructions;
-    });
-
-    const poolParams: TwoHopSwapPoolParams = {
+    const poolParams = {
       whirlpoolOne: whirlpool1.getAddress(),
       whirlpoolTwo: whirlpool2.getAddress(),
-      tokenOwnerAccountOneA: resolveAllAtas[indexMapping[0]].address,
+      tokenOwnerAccountOneA: resolveAllAtas[0].address,
       tokenVaultOneA: whirlpoolData1.tokenVaultA,
-      tokenOwnerAccountOneB: resolveAllAtas[indexMapping[1]].address,
+      tokenOwnerAccountOneB: resolveAllAtas[1].address,
       tokenVaultOneB: whirlpoolData1.tokenVaultB,
-      tokenOwnerAccountTwoA: resolveAllAtas[indexMapping[2]].address,
+      tokenOwnerAccountTwoA: resolveAllAtas[2].address,
       tokenVaultTwoA: whirlpoolData2.tokenVaultA,
-      tokenOwnerAccountTwoB: resolveAllAtas[indexMapping[3]].address,
+      tokenOwnerAccountTwoB: resolveAllAtas[3].address,
       tokenVaultTwoB: whirlpoolData2.tokenVaultB,
       oracleOne,
       oracleTwo,
@@ -348,6 +357,7 @@ export class SwapUtils {
     return {
       createAtaIxs: createATAInstructions,
       poolParams,
+      createdWRenecAta: createdWRenecAta,
     };
   }
 }
