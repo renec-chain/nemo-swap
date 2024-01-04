@@ -41,7 +41,7 @@ import {
   Wallet,
 } from "@renec-foundation/gasless-sdk";
 import { Address, BN } from "@project-serum/anchor";
-import { compareTxSize } from "../utils/version";
+import { VersionedTransactionBuilder, compareTxSize } from "../utils/version";
 import { loadLookupTable } from "../utils/helper";
 import { getTwoHopSwapIx } from "./utils";
 
@@ -49,25 +49,17 @@ const SLIPPAGE = Percentage.fromFraction(1, 100);
 
 //usage: 02_two_hop_swap <pool-idx-0> <pool-idx-1> <pool-idx-2> <discount-token-mint | null>
 async function main() {
-  const wallets = loadWallets([ROLES.USER]);
-  const userAuth = wallets[ROLES.USER];
+  const wallets = loadWallets([ROLES.TEST]);
+  const userAuth = wallets[ROLES.TEST];
 
   // Generate new wallets for testing
   const { ctx } = loadProvider(userAuth);
   const client = buildWhirlpoolClient(ctx);
-  const newWallet = await genNewWallet(ctx.connection);
-
-  console.log("new wallet created:", newWallet.publicKey.toString());
 
   // Get pool from terminal
   const poolIdx0 = parseInt(process.argv[2]);
   const poolIdx1 = parseInt(process.argv[3]);
   const poolIdx2 = parseInt(process.argv[4]);
-
-  const discountTokenMintStr = process.argv[5];
-  const discountTokenMint = discountTokenMintStr
-    ? new PublicKey(discountTokenMintStr)
-    : null;
 
   if (isNaN(poolIdx0) || isNaN(poolIdx1) || isNaN(poolIdx2)) {
     console.error("Please provide two valid pool indexes.");
@@ -85,11 +77,10 @@ async function main() {
     pool0,
     pool1,
     pool2,
-    [0],
-    [swapAmount.toNumber()],
+    [],
+    [],
     swapAmount,
-    newWallet,
-    discountTokenMint,
+    userAuth,
     true
   );
 }
@@ -108,7 +99,6 @@ const swapThreeHops = async (
   mintAmounts: number[],
   swapAmount: BN,
   walletKeypair: Keypair,
-  feeDiscountToken?: PublicKey,
   executeGasless = false
 ) => {
   console.log("\n\n Test case: ", testCase);
@@ -132,53 +122,38 @@ const swapThreeHops = async (
     wallet.publicKey
   );
 
-  if (feeDiscountToken) {
-    await createTokenAccountAndMintTo(
-      client.getContext().provider,
-      feeDiscountToken,
-      wallet.publicKey,
-      10
-    );
-  }
-
   // Swap three hops
-  const { tx, quote2 } = await getTwoHopSwapIx(
+  const { tx, quote2, createdWrenecPubkey } = await getTwoHopSwapIx(
     client,
     pool0,
     pool1,
     wallet,
-    swapAmount,
-    feeDiscountToken
+    swapAmount
   );
 
   // Get swap ix
-  let thirdQuote;
-  if (feeDiscountToken) {
-    thirdQuote = await swapWithFeeDiscountQuoteByInputToken(
-      pool2,
-      feeDiscountToken,
-      twoHopsSwapToken.pool2OtherToken,
-      quote2.estimatedAmountOut,
-      SLIPPAGE,
-      client.getContext().program.programId,
-      client.getContext().fetcher,
-      true
-    );
-  } else {
-    thirdQuote = await swapQuoteByInputToken(
-      pool2,
-      twoHopsSwapToken.pool2OtherToken,
-      quote2.estimatedAmountOut,
-      SLIPPAGE,
-      client.getContext().program.programId,
-      client.getContext().fetcher,
-      true
-    );
-  }
+  let thirdQuote = await swapQuoteByInputToken(
+    pool2,
+    pool2.getData().tokenMintA,
+    new BN(1000),
+    SLIPPAGE,
+    client.getContext().program.programId,
+    client.getContext().fetcher,
+    true
+  );
 
-  const thirdQuoteTx = await pool2.swap(thirdQuote, wallet.publicKey);
+  // Normal swap
+  // const thirdQuoteTx = await pool2.swap(thirdQuote, wallet.publicKey);
+  // tx.addInstruction(thirdQuoteTx.compressIx(true));
 
-  tx.addInstruction(thirdQuoteTx.compressIx(true));
+  // Optimize swap
+  // This will not re-created wrenec ata, if it is already created by the previous ix
+  const thirdQuoteTx = await pool2.swapWithWRenecAta(
+    thirdQuote,
+    createdWrenecPubkey
+  );
+
+  tx.addInstruction(thirdQuoteTx.tx.compressIx(true));
 
   const lookupTableData = loadLookupTable();
   const lookupTableAddress0 = lookupTableData[pool0.getAddress().toBase58()];
@@ -196,22 +171,29 @@ const swapThreeHops = async (
     new PublicKey(lookupTableAddress1),
     new PublicKey(lookupTableAddress2),
   ];
-  const txIxs = tx.compressIx(true);
 
-  await compareTxSize(
+  // Get size
+  const versionedTx = VersionedTransactionBuilder.fromTransactionBuilder(
     client.getContext().connection,
     walletKeypair,
-    txIxs.instructions.concat(txIxs.cleanupInstructions),
-    lookUpTables,
-    txIxs.signers
+    tx,
+    lookUpTables
   );
 
-  return;
+  console.log("--------");
   try {
-    console.log("tx size: ", await tx.txnSize());
+    const size = await tx.txnSize();
+    console.log("Legacy transaction size:", size);
   } catch (e) {
-    console.log("tx failed: ", e);
+    console.log("Legacy transaction size error: ");
+    console.log(e);
   }
+  console.log("--------");
+
+  const size = await versionedTx.txSize();
+  console.log("V0 transaction size:", size);
+
+  return;
 
   // Construct gasless txn
   const dappUtil = await GaslessDapp.new(client.getContext().connection);

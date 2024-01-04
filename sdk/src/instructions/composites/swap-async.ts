@@ -140,7 +140,7 @@ export async function swapAsyncWithWRenecAta(
     }
   }
 
-  txBuilder.addInstructions([tokenOwnerAccountAIx, tokenOwnerAccountBIx]);
+  txBuilder.addInstructions(instructions);
   const inputTokenAccount = aToB ? ataAKey : ataBKey;
   const outputTokenAccount = aToB ? ataBKey : ataAKey;
 
