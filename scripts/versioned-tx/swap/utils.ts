@@ -58,10 +58,12 @@ export const getTwoHopSwapIx = async (
   pool1: Whirlpool,
   wallet: Wallet,
   swapAmount: BN,
-  feeDiscountToken?: PublicKey
+  feeDiscountToken?: PublicKey,
+  createdWrenecPubkey?: PublicKey
 ): Promise<{
   tx: TransactionBuilder;
   quote2: SwapQuote;
+  createdWrenecPubkey?: PublicKey;
 }> => {
   const twoHopTokens = getTwoHopSwapTokens(pool0, pool1);
 
@@ -95,15 +97,14 @@ export const getTwoHopSwapIx = async (
       quote2,
       pool1,
       feeDiscountToken,
-      wallet
+      createdWrenecPubkey
     );
 
-    console.log(
-      "Estimated Burn Amount: ",
-      twoHopTx.estimatedBurnAmount.toNumber()
-    );
-
-    return { tx: twoHopTx.tx, quote2 };
+    return {
+      tx: twoHopTx.tx,
+      quote2,
+      createdWrenecPubkey: twoHopTx.createdWRenecAta,
+    };
   } else {
     const quote1 = await swapQuoteByInputToken(
       pool0,
@@ -131,10 +132,14 @@ export const getTwoHopSwapIx = async (
       pool0,
       quote2,
       pool1,
-      wallet
+      createdWrenecPubkey
     );
 
-    return { tx: twoHopTx, quote2 };
+    return {
+      tx: twoHopTx.tx,
+      quote2,
+      createdWrenecPubkey: twoHopTx.createdWRenecAta,
+    };
   }
 };
 

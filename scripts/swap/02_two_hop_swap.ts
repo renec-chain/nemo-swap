@@ -323,7 +323,7 @@ const getTwoHopSwapIx = async (
       wallet
     );
 
-    return twoHopTx;
+    return twoHopTx.tx;
   }
 };
 

@@ -51,7 +51,7 @@ async function main() {
   console.log("asyReusd:", asyReusd.getAddress().toBase58());
   console.log("revndReusd:", revndReusd.getAddress().toBase58());
 
-  const tx1 = await swapTwoHops(
+  const { tx: tx1, createdWrenecPubkey } = await swapTwoHops(
     "two hops ",
     client,
     revndRenec,
@@ -61,10 +61,10 @@ async function main() {
     new BN(10000),
     userAuth,
     null,
-    true
+    null
   );
 
-  const tx2 = await swapTwoHops(
+  const { tx: tx2 } = await swapTwoHops(
     "two hops ",
     client,
     revndRenec,
@@ -74,7 +74,7 @@ async function main() {
     new BN(10000),
     userAuth,
     null,
-    true
+    createdWrenecPubkey
   );
 
   // Extract the relevant lookup table addresses using the pool addresses
@@ -177,9 +177,16 @@ const swapTwoHops = async (
   swapAmount: BN,
   walletKeypair: Keypair,
   feeDiscountToken?: PublicKey,
-  executeGasless = false
-): Promise<TransactionBuilder> => {
+  inputCreatedWrenecPubkey?: PublicKey
+): Promise<{
+  tx: TransactionBuilder;
+  createdWrenecPubkey: PublicKey | undefined;
+}> => {
   console.log("\n\n Test case: ", testCase);
+  console.log(
+    "Created input wrenec pubkey: ",
+    inputCreatedWrenecPubkey?.toString() || "none  "
+  );
 
   const wallet = new Wallet(walletKeypair);
   // Swap route: reusd -> revnd -> rebtc -> reeth
@@ -209,14 +216,15 @@ const swapTwoHops = async (
   }
 
   // Swap three hops
-  const { tx } = await getTwoHopSwapIx(
+  const { tx, createdWrenecPubkey } = await getTwoHopSwapIx(
     client,
     pool0,
     pool1,
     wallet,
     swapAmount,
-    feeDiscountToken
+    feeDiscountToken,
+    inputCreatedWrenecPubkey
   );
 
-  return tx;
+  return { tx, createdWrenecPubkey };
 };
