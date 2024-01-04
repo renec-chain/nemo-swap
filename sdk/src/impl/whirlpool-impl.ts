@@ -202,7 +202,7 @@ export class WhirlpoolImpl implements Whirlpool {
   /**
    * @dev this function take the created `wrenec` ata of user, to reduce tx size
    */
-  async swapWithWRenecATA(
+  async swapWithWRenecAta(
     quote: SwapInput,
     wRenecAta?: PublicKey
   ): Promise<{ tx: TransactionBuilder; createdWRenecAta: PublicKey | undefined }> {
