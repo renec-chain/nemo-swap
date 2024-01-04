@@ -331,12 +331,11 @@ export class WhirlpoolClientImpl implements WhirlpoolClient {
     whirlpool1: Whirlpool,
     swapQuote2: SwapQuote,
     whirlpool2: Whirlpool,
-    wallet?: Wallet | undefined,
-    createdWrenecPubkey?: PublicKey | undefined
-  ): Promise<{ tx: TransactionBuilder; createdWrenecPubkey: PublicKey | undefined }> {
+    wRenecAta?: PublicKey
+  ): Promise<{ tx: TransactionBuilder; createdWRenecAta: PublicKey | undefined }> {
     const twoHopSwapQuote = twoHopSwapQuoteFromSwapQuotes(swapQuote1, swapQuote2);
 
-    const sourceWallet = wallet ?? this.ctx.provider.wallet;
+    const sourceWallet = this.ctx.provider.wallet;
     const preSwapHandler = await SwapUtils.getTwoHopSwapCreateAtaIxs(
       this.ctx,
       swapQuote1,
@@ -344,7 +343,7 @@ export class WhirlpoolClientImpl implements WhirlpoolClient {
       swapQuote2,
       whirlpool2,
       sourceWallet,
-      createdWrenecPubkey
+      wRenecAta
     );
     const ix = WhirlpoolIx.twoHopSwapIx(this.ctx.program, {
       ...twoHopSwapQuote,
@@ -354,7 +353,7 @@ export class WhirlpoolClientImpl implements WhirlpoolClient {
 
     return {
       tx: toTx(this.ctx, ix).prependInstructions(preSwapHandler.createAtaIxs),
-      createdWrenecPubkey,
+      createdWRenecAta: preSwapHandler.createdWRenecAta,
     };
   }
 
@@ -364,16 +363,15 @@ export class WhirlpoolClientImpl implements WhirlpoolClient {
     swapQuote2: FeeDiscountSwapQuote,
     whirlpool2: Whirlpool,
     discountToken: PublicKey,
-    wallet?: Wallet | undefined,
-    wrenecPubkey?: PublicKey | undefined
+    wRenecAta?: PublicKey
   ): Promise<{
     tx: TransactionBuilder;
-    createdWrenecPubkey: PublicKey | undefined;
+    createdWRenecAta: PublicKey | undefined;
     estimatedBurnAmount: BN;
     estimatedDiscountAmount: BN;
   }> {
     const twoHopSwapQuote = twoHopSwapQuoteFromSwapQuotes(swapQuote1, swapQuote2);
-    const sourceWallet = wallet ?? this.ctx.provider.wallet;
+    const sourceWallet = this.ctx.provider.wallet;
 
     const preSwapHandler = await SwapUtils.getTwoHopSwapCreateAtaIxs(
       this.ctx,
@@ -382,7 +380,7 @@ export class WhirlpoolClientImpl implements WhirlpoolClient {
       swapQuote2,
       whirlpool2,
       sourceWallet,
-      wrenecPubkey
+      wRenecAta
     );
 
     // Get whirlpool discount info
@@ -417,7 +415,7 @@ export class WhirlpoolClientImpl implements WhirlpoolClient {
       estimatedDiscountAmount: swapQuote1.estimatedDiscountAmount.add(
         swapQuote2.estimatedDiscountAmount
       ),
-      createdWrenecPubkey: wrenecPubkey,
+      createdWRenecAta: preSwapHandler.createdWRenecAta,
     };
   }
 }
