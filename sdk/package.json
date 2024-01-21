@@ -1,6 +1,6 @@
 {
   "name": "@renec-foundation/nemoswap-sdk",
-  "version": "0.9.2",
+  "version": "0.9.5",
   "description": "Typescript SDK to interact with NemoSwap program.",
   "license": "Apache-2.0",
   "main": "dist/index.js",

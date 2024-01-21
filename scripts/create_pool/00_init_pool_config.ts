@@ -5,7 +5,7 @@ import {
   InitConfigParams,
   toTx,
 } from "@renec/redex-sdk";
-import { loadProvider, delay, loadWallets, getConfig, ROLES } from "./utils";
+import { loadProvider, delay, loadWallets, getConfig } from "./utils";
 import deployed from "./deployed.json";
 const fs = require("fs");
 const deployedPath = "./create_pool/deployed.json";

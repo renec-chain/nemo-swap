@@ -1,14 +1,11 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Mint, Token, TokenAccount};
+use anchor_spl::token::{self, Token, TokenAccount};
 
 use crate::{
     errors::ErrorCode,
     manager::swap_manager::*,
-    state::{TickArray, Whirlpool, WhirlpoolDiscountInfo},
-    util::{
-        burn_token, calculate_equivalent_discount_token_amount, to_timestamp_u64,
-        update_and_swap_whirlpool, SwapTickSequence,
-    },
+    state::{TickArray, Whirlpool},
+    util::{to_timestamp_u64, update_and_swap_whirlpool, SwapTickSequence},
 };
 
 #[derive(Accounts)]
@@ -43,19 +40,6 @@ pub struct SwapWithFeeDiscount<'info> {
     #[account(seeds = [b"oracle", whirlpool.key().as_ref()],bump)]
     /// Oracle is currently unused and will be enabled on subsequent updates
     pub oracle: UncheckedAccount<'info>,
-
-    /// handle fee discount
-    #[account(
-        seeds = [b"whirlpool_discount_info", whirlpool.key().as_ref(), discount_token.key().as_ref()],
-        bump,
-    )]
-    pub whirlpool_discount_info: Box<Account<'info, WhirlpoolDiscountInfo>>,
-
-    #[account(mut)]
-    pub discount_token: Account<'info, Mint>,
-
-    #[account(mut, constraint= discount_token_owner_account.mint == discount_token.key())]
-    pub discount_token_owner_account: Box<Account<'info, TokenAccount>>,
 }
 
 pub fn handler(
@@ -67,10 +51,6 @@ pub fn handler(
     a_to_b: bool, // Zero for one
 ) -> ProgramResult {
     let whirlpool = &mut ctx.accounts.whirlpool;
-    let whirlpool_discount_info = &mut ctx.accounts.whirlpool_discount_info;
-    let discount_token = &ctx.accounts.discount_token;
-    let discount_token_owner_account = &ctx.accounts.discount_token_owner_account;
-
     whirlpool.require_enabled()?;
     let clock = Clock::get()?;
     // Update the global reward growth which increases as a function of time.
@@ -81,9 +61,8 @@ pub fn handler(
         ctx.accounts.tick_array_2.load_mut().ok(),
     );
 
-    let (swap_update, _, burn_fee_accumulated) = swap_with_fee_discount(
+    let (swap_update, _, _) = swap_with_fee_discount(
         &whirlpool,
-        &whirlpool_discount_info,
         &mut swap_tick_sequence,
         amount,
         sqrt_price_limit,
@@ -97,6 +76,15 @@ pub fn handler(
         discount_token,
         &swap_update,
         burn_fee_accumulated,
+        amount_specified_is_input,
+        a_to_b,
+    )?;
+
+    let discount_token_amount_in_discount_token = calculate_equivalent_discount_token_amount(
+        whirlpool_discount_info,
+        discount_token,
+        &swap_update,
+        discount_amount_accumulated,
         amount_specified_is_input,
         a_to_b,
     )?;

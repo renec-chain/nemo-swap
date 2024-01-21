@@ -9,7 +9,7 @@ export const ONE_SOL = 1000000000;
 
 export const loadProvider = function (payerKeypair: Keypair) {
   const config = getConfig();
-  const wallets = loadWallets([]);
+  const wallets = loadWallets();
   const commitment: Commitment = "confirmed";
   const connection = new Connection(config.RPC_ENDPOINT_URL, { commitment });
   const wallet = new Wallet(payerKeypair);
@@ -100,7 +100,7 @@ export enum TickSpacing {
 }
 
 export const getConfig = () => {
-  if (process.env.TESTNET === "1") {
+  if (process.env.IS_TESTNET === "true") {
     return require("../config-testnet.json");
   } else {
     return require("../config.json");
