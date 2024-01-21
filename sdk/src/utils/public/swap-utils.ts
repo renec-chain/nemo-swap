@@ -26,8 +26,10 @@ import { adjustForSlippage } from "../math/token-math";
 import { PDAUtil } from "./pda-utils";
 import { PoolUtil } from "./pool-utils";
 import { TickUtil } from "./tick-utils";
-import { SwapDirection, TokenType } from "./types";
+import { SwapDirection, TokenType, TwoHopSwapPoolParams } from "./types";
 import { SwapWithFeeDiscountParams } from "../../instructions";
+import { Wallet } from "@project-serum/anchor/dist/cjs/provider";
+import { NATIVE_MINT } from "@solana/spl-token";
 
 /**
  * @category Whirlpool Utils
@@ -245,6 +247,9 @@ export class SwapUtils {
       tokenVaultB: data.tokenVaultB,
       oracle: oraclePda.publicKey,
       tokenAuthority: wallet,
+      whirlpoolDiscountInfo: whirlpoolDiscountInfoPDA.publicKey,
+      discountToken: discountTokenMint,
+      discountTokenOwnerAccount: ataDiscountTokenKey,
       ...quote,
     };
     return params;

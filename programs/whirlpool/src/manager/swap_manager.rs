@@ -404,10 +404,12 @@ pub fn swap_with_fee_discount(
 fn apply_fee_discount(
     swap_computation: &mut SwapStepComputation,
     discount_fee_accumulated: u64,
-) -> Result<u64, ErrorCode> {
-    let discount_amount = swap_computation.fee_amount * 99 / 100; // discount 99%
-    swap_computation.fee_amount = swap_computation.fee_amount - discount_amount;
-    let updated_discount_fee_amount = discount_fee_accumulated + discount_amount;
+    burn_fee_accoumulated: u64,
+) -> Result<(u64, u64), ErrorCode> {
+    // max conversion rate is at 99.99% (9999)
+    if whirlpool_discount_info.token_conversion_fee_rate as u128 > DISCOUNT_FEE_RATE_MUL_VALUE {
+        return Err(ErrorCode::FeeRateMaxExceeded.into());
+    }
 
     Ok(updated_discount_fee_amount)
 }

@@ -1,5 +1,5 @@
 import { Percentage, TransactionBuilder } from "@orca-so/common-sdk";
-import { Address, Wallet } from "@project-serum/anchor";
+import { Address, BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { WhirlpoolContext } from "./context";
 import { WhirlpoolClientImpl } from "./impl/whirlpool-client-impl";
@@ -13,7 +13,8 @@ import {
   WhirlpoolData,
 } from "./types/public";
 import { TokenAccountInfo, TokenInfo, WhirlpoolRewardInfo } from "./types/public/client-types";
-import { SwapQuote } from "./quotes/public";
+import { FeeDiscountSwapQuote, SwapQuote } from "./quotes/public";
+import { Wallet } from "@project-serum/anchor/dist/cjs/provider";
 
 /**
  * Helper class to help interact with Whirlpool Accounts with a simpler interface.
@@ -116,12 +117,26 @@ export interface WhirlpoolClient {
   collectProtocolFeesForPools: (poolAddresses: Address[]) => Promise<TransactionBuilder>;
 
   twoHopSwap(
-    swapInput1: SwapQuote,
+    swapQuote1: SwapQuote,
     whirlpool1: Whirlpool,
-    swapInput2: SwapQuote,
+    swapQuote2: SwapQuote,
     whirlpool2: Whirlpool,
-    wallet?: Wallet
-  ): Promise<TransactionBuilder>;
+    wRenecAta?: PublicKey
+  ): Promise<{ tx: TransactionBuilder; createdWRenecAta: PublicKey | undefined }>;
+
+  twoHopSwapWithFeeDiscount(
+    swapQuote1: FeeDiscountSwapQuote,
+    whirlpool1: Whirlpool,
+    swapQuote2: FeeDiscountSwapQuote,
+    whirlpool2: Whirlpool,
+    discountToken: PublicKey,
+    wRenecAta?: PublicKey
+  ): Promise<{
+    tx: TransactionBuilder;
+    createdWRenecAta: PublicKey | undefined;
+    estimatedBurnAmount: BN;
+    estimatedDiscountAmount: BN;
+  }>;
 }
 
 /**
@@ -278,7 +293,16 @@ export interface Whirlpool {
    */
   swap: (input: SwapInput, wallet?: PublicKey) => Promise<TransactionBuilder>;
 
-  swapWithFeeDiscount: (input: SwapInput, wallet?: PublicKey) => Promise<TransactionBuilder>;
+  swapWithWRenecAta(
+    quote: SwapInput,
+    wRenecAta?: PublicKey
+  ): Promise<{ tx: TransactionBuilder; createdWRenecAta: PublicKey | undefined }>;
+
+  swapWithFeeDiscount: (
+    input: SwapInput,
+    discountTokenMint: PublicKey,
+    wallet?: PublicKey
+  ) => Promise<TransactionBuilder>;
 
   /**
    * Collect a developer fee and perform a swap between tokenA and tokenB on this pool.
