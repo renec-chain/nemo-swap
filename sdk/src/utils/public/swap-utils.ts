@@ -229,8 +229,6 @@ export class SwapUtils {
     whirlpool: Whirlpool,
     inputTokenAssociatedAddress: Address,
     outputTokenAssociatedAddress: Address,
-    discountTokenMint: PublicKey,
-    ataDiscountTokenKey: PublicKey,
     wallet: PublicKey
   ) {
     const addr = whirlpool.getAddress();
@@ -241,12 +239,6 @@ export class SwapUtils {
       outputTokenAssociatedAddress,
     ]);
     const oraclePda = PDAUtil.getOracle(ctx.program.programId, addr);
-    const whirlpoolDiscountInfoPDA = PDAUtil.getWhirlpoolDiscountInfo(
-      ctx.program.programId,
-      whirlpool.getAddress(),
-      discountTokenMint
-    );
-
     const params: SwapWithFeeDiscountParams = {
       whirlpool: whirlpool.getAddress(),
       tokenOwnerAccountA: aToB ? inputTokenATA : outputTokenATA,
@@ -283,22 +275,25 @@ export class SwapUtils {
     const whirlpoolData1 = whirlpool1.getData();
     const whirlpoolData2 = whirlpool2.getData();
 
+    const quote1NativeAmount = swapQuote1.aToB && swapQuote1.amountSpecifiedIsInput ? swapQuote1.amount : swapQuote1.otherAmountThreshold
+    const quote2NativeAmount = swapQuote2.aToB && swapQuote2.amountSpecifiedIsInput ? swapQuote2.amount : swapQuote2.otherAmountThreshold
+
     const requests = [
       {
         tokenMint: whirlpoolData1.tokenMintA,
-        wrappedSolAmountIn: swapQuote1.aToB ? swapQuote1.amount : ZERO,
+        wrappedSolAmountIn: swapQuote1.aToB ? quote1NativeAmount : ZERO,
       },
       {
         tokenMint: whirlpoolData1.tokenMintB,
-        wrappedSolAmountIn: !swapQuote1.aToB ? swapQuote1.amount : ZERO,
+        wrappedSolAmountIn: !swapQuote1.aToB ? quote1NativeAmount : ZERO,
       },
       {
         tokenMint: whirlpoolData2.tokenMintA,
-        wrappedSolAmountIn: swapQuote2.aToB ? swapQuote2.amount : ZERO,
+        wrappedSolAmountIn: swapQuote2.aToB ? quote2NativeAmount : ZERO,
       },
       {
         tokenMint: whirlpoolData2.tokenMintB,
-        wrappedSolAmountIn: !swapQuote2.aToB ? swapQuote2.amount : ZERO,
+        wrappedSolAmountIn: !swapQuote2.aToB ? quote2NativeAmount : ZERO,
       },
     ];
 

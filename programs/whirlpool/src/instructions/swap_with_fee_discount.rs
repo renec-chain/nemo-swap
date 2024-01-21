@@ -83,7 +83,6 @@ pub fn handler(
 
     let (swap_update, _, burn_fee_accumulated) = swap_with_fee_discount(
         &whirlpool,
-        &whirlpool_discount_info,
         &mut swap_tick_sequence,
         amount,
         sqrt_price_limit,

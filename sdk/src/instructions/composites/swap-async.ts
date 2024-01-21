@@ -24,7 +24,12 @@ export async function swapAsync(
   refresh: boolean
 ): Promise<TransactionBuilder> {
   const { wallet, whirlpool, swapInput } = params;
-  const { aToB, amount } = swapInput;
+  const {
+    aToB,
+    amountSpecifiedIsInput,
+    amount,
+    otherAmountThreshold,
+  } = swapInput;
   const txBuilder = new TransactionBuilder(ctx.connection, ctx.wallet);
   const tickArrayAddresses = [swapInput.tickArray0, swapInput.tickArray1, swapInput.tickArray2];
 
@@ -38,12 +43,13 @@ export async function swapAsync(
   }
 
   const data = whirlpool.getData();
+  const nativeAmount = aToB && amountSpecifiedIsInput ? amount : otherAmountThreshold
   const [resolvedAtaA, resolvedAtaB] = await resolveOrCreateATAs(
     ctx.connection,
     wallet,
     [
-      { tokenMint: data.tokenMintA, wrappedSolAmountIn: aToB ? amount : ZERO },
-      { tokenMint: data.tokenMintB, wrappedSolAmountIn: !aToB ? amount : ZERO },
+      { tokenMint: data.tokenMintA, wrappedSolAmountIn: aToB ? nativeAmount : ZERO },
+      { tokenMint: data.tokenMintB, wrappedSolAmountIn: !aToB ? nativeAmount : ZERO },
     ],
     () => ctx.fetcher.getAccountRentExempt()
   );
@@ -82,7 +88,12 @@ export async function swapAsyncWithWRenecAta(
   wRenecAta?: PublicKey
 ): Promise<{ tx: TransactionBuilder; createdWRenecAta: PublicKey | undefined }> {
   const { wallet, whirlpool, swapInput } = params;
-  const { aToB, amount } = swapInput;
+  const {
+    aToB,
+    amountSpecifiedIsInput,
+    amount,
+    otherAmountThreshold,
+  } = swapInput;
   const txBuilder = new TransactionBuilder(ctx.connection, ctx.wallet);
   const tickArrayAddresses = [swapInput.tickArray0, swapInput.tickArray1, swapInput.tickArray2];
 
@@ -97,9 +108,10 @@ export async function swapAsyncWithWRenecAta(
 
   const data = whirlpool.getData();
 
+  const nativeAmount = aToB && amountSpecifiedIsInput ? amount : otherAmountThreshold
   let request = [
-    { tokenMint: data.tokenMintA, wrappedSolAmountIn: aToB ? amount : ZERO },
-    { tokenMint: data.tokenMintB, wrappedSolAmountIn: !aToB ? amount : ZERO },
+    { tokenMint: data.tokenMintA, wrappedSolAmountIn: aToB ? nativeAmount : ZERO },
+    { tokenMint: data.tokenMintB, wrappedSolAmountIn: !aToB ? nativeAmount : ZERO },
   ];
 
   const [resolvedAtaA, resolvedAtaB] = await resolveOrCreateATAs(
@@ -168,7 +180,12 @@ export async function swapWithFeeDiscountAsync(
   refresh: boolean
 ): Promise<TransactionBuilder> {
   const { wallet, whirlpool, swapInput } = params;
-  const { aToB, amount } = swapInput;
+  const {
+    aToB,
+    amountSpecifiedIsInput,
+    amount,
+    otherAmountThreshold,
+  } = swapInput;
   const txBuilder = new TransactionBuilder(ctx.connection, ctx.wallet);
   const tickArrayAddresses = [swapInput.tickArray0, swapInput.tickArray1, swapInput.tickArray2];
 
@@ -182,20 +199,19 @@ export async function swapWithFeeDiscountAsync(
   }
 
   const data = whirlpool.getData();
+  const nativeAmount = aToB && amountSpecifiedIsInput ? amount : otherAmountThreshold
   const [resolvedAtaA, resolvedAtaB, resolveDiscountTokenAta] = await resolveOrCreateATAs(
     ctx.connection,
     wallet,
     [
-      { tokenMint: data.tokenMintA, wrappedSolAmountIn: aToB ? amount : ZERO },
-      { tokenMint: data.tokenMintB, wrappedSolAmountIn: !aToB ? amount : ZERO },
+      { tokenMint: data.tokenMintA, wrappedSolAmountIn: aToB ? nativeAmount : ZERO },
+      { tokenMint: data.tokenMintB, wrappedSolAmountIn: !aToB ? nativeAmount : ZERO },
       { tokenMint: discountTokenMint, wrappedSolAmountIn: ZERO },
     ],
     () => ctx.fetcher.getAccountRentExempt()
   );
   const { address: ataAKey, ...tokenOwnerAccountAIx } = resolvedAtaA;
   const { address: ataBKey, ...tokenOwnerAccountBIx } = resolvedAtaB;
-  const { address: ataDiscountTokenKey } = resolveDiscountTokenAta;
-
   txBuilder.addInstructions([tokenOwnerAccountAIx, tokenOwnerAccountBIx]);
   const inputTokenAccount = aToB ? ataAKey : ataBKey;
   const outputTokenAccount = aToB ? ataBKey : ataAKey;
@@ -209,8 +225,6 @@ export async function swapWithFeeDiscountAsync(
         whirlpool,
         inputTokenAccount,
         outputTokenAccount,
-        discountTokenMint,
-        ataDiscountTokenKey,
         wallet
       )
     )
