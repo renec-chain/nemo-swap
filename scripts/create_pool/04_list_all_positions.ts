@@ -25,7 +25,8 @@ async function main() {
   const positions = await client.getAllPositionsOf(ctx.wallet.publicKey);
 
   console.log("Number of positions: ", positions.length);
-  for (let i = 0; i < positions.length; i++) {
+  const poolIndex = 6;
+  for (let i = poolIndex; i < positions.length; i++) {
     let position = positions[i].getData();
     console.log("Position ", i);
     console.log("Liquidity ", position.liquidity.toNumber() / 1e9);

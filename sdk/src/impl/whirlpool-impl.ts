@@ -22,6 +22,7 @@ import {
   openPositionIx,
   openPositionWithMetadataIx,
   swapAsync,
+  swapAsyncWithWRenecAta,
   SwapInput,
   swapWithFeeDiscountAsync,
 } from "../instructions";
@@ -195,6 +196,26 @@ export class WhirlpoolImpl implements Whirlpool {
         wallet: sourceWalletKey,
       },
       true
+    );
+  }
+
+  /**
+   * @dev this function take the created `wrenec` ata of user, to reduce tx size
+   */
+  async swapWithWRenecAta(
+    quote: SwapInput,
+    wRenecAta?: PublicKey
+  ): Promise<{ tx: TransactionBuilder; createdWRenecAta: PublicKey | undefined }> {
+    const sourceWalletKey = this.ctx.wallet.publicKey;
+    return swapAsyncWithWRenecAta(
+      this.ctx,
+      {
+        swapInput: quote,
+        whirlpool: this,
+        wallet: sourceWalletKey,
+      },
+      true,
+      wRenecAta
     );
   }
 

@@ -23,6 +23,9 @@ async function main() {
   const wallets = loadWallets([ROLES.USER]);
   const userKeypair = wallets[ROLES.USER];
 
+  console.log("------------------");
+  console.log("user wallet:", userKeypair.publicKey.toString());
+  console.log("------------------");
   const { ctx } = loadProvider(userKeypair);
 
   if (deployed.REDEX_CONFIG_PUB === "") {
@@ -38,8 +41,12 @@ async function main() {
   let poolInfo = getPoolInfo(poolIndex);
   const mintAPub = new PublicKey(poolInfo.tokenMintA);
   const mintBPub = new PublicKey(poolInfo.tokenMintB);
+
   const tokenMintA = await getTokenMintInfo(ctx, mintAPub);
   const tokenMintB = await getTokenMintInfo(ctx, mintBPub);
+
+  console.log("mint a pub: ", mintAPub.toString());
+  console.log("mint b pub: ", mintBPub.toString());
 
   if (tokenMintA && tokenMintB) {
     const whirlpoolPda = PDAUtil.getWhirlpool(
@@ -116,9 +123,13 @@ async function main() {
         tickUpperIndex,
         quote
       );
+
       if (initTickTx) {
         tx.prependInstruction(initTickTx.compressIx(true));
       }
+
+      const size = await tx.txnSize();
+      console.log("size:", size);
 
       console.log("Tx size:", await tx.buildAndExecute());
     }

@@ -72,7 +72,7 @@ async function main() {
   const pool0 = await getWhirlPool(client, getPoolInfo(poolIdx0));
   const pool1 = await getWhirlPool(client, getPoolInfo(poolIdx1));
 
-  await swapTwoHops(
+  const tx1 = await swapTwoHops(
     "two hops - 0 ",
     client,
     pool0,
@@ -151,6 +151,8 @@ const swapTwoHops = async (
     wallet,
     feeDiscountToken
   );
+
+  return tx;
 
   try {
     console.log("tx size: ", await tx.txnSize());
@@ -321,7 +323,7 @@ const getTwoHopSwapIx = async (
       wallet
     );
 
-    return twoHopTx;
+    return twoHopTx.tx;
   }
 };
 

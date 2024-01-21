@@ -6,7 +6,7 @@ import { Whirlpool } from "@renec/redex-sdk";
 import { Instruction } from "@orca-so/common-sdk";
 export const executeGaslessTx = async (
   gaslessTxn: GaslessTransaction,
-  execute: boolean = false
+  execute: boolean
 ) => {
   if (!execute) {
     const transaction = await gaslessTxn.build();
@@ -23,6 +23,7 @@ export const executeGaslessTx = async (
     }
   } else {
     try {
+      console.log("---> Executing gasless transaction...");
       const tx = await gaslessTxn.buildAndExecute();
       console.log("gasless tx hash: ", tx);
     } catch (e) {

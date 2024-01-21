@@ -35,23 +35,23 @@
       "TICK_SPACING": 32,
       "OPEN_POSITION": true,
       "INIT_AMOUNT_B_PER_A": "1.0",
+      "LOWER_B_PER_A_PRICE": "0.00001",
+      "UPPER_B_PER_A_PRICE": "400",
+      "SLIPPAGE": "1",
+      "INPUT_MINT": "So11111111111111111111111111111111111111112",
+      "INPUT_AMOUNT": "1"
+    },
+    {
+      "TOKEN_MINT_A": "So11111111111111111111111111111111111111112",
+      "TOKEN_MINT_B": "4VgC6A349HfLFGWRm2FkkSzo39mceyA8Tba2o28PqyyP",
+      "TICK_SPACING": 32,
+      "OPEN_POSITION": true,
+      "INIT_AMOUNT_B_PER_A": "1.0",
       "LOWER_B_PER_A_PRICE": "0.0001",
       "UPPER_B_PER_A_PRICE": "100",
       "SLIPPAGE": "1",
       "INPUT_MINT": "So11111111111111111111111111111111111111112",
-      "INPUT_AMOUNT": "0.2"
-    },
-    {
-      "TOKEN_MINT_A": "7nBCWxXw5W73cDQkZ1EkTwApkSmbtCoYcqurBfPMQVr4",
-      "TOKEN_MINT_B": "9NB1vaGCPUnt6H2EXQUXt5xqXKubWHUis4xmz7eVd4nH",
-      "TICK_SPACING": 32,
-      "OPEN_POSITION": true,
-      "INIT_AMOUNT_B_PER_A": "3.0",
-      "LOWER_B_PER_A_PRICE": "0.0001",
-      "UPPER_B_PER_A_PRICE": "100",
-      "SLIPPAGE": "1",
-      "INPUT_MINT": "9NB1vaGCPUnt6H2EXQUXt5xqXKubWHUis4xmz7eVd4nH",
-      "INPUT_AMOUNT": "1000"
+      "INPUT_AMOUNT": "1"
     },
     {
       "TOKEN_MINT_A": "So11111111111111111111111111111111111111112",
@@ -63,7 +63,7 @@
       "UPPER_B_PER_A_PRICE": "100",
       "SLIPPAGE": "1",
       "INPUT_MINT": "So11111111111111111111111111111111111111112",
-      "INPUT_AMOUNT": "0.2"
+      "INPUT_AMOUNT": "1"
     },
     {
       "TOKEN_MINT_A": "4VgC6A349HfLFGWRm2FkkSzo39mceyA8Tba2o28PqyyP",
@@ -71,6 +71,18 @@
       "TICK_SPACING": 32,
       "OPEN_POSITION": true,
       "INIT_AMOUNT_B_PER_A": "1.0",
+      "LOWER_B_PER_A_PRICE": "0.0001",
+      "UPPER_B_PER_A_PRICE": "100",
+      "SLIPPAGE": "1",
+      "INPUT_MINT": "9NB1vaGCPUnt6H2EXQUXt5xqXKubWHUis4xmz7eVd4nH",
+      "INPUT_AMOUNT": "1000"
+    },
+    {
+      "TOKEN_MINT_A": "7nBCWxXw5W73cDQkZ1EkTwApkSmbtCoYcqurBfPMQVr4",
+      "TOKEN_MINT_B": "9NB1vaGCPUnt6H2EXQUXt5xqXKubWHUis4xmz7eVd4nH",
+      "TICK_SPACING": 32,
+      "OPEN_POSITION": true,
+      "INIT_AMOUNT_B_PER_A": "3.0",
       "LOWER_B_PER_A_PRICE": "0.0001",
       "UPPER_B_PER_A_PRICE": "100",
       "SLIPPAGE": "1",
