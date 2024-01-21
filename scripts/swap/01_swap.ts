@@ -63,8 +63,8 @@ async function main() {
 
     const quote = await swapQuoteByInputToken(
       whirlpool,
-      whirlpoolData.tokenMintA,
-      new u64(100),
+      whirlpoolData.tokenMintB,
+      new u64(100000000000),
       Percentage.fromFraction(1, 100),
       ctx.program.programId,
       ctx.fetcher,

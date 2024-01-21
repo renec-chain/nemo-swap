@@ -26,8 +26,10 @@ import { adjustForSlippage } from "../math/token-math";
 import { PDAUtil } from "./pda-utils";
 import { PoolUtil } from "./pool-utils";
 import { TickUtil } from "./tick-utils";
-import { SwapDirection, TokenType } from "./types";
+import { SwapDirection, TokenType, TwoHopSwapPoolParams } from "./types";
 import { SwapWithFeeDiscountParams } from "../../instructions";
+import { Wallet } from "@project-serum/anchor/dist/cjs/provider";
+import { NATIVE_MINT } from "@solana/spl-token";
 
 /**
  * @category Whirlpool Utils
@@ -245,8 +247,123 @@ export class SwapUtils {
       tokenVaultB: data.tokenVaultB,
       oracle: oraclePda.publicKey,
       tokenAuthority: wallet,
+      whirlpoolDiscountInfo: whirlpoolDiscountInfoPDA.publicKey,
+      discountToken: discountTokenMint,
+      discountTokenOwnerAccount: ataDiscountTokenKey,
       ...quote,
     };
     return params;
+  }
+
+  public static async getTwoHopSwapCreateAtaIxs(
+    ctx: WhirlpoolContext,
+    swapQuote1: SwapQuote,
+    whirlpool1: Whirlpool,
+    swapQuote2: SwapQuote,
+    whirlpool2: Whirlpool,
+    wallet: Wallet,
+    wrenecPubkeyAta?: PublicKey
+  ): Promise<{
+    createAtaIxs: Instruction[];
+    poolParams: TwoHopSwapPoolParams;
+    createdWRenecAta: PublicKey | undefined;
+  }> {
+    const oracleOne = PDAUtil.getOracle(ctx.program.programId, whirlpool1.getAddress()).publicKey;
+
+    const oracleTwo = PDAUtil.getOracle(ctx.program.programId, whirlpool2.getAddress()).publicKey;
+
+    const whirlpoolData1 = whirlpool1.getData();
+    const whirlpoolData2 = whirlpool2.getData();
+
+    const quote1NativeAmount = swapQuote1.aToB && swapQuote1.amountSpecifiedIsInput ? swapQuote1.amount : swapQuote1.otherAmountThreshold
+    const quote2NativeAmount = swapQuote2.aToB && swapQuote2.amountSpecifiedIsInput ? swapQuote2.amount : swapQuote2.otherAmountThreshold
+
+    const requests = [
+      {
+        tokenMint: whirlpoolData1.tokenMintA,
+        wrappedSolAmountIn: swapQuote1.aToB ? quote1NativeAmount : ZERO,
+      },
+      {
+        tokenMint: whirlpoolData1.tokenMintB,
+        wrappedSolAmountIn: !swapQuote1.aToB ? quote1NativeAmount : ZERO,
+      },
+      {
+        tokenMint: whirlpoolData2.tokenMintA,
+        wrappedSolAmountIn: swapQuote2.aToB ? quote2NativeAmount : ZERO,
+      },
+      {
+        tokenMint: whirlpoolData2.tokenMintB,
+        wrappedSolAmountIn: !swapQuote2.aToB ? quote2NativeAmount : ZERO,
+      },
+    ];
+
+    const resolveAllAtasPromise = [];
+    for (const req of requests) {
+      const instruction = resolveOrCreateATA(
+        ctx.connection,
+        wallet.publicKey,
+        req.tokenMint,
+        () => ctx.fetcher.getAccountRentExempt(),
+        req.wrappedSolAmountIn
+      );
+      resolveAllAtasPromise.push(instruction);
+    }
+
+    let resolveAllAtas = await Promise.all(resolveAllAtasPromise);
+
+    const createATAInstructions = [];
+    // make a set of unique address
+    const uniqueAddresses = new Set<string>();
+
+    let createdWRenecAta = undefined;
+    for (let i = 0; i < resolveAllAtas.length; i++) {
+      const resolveAta = resolveAllAtas[i];
+      const { address: ataAddress, ...instructions } = resolveAta;
+
+      // Check wrenecPubkeyAta is provide, and token mint is wrenec -> use that ATA and skip
+      if (requests[i].tokenMint.equals(NATIVE_MINT)) {
+        // if either wrenecPubkeyAta or createdWRenecAta is defined, use that
+        if (wrenecPubkeyAta || createdWRenecAta) {
+          if (wrenecPubkeyAta) {
+            createdWRenecAta = wrenecPubkeyAta; // set createdWRenecAta to wrenecPubkeyAta
+            resolveAllAtas[i].address = wrenecPubkeyAta;
+          } else if (createdWRenecAta) {
+            resolveAllAtas[i].address = createdWRenecAta;
+          }
+
+          continue;
+        } else {
+          // if both are undefined, create a new ATA
+          createdWRenecAta = ataAddress;
+        }
+      }
+
+      // Check if instruction has not been created
+      if (!uniqueAddresses.has(ataAddress.toBase58())) {
+        createATAInstructions.push(instructions);
+        uniqueAddresses.add(ataAddress.toBase58());
+      }
+    }
+
+    const poolParams = {
+      whirlpoolOne: whirlpool1.getAddress(),
+      whirlpoolTwo: whirlpool2.getAddress(),
+      tokenOwnerAccountOneA: resolveAllAtas[0].address,
+      tokenVaultOneA: whirlpoolData1.tokenVaultA,
+      tokenOwnerAccountOneB: resolveAllAtas[1].address,
+      tokenVaultOneB: whirlpoolData1.tokenVaultB,
+      tokenOwnerAccountTwoA: resolveAllAtas[2].address,
+      tokenVaultTwoA: whirlpoolData2.tokenVaultA,
+      tokenOwnerAccountTwoB: resolveAllAtas[3].address,
+      tokenVaultTwoB: whirlpoolData2.tokenVaultB,
+      oracleOne,
+      oracleTwo,
+    };
+
+    return {
+      createAtaIxs: createATAInstructions,
+      poolParams,
+      createdWRenecAta: createdWRenecAta,
+    };
   }
 }

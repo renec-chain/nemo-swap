@@ -950,7 +950,7 @@
           "isSigner": false
         },
         {
-          "name": "tokenDiscountOwnerAccount",
+          "name": "discountTokenOwnerAccount",
           "isMut": true,
           "isSigner": false
         }
