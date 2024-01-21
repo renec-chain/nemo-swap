@@ -1,15 +1,11 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount};
+use anchor_spl::token::{ self, Token, TokenAccount };
 
 use crate::{
     errors::ErrorCode,
     manager::swap_manager::*,
-    state::{TickArray, Whirlpool},
-    util::{
-        to_timestamp_u64,
-        SwapTickSequence,
-        update_and_swap_whirlpool
-    },
+    state::{ TickArray, Whirlpool },
+    util::{ to_timestamp_u64, SwapTickSequence, update_and_swap_whirlpool },
 };
 
 #[derive(Accounts)]
@@ -41,7 +37,7 @@ pub struct Swap<'info> {
     #[account(mut, has_one = whirlpool)]
     pub tick_array_2: AccountLoader<'info, TickArray>,
 
-    #[account(seeds = [b"oracle", whirlpool.key().as_ref()],bump)]
+    #[account(seeds = [b"oracle", whirlpool.key().as_ref()], bump)]
     /// Oracle is currently unused and will be enabled on subsequent updates
     pub oracle: UncheckedAccount<'info>,
 }
@@ -52,7 +48,7 @@ pub fn handler(
     other_amount_threshold: u64,
     sqrt_price_limit: u128,
     amount_specified_is_input: bool,
-    a_to_b: bool, // Zero for one
+    a_to_b: bool // Zero for one
 ) -> ProgramResult {
     let whirlpool = &mut ctx.accounts.whirlpool;
     whirlpool.require_enabled()?;
@@ -62,7 +58,7 @@ pub fn handler(
     let mut swap_tick_sequence = SwapTickSequence::new(
         ctx.accounts.tick_array_0.load_mut().unwrap(),
         ctx.accounts.tick_array_1.load_mut().ok(),
-        ctx.accounts.tick_array_2.load_mut().ok(),
+        ctx.accounts.tick_array_2.load_mut().ok()
     );
 
     let swap_update = swap(
@@ -72,18 +68,20 @@ pub fn handler(
         sqrt_price_limit,
         amount_specified_is_input,
         a_to_b,
-        timestamp,
+        timestamp
     )?;
 
     if amount_specified_is_input {
-        if (a_to_b && other_amount_threshold > swap_update.amount_b)
-            || (!a_to_b && other_amount_threshold > swap_update.amount_a)
+        if
+            (a_to_b && other_amount_threshold > swap_update.amount_b) ||
+            (!a_to_b && other_amount_threshold > swap_update.amount_a)
         {
             return Err(ErrorCode::AmountOutBelowMinimum.into());
         }
     } else {
-        if (a_to_b && other_amount_threshold < swap_update.amount_a)
-            || (!a_to_b && other_amount_threshold < swap_update.amount_b)
+        if
+            (a_to_b && other_amount_threshold < swap_update.amount_a) ||
+            (!a_to_b && other_amount_threshold < swap_update.amount_b)
         {
             return Err(ErrorCode::AmountInAboveMaximum.into());
         }
@@ -99,6 +97,6 @@ pub fn handler(
         &ctx.accounts.token_program,
         swap_update,
         a_to_b,
-        timestamp,
+        timestamp
     )
 }

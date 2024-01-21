@@ -121,8 +121,8 @@ export interface WhirlpoolClient {
     whirlpool1: Whirlpool,
     swapQuote2: SwapQuote,
     whirlpool2: Whirlpool,
-    wallet?: Wallet
-  ): Promise<TransactionBuilder>;
+    wRenecAta?: PublicKey
+  ): Promise<{ tx: TransactionBuilder; createdWRenecAta: PublicKey | undefined }>;
 
   twoHopSwapWithFeeDiscount(
     swapQuote1: FeeDiscountSwapQuote,
@@ -130,8 +130,13 @@ export interface WhirlpoolClient {
     swapQuote2: FeeDiscountSwapQuote,
     whirlpool2: Whirlpool,
     discountToken: PublicKey,
-    wallet?: Wallet
-  ): Promise<{ tx: TransactionBuilder; estimatedBurnAmount: BN; estimatedDiscountAmount: BN }>;
+    wRenecAta?: PublicKey
+  ): Promise<{
+    tx: TransactionBuilder;
+    createdWRenecAta: PublicKey | undefined;
+    estimatedBurnAmount: BN;
+    estimatedDiscountAmount: BN;
+  }>;
 }
 
 /**
@@ -287,6 +292,11 @@ export interface Whirlpool {
    * @return a transaction that will perform the swap once executed.
    */
   swap: (input: SwapInput, wallet?: PublicKey) => Promise<TransactionBuilder>;
+
+  swapWithWRenecAta(
+    quote: SwapInput,
+    wRenecAta?: PublicKey
+  ): Promise<{ tx: TransactionBuilder; createdWRenecAta: PublicKey | undefined }>;
 
   swapWithFeeDiscount: (
     input: SwapInput,

@@ -1,5 +1,5 @@
 {
-  "RPC_ENDPOINT_URL": "https://api-mainnet-beta.renec.foundation:8899",
+  "RPC_ENDPOINT_URL": "https://api-mainnet-beta.renec.foundation:8899/",
   "REDEX_PROGRAM_ID": "7rh7ZtPzHqdY82RWjHf1Q8NaQiWnyNqkC48vSixcBvad",
   "PROTOCOL_FEE_RATE": 300,
   "FEE_TIERS": [
@@ -38,13 +38,13 @@
       "LOWER_B_PER_A_PRICE": "0.0001",
       "UPPER_B_PER_A_PRICE": "100",
       "SLIPPAGE": "1",
-      "INPUT_MINT": "So11111111111111111111111111111111111111112",
-      "INPUT_AMOUNT": "0.2"
+      "INPUT_MINT": "FTFhGX7PS7JcVNgBjtFTNayUfe5jHVrsSVqBZDFivgcz",
+      "INPUT_AMOUNT": "1000000"
     },
     {
       "TOKEN_MINT_A": "So11111111111111111111111111111111111111112",
-      "TOKEN_MINT_B": "7Si3Fk92b8nnPP7KY1UjihuVo8fiGtwug58eHS6iXL9Z",
-      "TICK_SPACING": 32,
+      "TOKEN_MINT_B": "4Q89182juiadeFgGw3fupnrwnnDmBhf7e7fHWxnUP3S3",
+      "TICK_SPACING": 8,
       "OPEN_POSITION": true,
       "INIT_AMOUNT_B_PER_A": "1.0",
       "LOWER_B_PER_A_PRICE": "0.0001",
