@@ -325,13 +325,17 @@ export class WhirlpoolClientImpl implements WhirlpoolClient {
   }
 
   public async twoHopSwap(
-    swapQuote1: SwapQuote,
+    swapInput1: SwapInput,
     whirlpool1: Whirlpool,
-    swapQuote2: SwapQuote,
+    swapInput2: SwapInput,
     whirlpool2: Whirlpool,
     wallet?: Wallet | undefined
   ): Promise<TransactionBuilder> {
-    const twoHopSwapQuote = twoHopSwapQuoteFromSwapQuotes(swapQuote1, swapQuote2);
+    const twoHopSwapQuote = twoHopSwapQuoteFromSwapQuotes(
+      // casting is safe here as we don't use swapOneEstimates and swapTwoEstimates
+      swapInput1 as SwapQuote,
+      swapInput2 as SwapQuote,
+    );
 
     const sourceWallet = wallet ?? this.ctx.provider.wallet;
 
@@ -348,25 +352,25 @@ export class WhirlpoolClientImpl implements WhirlpoolClient {
     const whirlpoolData1 = whirlpool1.getData();
     const whirlpoolData2 = whirlpool2.getData();
 
-    const quote1NativeTokenAmount = swapQuote1.amountSpecifiedIsInput ? swapQuote1.amount : swapQuote1.otherAmountThreshold
-    const quote2NativeTokenAmount = swapQuote2.amountSpecifiedIsInput ? swapQuote2.amount : swapQuote2.otherAmountThreshold
+    const input1NativeTokenAmount = swapInput1.amountSpecifiedIsInput ? swapInput1.amount : swapInput1.otherAmountThreshold
+    const input2NativeTokenAmount = swapInput2.amountSpecifiedIsInput ? swapInput2.amount : swapInput2.otherAmountThreshold
 
     const requests = [
       {
         tokenMint: whirlpoolData1.tokenMintA,
-        wrappedSolAmountIn: swapQuote1.aToB ? quote1NativeTokenAmount : ZERO,
+        wrappedSolAmountIn: swapInput1.aToB ? input1NativeTokenAmount : ZERO,
       },
       {
         tokenMint: whirlpoolData1.tokenMintB,
-        wrappedSolAmountIn: !swapQuote1.aToB ? quote1NativeTokenAmount : ZERO,
+        wrappedSolAmountIn: !swapInput1.aToB ? input1NativeTokenAmount : ZERO,
       },
       {
         tokenMint: whirlpoolData2.tokenMintA,
-        wrappedSolAmountIn: swapQuote2.aToB ? quote2NativeTokenAmount : ZERO,
+        wrappedSolAmountIn: swapInput2.aToB ? input2NativeTokenAmount : ZERO,
       },
       {
         tokenMint: whirlpoolData2.tokenMintB,
-        wrappedSolAmountIn: !swapQuote2.aToB ? quote2NativeTokenAmount : ZERO,
+        wrappedSolAmountIn: !swapInput2.aToB ? input2NativeTokenAmount : ZERO,
       },
     ];
 
